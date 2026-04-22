@@ -1,0 +1,201 @@
+<div x-show="page==='marketplace'" x-init="$watch('page', p => p === 'marketplace' && loadMarketplace())">
+
+  <div class="page-title-block">
+    <h2 class="page-title">Marketplace</h2>
+    <p class="page-subtitle">Top crypto assets ranked by price</p>
+    <div class="coin-stack" x-show="marketplaceCoins.length">
+      <template x-for="p in marketplaceCoins.slice((mkPage-1)*mkPerPage, (mkPage-1)*mkPerPage + mkPerPage + 30)" :key="p.base_asset">
+        <div class="coin-stack-wrap" @click="mkPinned = (mkPinned === p.base_asset ? null : p.base_asset); mkPage = 1" style="cursor:pointer">
+          <img class="coin-stack-icon"
+               :src="p.image || `https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/${p.base_asset.toLowerCase()}.svg`"
+               :alt="p.base_asset"
+               @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
+          <div class="coin-stack-icon coin-stack-fallback"
+               :class="'coin-placeholder-' + unknownCoinShape(p.base_asset)"
+               style="display:none"></div>
+          <span class="coin-stack-tip" x-text="p.base_asset"></span>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- Error banner -->
+  <div class="form-error" x-show="marketplaceError" x-text="marketplaceError" style="margin-bottom:16px"></div>
+
+  <!-- Market Prices -->
+  <div class="card marketplace-table">
+    <div class="card-header">
+      <span class="card-title">Market Prices</span>
+      <div style="display:flex; align-items:center; gap:8px; margin-left:auto">
+        <select class="mk-sort-select" x-model="mkSort" @change="mkPage = 1">
+          <option value="price_desc">Highest Price</option>
+          <option value="price_asc">Lowest Price</option>
+          <option value="vol_desc">Highest Volatility</option>
+          <option value="vol_asc">Lowest Volatility</option>
+          <option value="stablecoin">Stablecoin</option>
+          <option value="income_yield">Income by Yield</option>
+        </select>
+        <input class="input input-sm mk-search-input" type="text" placeholder="Search coins..."
+               x-model="mkSearch" @input="mkPage = 1" />
+        <button class="btn btn-outline btn-sm" @click="loadMarketplace()" :disabled="marketplaceLoading">
+          <span x-show="marketplaceLoading" class="spinner spinner-sm"></span>
+          <span x-show="!marketplaceLoading">Refresh</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="load-center" x-show="marketplaceLoading && !marketplaceCoins.length">
+      <div class="spinner"></div>
+    </div>
+
+    <div class="table-wrap" x-show="marketplaceCoins.length">
+      <table>
+        <thead>
+          <tr>
+            <th><div class="th-tip-wrap">Asset<div class="th-tip"><span class="th-tip-label">Refreshed every:</span><span class="th-tip-val">Static</span></div></div></th>
+            <th><div class="th-tip-wrap">Volatility<div class="th-tip"><span class="th-tip-label">Refreshed every:</span><span class="th-tip-val">24 hours</span></div></div></th>
+            <th><div class="th-tip-wrap">Last Price<div class="th-tip"><span class="th-tip-label">Refreshed every:</span><span class="th-tip-val">Every refresh</span></div></div></th>
+            <th><div class="th-tip-wrap">Market Cap<div class="th-tip"><span class="th-tip-label">Refreshed every:</span><span class="th-tip-val">5 minutes</span></div></div></th>
+            <th><div class="th-tip-wrap">Fees<div class="th-tip"><span class="th-tip-label">Scale:</span><span class="th-tip-val">$ = nearly free → $$$$$ = expensive (ERC-20 on Ethereum L1)</span></div></div></th>
+            <th><div class="th-tip-wrap">1Y Low / High<div class="th-tip"><span class="th-tip-label">Refreshed every:</span><span class="th-tip-val">24 hours</span></div></div></th>
+            <th><div class="th-tip-wrap">% Purchased<div class="th-tip"><span class="th-tip-label">Refreshed every:</span><span class="th-tip-val">24 hours</span></div></div></th>
+            <th><div class="th-tip-wrap">Backed By<div class="th-tip"><span class="th-tip-label">Refreshed every:</span><span class="th-tip-val">Never — static</span></div></div></th>
+            <th><div class="th-tip-wrap">Yield Types<div class="th-tip"><span class="th-tip-label">Refreshed every:</span><span class="th-tip-val">Never — static</span></div></div></th>
+            <th><div class="th-tip-wrap">Income by Yield<div class="th-tip"><span class="th-tip-label">Based on:</span><span class="th-tip-val">$100 at highest published APR</span></div></div></th>
+            <th><div class="th-tip-wrap">Description<div class="th-tip"><span class="th-tip-label">Refreshed every:</span><span class="th-tip-val">Never — static</span></div></div></th>
+          </tr>
+        </thead>
+        <tbody>
+          <template x-for="p in mkPageCoins()" :key="p.base_asset">
+            <tr :class="{ 'mk-row-low-data': p.vol90d == null && p.vol180d == null && p.vol365d == null }">
+              <td>
+                <div class="coin-cell" x-data="{ profileOpen: false }" @mouseenter="profileOpen = true" @mouseleave="profileOpen = false" style="position:relative">
+                  <template x-if="p.image">
+                    <img class="coin-img" :src="p.image" :alt="p.base_asset" />
+                  </template>
+                  <template x-if="!p.image">
+                    <div class="coin-img-placeholder"
+                         :class="'coin-placeholder-' + unknownCoinShape(p.base_asset)"></div>
+                  </template>
+                  <div>
+                    <div class="coin-name" x-text="p.coinName || p.base_asset"></div>
+                    <div class="coin-symbol" x-text="p.base_asset"></div>
+                  </div>
+                  <!-- Coin profile popup -->
+                  <div class="coin-profile-popup" x-show="profileOpen" x-cloak>
+                    <div class="cpp-name" x-text="(p.coinName || p.base_asset) + ' (' + p.base_asset + ')'"></div>
+                    <div>
+                      <div class="cpp-row">
+                        <span class="cpp-label">Price</span>
+                        <span x-text="p.last != null ? fmtPaxosPrice(p.last) : '—'"></span>
+                      </div>
+                      <div class="cpp-row">
+                        <span class="cpp-label">Market Cap</span>
+                        <span x-text="fmtMktCap(p.mktCap)"></span>
+                      </div>
+                      <div class="cpp-row">
+                        <span class="cpp-label">1Y Low / High</span>
+                        <span x-text="(p.low != null && p.high != null) ? fmtPaxosPrice(p.low) + ' / ' + fmtPaxosPrice(p.high) : '—'"></span>
+                      </div>
+                      <div class="cpp-row">
+                        <span class="cpp-label">Volatility (90D)</span>
+                        <span :class="volatilityLabel(p.vol90d)?.cls || ''"
+                              x-text="volatilityLabel(p.vol90d)?.label || '—'"></span>
+                      </div>
+                      <div class="cpp-row">
+                        <span class="cpp-label">Backed By</span>
+                        <span x-text="coinCollateral(p.base_asset)?.label || 'None'"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <div class="vol-stack">
+                  <template x-if="volatilityLabel(p.vol90d)">
+                    <span :class="volatilityLabel(p.vol90d).cls" x-text="'90D: ' + volatilityLabel(p.vol90d).label"></span>
+                  </template>
+                  <template x-if="volatilityLabel(p.vol180d)">
+                    <span :class="volatilityLabel(p.vol180d).cls" x-text="'180D: ' + volatilityLabel(p.vol180d).label"></span>
+                  </template>
+                  <template x-if="volatilityLabel(p.vol365d)">
+                    <span :class="volatilityLabel(p.vol365d).cls" x-text="'1Y: ' + volatilityLabel(p.vol365d).label"></span>
+                  </template>
+                  <template x-if="!volatilityLabel(p.vol90d) && !volatilityLabel(p.vol180d) && !volatilityLabel(p.vol365d)">
+                    <span class="badge-muted">—</span>
+                  </template>
+                </div>
+              </td>
+              <td x-text="fmtPaxosPrice(p.last)"></td>
+              <td x-text="fmtMktCap(p.mktCap)"></td>
+              <td><span class="mk-fees" x-text="fmtCoinFees(p.base_asset)"></span></td>
+              <td>
+                <template x-if="p.low != null && p.high != null">
+                  <div class="mk-lowhigh">
+                    <div class="mk-low" x-text="fmtPaxosPrice(p.low)"></div>
+                    <div class="mk-high" x-text="fmtPaxosPrice(p.high)"></div>
+                  </div>
+                </template>
+                <template x-if="p.low == null || p.high == null">
+                  <span>—</span>
+                </template>
+              </td>
+              <td>
+                <div class="cell-tip-wrap">
+                  <span x-text="(p.hardCap != null && p.circulating != null) ? ((p.circulating / p.hardCap) * 100).toFixed(1) + '%' : (p.circulating != null ? 'no limit' : '—')"></span>
+                  <div class="cell-tip">
+                    <span class="th-tip-label">Current Supply</span>
+                    <span class="th-tip-val" x-text="p.circulating != null ? fmtAmount(Math.round(p.circulating)) : '—'"></span>
+                    <span class="th-tip-label" style="margin-top:6px">Hard Cap</span>
+                    <span class="th-tip-val" x-text="p.hardCap != null ? fmtAmount(p.hardCap) : _hardCapLabel(p.base_asset)"></span>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <template x-if="coinCollateral(p.base_asset)">
+                  <span :class="coinCollateral(p.base_asset).cls" x-text="coinCollateral(p.base_asset).label"></span>
+                </template>
+                <template x-if="!coinCollateral(p.base_asset)">
+                  <span class="badge-muted">None</span>
+                </template>
+              </td>
+              <td>
+                <template x-if="coinYieldTypes(p.base_asset)">
+                  <div class="coin-features">
+                    <template x-for="y in coinYieldTypes(p.base_asset)" :key="y">
+                      <span class="coin-yield-tag" x-text="y"></span>
+                    </template>
+                  </div>
+                </template>
+                <template x-if="!coinYieldTypes(p.base_asset)">
+                  <span class="badge-muted">None</span>
+                </template>
+              </td>
+              <td x-text="fmtYieldIncome(p.base_asset)"></td>
+              <td>
+                <div class="coin-desc-wrap" x-data="{ descOpen: false }" @mouseenter="descOpen = true" @mouseleave="descOpen = false">
+                  <span class="coin-desc-text" x-text="paxosCoinDescription(p.base_asset) || 'obscure'"></span>
+                  <div class="coin-desc-popup" x-show="descOpen && paxosCoinDescription(p.base_asset)" x-cloak x-text="paxosCoinDescription(p.base_asset)"></div>
+                </div>
+              </td>
+            </tr>
+          </template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" x-show="mkTotalPages() > 1">
+      <button class="btn btn-outline btn-sm" @click="mkPage = Math.max(1, mkPage - 1)" :disabled="mkPage === 1">&laquo; Prev</button>
+      <template x-for="pg in mkTotalPages()" :key="pg">
+        <button class="btn btn-outline btn-sm"
+                :class="{ active: pg === mkPage }"
+                @click="mkPage = pg"
+                x-text="pg"></button>
+      </template>
+      <button class="btn btn-outline btn-sm" @click="mkPage = Math.min(mkTotalPages(), mkPage + 1)" :disabled="mkPage === mkTotalPages()">Next &raquo;</button>
+      <span class="page-info" x-text="`${(mkPage-1)*mkPerPage+1}–${Math.min(mkPage*mkPerPage, mkFilteredCoins().length)} of ${mkFilteredCoins().length}`"></span>
+    </div>
+  </div>
+
+</div>

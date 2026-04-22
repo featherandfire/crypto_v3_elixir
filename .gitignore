@@ -1,0 +1,32 @@
+# macOS
+.DS_Store
+
+# Local env files with secrets — never commit
+.env
+.env.local
+.env.*.local
+
+# Node / Vite
+node_modules/
+frontend/dist/
+*.log
+
+# Elixir / Phoenix
+crypto_portfolio_v3/_build/
+crypto_portfolio_v3/cover/
+crypto_portfolio_v3/deps/
+crypto_portfolio_v3/doc/
+crypto_portfolio_v3/.fetch
+crypto_portfolio_v3/erl_crash.dump
+crypto_portfolio_v3/*.ez
+crypto_portfolio_v3/tmp/
+crypto_portfolio_v3/crypto_portfolio_v3-*.tar
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Runtime caches
+*.dets

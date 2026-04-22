@@ -1,0 +1,225 @@
+<div x-show="page==='dashboard'">
+
+  <!-- Empty state -->
+  <div class="empty-state" x-show="!portfolios.length && !loadingPortfolio">
+    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <p class="empty-state-title">No portfolios yet</p>
+    <p>Click <strong>+ Portfolio</strong> to create your first one.</p>
+  </div>
+
+  <!-- Loading skeleton -->
+  <div x-show="loadingPortfolio">
+    <div class="stats-grid">
+      <template x-for="i in 4" :key="i">
+        <div class="stat-card" style="opacity:.5">
+          <div class="skel-label"></div>
+          <div class="skel-value"></div>
+        </div>
+      </template>
+    </div>
+  </div>
+
+  <!-- Portfolio detail -->
+  <div x-show="portfolioDetail && !loadingPortfolio">
+
+    <div class="page-title-block">
+      <h2 class="page-title" x-text="portfolioDetail?.name || 'Dashboard'"></h2>
+      <p class="page-subtitle">Your current holdings across all imported wallets</p>
+      <div class="coin-stack" x-show="(portfolioDetail?.holdings ?? []).length">
+        <template x-for="h in (portfolioDetail?.holdings ?? [])" :key="h.id">
+          <div class="coin-stack-wrap" style="cursor:default">
+            <img class="coin-stack-icon"
+                 :src="h.coin.image_url || `https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/${h.coin.symbol.toLowerCase()}.svg`"
+                 :alt="h.coin.symbol"
+                 @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
+            <div class="coin-stack-icon coin-stack-fallback"
+                 :class="'coin-placeholder-' + unknownCoinShape(h.coin.coingecko_id || h.coin.symbol)"
+                 style="display:none"></div>
+            <span class="coin-stack-tip" x-text="h.coin.symbol.toUpperCase()"></span>
+          </div>
+        </template>
+      </div>
+
+      <!-- Wallets in this portfolio. Click a chip to filter the table. -->
+      <div class="wallets-row" x-show="portfolioWallets().length">
+        <span class="wallets-label">Wallets:</span>
+        <span class="wallet-chip"
+              :class="{ active: !activeWalletFilter }"
+              @click="activeWalletFilter = null">All</span>
+        <template x-for="w in portfolioWallets()" :key="w">
+          <span class="wallet-chip"
+                :class="{ active: activeWalletFilter === w }"
+                :title="w"
+                @click="activeWalletFilter = (activeWalletFilter === w ? null : w)"
+                x-text="w"></span>
+        </template>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-label">Total Value</div>
+        <div class="stat-value" x-text="fmtUSD(portfolioDetail?.total_value_usd)"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Total Cost</div>
+        <div class="stat-value" x-text="fmtUSD(portfolioDetail?.total_cost_usd)"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Profit &amp; Loss</div>
+        <div class="stat-value" :class="pnlClass(portfolioDetail?.total_pnl_usd)" x-text="fmtUSD(portfolioDetail?.total_pnl_usd)"></div>
+        <div class="stat-change" :class="pnlClass(portfolioDetail?.total_pnl_pct)" x-text="fmtPct(portfolioDetail?.total_pnl_pct)"></div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Assets</div>
+        <div class="stat-value" x-text="portfolioDetail?.holdings?.length ?? 0"></div>
+      </div>
+    </div>
+
+    <!-- Charts row -->
+    <div class="charts-grid" x-show="portfolioDetail?.holdings?.length">
+      <div class="card">
+        <div class="card-header"><span class="card-title">Allocation</span></div>
+        <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title" x-text="selectedChartCoin ? selectedChartCoin.toUpperCase() + ' Price' : 'Price Chart'"></span>
+          <div class="chart-btn-row" x-show="selectedChartCoin">
+            <button class="btn btn-outline btn-sm" @click="renderPriceChart(selectedChartCoin, 7)">7D</button>
+            <button class="btn btn-outline btn-sm" @click="renderPriceChart(selectedChartCoin, 30)">30D</button>
+            <button class="btn btn-outline btn-sm" @click="renderPriceChart(selectedChartCoin, 90)">90D</button>
+          </div>
+        </div>
+        <div class="chart-wrap" x-show="selectedChartCoin"><canvas id="lineChart"></canvas></div>
+        <div class="empty-state empty-state-chart" x-show="!selectedChartCoin">
+          <p>Click a coin below to view its price chart</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Holdings table -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Holdings</span>
+        <div style="display:flex; gap:8px; margin-left:auto">
+          <button class="btn btn-primary btn-sm" @click="openAddHolding()" x-show="activePortfolioId">+ Holding</button>
+          <button class="btn btn-danger btn-sm" @click="deletePortfolio(activePortfolioId)">Delete portfolio</button>
+        </div>
+      </div>
+
+      <div class="empty-state" x-show="!portfolioDetail?.holdings?.length">
+        <p>No holdings yet — click <strong>+ Holding</strong> to add one.</p>
+      </div>
+
+      <div class="table-wrap holdings-table-wrap" x-show="portfolioDetail?.holdings?.length">
+        <table>
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Tx Hash</th>
+              <th>Price</th>
+              <th>24h</th>
+              <th>Amount</th>
+              <th>Avg Buy</th>
+              <th>Value</th>
+              <th>P&amp;L</th>
+              <th>Last Buy Fees</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="h in filteredHoldings()" :key="h.id">
+              <tr class="cursor-pointer" @click="renderPriceChart(h.coin.coingecko_id)">
+                <td>
+                  <div class="coin-cell">
+                    <img class="coin-img" :src="h.coin.image_url" :alt="h.coin.name" x-show="h.coin.image_url" />
+                    <div class="coin-img-placeholder"
+                         x-show="!h.coin.image_url"
+                         :class="'coin-placeholder-' + unknownCoinShape(h.coin.coingecko_id || h.coin.symbol)"></div>
+                    <div>
+                      <div class="coin-name" x-text="h.coin.name"></div>
+                      <div class="coin-symbol" x-text="h.coin.symbol"></div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  <a class="tx-hash"
+                     x-show="lastBuyFees[h.id] && lastBuyFees[h.id] !== 'loading' && lastBuyFees[h.id] !== 'unavailable' && lastBuyFees[h.id].signature"
+                     :href="lastBuyFees[h.id] && lastBuyFees[h.id].signature ? ((walletIsSolana(h.wallet_address) ? 'https://solscan.io/tx/' : 'https://etherscan.io/tx/') + lastBuyFees[h.id].signature) : '#'"
+                     target="_blank" rel="noopener"
+                     @click.stop
+                     x-text="lastBuyFees[h.id] && lastBuyFees[h.id].signature ? lastBuyFees[h.id].signature : ''"></a>
+                  <span class="text-muted" style="font-size:11px" x-show="lastBuyFees[h.id] === 'loading'">Loading…</span>
+                  <span class="text-muted" style="font-size:11px" x-show="lastBuyFees[h.id] === 'unavailable' || !lastBuyFees[h.id]">—</span>
+                </td>
+                <td x-text="fmtUSD(h.coin.current_price_usd)"></td>
+                <td>
+                  <span class="badge" :class="(h.coin.price_change_24h ?? 0) >= 0 ? 'badge-green' : 'badge-red'" x-text="fmtPct(h.coin.price_change_24h)"></span>
+                </td>
+                <td x-text="fmtAmount(h.amount) + ' ' + h.coin.symbol.toUpperCase()"></td>
+                <td x-text="fmtUSD(h.avg_buy_price)"></td>
+                <td x-text="fmtUSD(h.current_value_usd)"></td>
+                <td>
+                  <span :class="pnlClass(h.pnl_usd)" x-text="fmtUSD(h.pnl_usd)"></span>
+                  <div class="text-xs" :class="pnlClass(h.pnl_pct)" x-text="fmtPct(h.pnl_pct)"></div>
+                </td>
+                <td>
+                  <span class="text-muted" style="font-size:11px" x-show="lastBuyFees[h.id] === 'loading'">Loading…</span>
+                  <div class="cell-tip-wrap" style="font-size:12px; line-height:1.35"
+                       x-show="lastBuyFees[h.id] && lastBuyFees[h.id] !== 'loading' && lastBuyFees[h.id] !== 'unavailable'">
+                    <div x-show="lastBuyFees[h.id] && lastBuyFees[h.id].fee_pct != null"
+                      x-text="lastBuyFees[h.id] && lastBuyFees[h.id].fee_pct != null ? (lastBuyFees[h.id].fee_pct.toFixed(2) + '%') : ''"
+                      style="color: #e87b7b; font-weight:600"></div>
+                    <div class="cell-tip fee-tip" x-show="lastBuyFees[h.id] && typeof lastBuyFees[h.id] === 'object'">
+                      <div x-data="{
+                        cat: (lastBuyFees[h.id] && typeof lastBuyFees[h.id] === 'object') ? categorizeRouters(lastBuyFees[h.id].routers) : { platform: null, dex_routing: null, liquidity_pool: null },
+                        firstFee: (lastBuyFees[h.id] && typeof lastBuyFees[h.id] === 'object' && (lastBuyFees[h.id].fee_parties ?? [])[0]) || null,
+                      }" style="margin-bottom:6px">
+                        <span class="th-tip-label">Routed through</span>
+                        <span class="th-tip-val fee-row" x-show="cat.platform">
+                          <span><strong style="color: var(--muted); font-weight:600">Platform:</strong>
+                            <span style="margin-left:4px" x-text="cat.platform"></span></span>
+                          <span class="fee-amount" x-text="firstFee ? (firstFee.is_stable ? ('$' + firstFee.amount.toFixed(2)) : (fmtAmount(firstFee.amount) + ' ' + firstFee.symbol)) : '—'"></span>
+                        </span>
+                        <span class="th-tip-val fee-row" x-show="cat.dex_routing">
+                          <span><strong style="color: var(--muted); font-weight:600">DEX Routing:</strong>
+                            <span style="margin-left:4px" x-text="cat.dex_routing"></span></span>
+                          <span class="fee-amount" :class="{ 'muted-fee': !lastBuyFees[h.id] || lastBuyFees[h.id].spread_usd == null }"
+                            x-text="!lastBuyFees[h.id] || lastBuyFees[h.id].spread_usd == null ? 'in spread' : (lastBuyFees[h.id].spread_usd < 0.01 ? '$0.00' : '$' + lastBuyFees[h.id].spread_usd.toFixed(4))"></span>
+                        </span>
+                        <span class="th-tip-val fee-row" x-show="cat.liquidity_pool">
+                          <span><strong style="color: var(--muted); font-weight:600">Liquidity Pool:</strong>
+                            <span style="margin-left:4px" x-text="cat.liquidity_pool"></span></span>
+                          <span class="fee-amount" :class="{ 'muted-fee': !lastBuyFees[h.id] || lastBuyFees[h.id].spread_usd == null }"
+                            x-text="!lastBuyFees[h.id] || lastBuyFees[h.id].spread_usd == null ? 'in spread' : (lastBuyFees[h.id].spread_usd < 0.01 ? '$0.00' : '$' + lastBuyFees[h.id].spread_usd.toFixed(4))"></span>
+                        </span>
+                        <span class="th-tip-val fee-row">
+                          <span><strong style="color: var(--muted); font-weight:600">Network:</strong>
+                            <span style="margin-left:4px">Solana</span></span>
+                          <span class="fee-amount" x-text="lastBuyFees[h.id] && lastBuyFees[h.id].fee_sol ? lastBuyFees[h.id].fee_sol : ''"></span>
+                        </span>
+                      </div>
+                      <a
+                        :href="lastBuyFees[h.id] && lastBuyFees[h.id].signature ? ('https://solscan.io/tx/' + lastBuyFees[h.id].signature) : '#'"
+                        target="_blank" rel="noopener"
+                        style="display:inline-block; margin-top:8px; color: var(--accent); font-size:11px; text-decoration: underline"
+                        @click.stop
+                      >View tx on Solscan →</a>
+                    </div>
+                  </div>
+                  <span class="text-muted" style="font-size:11px" x-show="lastBuyFees[h.id] === 'unavailable'">—</span>
+                </td>
+                <td>
+                  <button class="btn btn-danger btn-sm" @click.stop="removeHolding(h.id)">✕</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /portfolioDetail -->
+</div><!-- /dashboard -->
