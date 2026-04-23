@@ -97,7 +97,10 @@ jobs:
     name: Package release artifact
     needs: [backend, frontend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    runs-on: ubuntu-latest
+    # Use 22.04 (glibc 2.35) for broader binary compat with AL2023 (glibc 2.34)
+    # than ubuntu-latest (24.04, glibc 2.39). If GLIBC errors return on the
+    # EC2, swap to a container build (amazonlinux:2023 image) for an exact match.
+    runs-on: ubuntu-22.04
 
     outputs:
       artifact_key: ${{ steps.upload.outputs.artifact_key }}
