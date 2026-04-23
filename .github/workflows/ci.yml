@@ -171,6 +171,22 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-2
+
+      - name: Open SSH port for this runner
+        id: open-ssh
+        run: |
+          IP=$(curl -4 -s https://checkip.amazonaws.com)
+          echo "runner_ip=$IP" >> "$GITHUB_OUTPUT"
+          aws ec2 authorize-security-group-ingress \
+            --group-id "${{ secrets.DEPLOY_SG_ID }}" \
+            --protocol tcp --port 22 \
+            --cidr "${IP}/32"
+
       - name: SSH to EC2 and deploy
         uses: appleboy/ssh-action@v1
         with:
@@ -188,3 +204,11 @@ jobs:
             bash scripts/deploy-remote.sh \
               "${{ secrets.DEPLOY_S3_BUCKET }}" \
               "${{ needs.package.outputs.artifact_key }}"
+
+      - name: Close SSH port
+        if: always() && steps.open-ssh.outputs.runner_ip
+        run: |
+          aws ec2 revoke-security-group-ingress \
+            --group-id "${{ secrets.DEPLOY_SG_ID }}" \
+            --protocol tcp --port 22 \
+            --cidr "${{ steps.open-ssh.outputs.runner_ip }}/32" || true
