@@ -520,6 +520,10 @@ animate();
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
       Marketplace
     </div>
+    <div class="nav-item" :class="{active: page==='platforms'}" @click="page='platforms'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/><path d="M6 14h4"/></svg>
+      Platforms
+    </div>
   </nav>
 
   <div class="sidebar-footer">
@@ -1688,6 +1692,192 @@ animate();
   </div>
 
 </div>
+
+        <div x-show="page==='platforms'">
+
+  <div class="page-title-block">
+    <h2 class="page-title">Platforms</h2>
+    <p class="page-subtitle">Where to set up a wallet, buy crypto, or hold custody &mdash; grouped by type</p>
+  </div>
+
+  <div class="lookup-grid resources-grid">
+
+    <!-- ── EVM self-custody wallets ─────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">EVM Self-Custody Wallets</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Wallet</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">MetaMask</td>         <td class="chains-exp"><a href="https://metamask.io" target="_blank" rel="noopener noreferrer">metamask.io</a></td></tr>
+          <tr><td class="chains-td">Rabby</td>            <td class="chains-exp"><a href="https://rabby.io" target="_blank" rel="noopener noreferrer">rabby.io</a></td></tr>
+          <tr><td class="chains-td">Coinbase Wallet</td>  <td class="chains-exp"><a href="https://wallet.coinbase.com" target="_blank" rel="noopener noreferrer">wallet.coinbase.com</a></td></tr>
+          <tr><td class="chains-td">Trust Wallet</td>     <td class="chains-exp"><a href="https://trustwallet.com" target="_blank" rel="noopener noreferrer">trustwallet.com</a></td></tr>
+          <tr><td class="chains-td">Frame</td>            <td class="chains-exp"><a href="https://frame.sh" target="_blank" rel="noopener noreferrer">frame.sh</a></td></tr>
+          <tr><td class="chains-td-last">Zerion Wallet</td><td class="chains-exp-last"><a href="https://zerion.io/wallet" target="_blank" rel="noopener noreferrer">zerion.io/wallet</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Solana wallets ──────────────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">Solana Wallets</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Wallet</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">Phantom</td>          <td class="chains-exp"><a href="https://phantom.app" target="_blank" rel="noopener noreferrer">phantom.app</a></td></tr>
+          <tr><td class="chains-td">Solflare</td>         <td class="chains-exp"><a href="https://solflare.com" target="_blank" rel="noopener noreferrer">solflare.com</a></td></tr>
+          <tr><td class="chains-td">Backpack</td>         <td class="chains-exp"><a href="https://backpack.app" target="_blank" rel="noopener noreferrer">backpack.app</a></td></tr>
+          <tr><td class="chains-td-last">Glow</td>        <td class="chains-exp-last"><a href="https://glow.app" target="_blank" rel="noopener noreferrer">glow.app</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Tron wallets ────────────────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">Tron Wallets</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Wallet</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">TronLink</td>         <td class="chains-exp"><a href="https://tronlink.org" target="_blank" rel="noopener noreferrer">tronlink.org</a></td></tr>
+          <tr><td class="chains-td">Klever</td>           <td class="chains-exp"><a href="https://klever.io" target="_blank" rel="noopener noreferrer">klever.io</a></td></tr>
+          <tr><td class="chains-td-last">Trust Wallet</td><td class="chains-exp-last"><a href="https://trustwallet.com" target="_blank" rel="noopener noreferrer">trustwallet.com</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Bitcoin wallets ─────────────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">Bitcoin Wallets</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Wallet</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">Sparrow</td>          <td class="chains-exp"><a href="https://sparrowwallet.com" target="_blank" rel="noopener noreferrer">sparrowwallet.com</a></td></tr>
+          <tr><td class="chains-td">Electrum</td>         <td class="chains-exp"><a href="https://electrum.org" target="_blank" rel="noopener noreferrer">electrum.org</a></td></tr>
+          <tr><td class="chains-td">Xverse</td>           <td class="chains-exp"><a href="https://xverse.app" target="_blank" rel="noopener noreferrer">xverse.app</a></td></tr>
+          <tr><td class="chains-td">Muun</td>             <td class="chains-exp"><a href="https://muun.com" target="_blank" rel="noopener noreferrer">muun.com</a></td></tr>
+          <tr><td class="chains-td-last">Wasabi</td>      <td class="chains-exp-last"><a href="https://wasabiwallet.io" target="_blank" rel="noopener noreferrer">wasabiwallet.io</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Litecoin wallets ────────────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">Litecoin Wallets</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Wallet</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">Litecoin Core</td>    <td class="chains-exp"><a href="https://litecoin.org" target="_blank" rel="noopener noreferrer">litecoin.org</a></td></tr>
+          <tr><td class="chains-td">Electrum-LTC</td>     <td class="chains-exp"><a href="https://electrum-ltc.org" target="_blank" rel="noopener noreferrer">electrum-ltc.org</a></td></tr>
+          <tr><td class="chains-td-last">Exodus</td>      <td class="chains-exp-last"><a href="https://exodus.com" target="_blank" rel="noopener noreferrer">exodus.com</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Hardware wallets ────────────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">Hardware Wallets</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Device</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">Ledger</td>           <td class="chains-exp"><a href="https://ledger.com" target="_blank" rel="noopener noreferrer">ledger.com</a></td></tr>
+          <tr><td class="chains-td">Trezor</td>           <td class="chains-exp"><a href="https://trezor.io" target="_blank" rel="noopener noreferrer">trezor.io</a></td></tr>
+          <tr><td class="chains-td">Keystone</td>         <td class="chains-exp"><a href="https://keyst.one" target="_blank" rel="noopener noreferrer">keyst.one</a></td></tr>
+          <tr><td class="chains-td">GridPlus</td>         <td class="chains-exp"><a href="https://gridplus.io" target="_blank" rel="noopener noreferrer">gridplus.io</a></td></tr>
+          <tr><td class="chains-td-last">Coldcard</td>    <td class="chains-exp-last"><a href="https://coldcard.com" target="_blank" rel="noopener noreferrer">coldcard.com</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Multi-chain wallets ─────────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">Multi-Chain Wallets</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Wallet</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">Exodus</td>           <td class="chains-exp"><a href="https://exodus.com" target="_blank" rel="noopener noreferrer">exodus.com</a></td></tr>
+          <tr><td class="chains-td">Atomic</td>           <td class="chains-exp"><a href="https://atomicwallet.io" target="_blank" rel="noopener noreferrer">atomicwallet.io</a></td></tr>
+          <tr><td class="chains-td">Trust Wallet</td>     <td class="chains-exp"><a href="https://trustwallet.com" target="_blank" rel="noopener noreferrer">trustwallet.com</a></td></tr>
+          <tr><td class="chains-td-last">BitKeep / Bitget</td><td class="chains-exp-last"><a href="https://web3.bitget.com" target="_blank" rel="noopener noreferrer">web3.bitget.com</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Centralized exchanges ───────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">Centralized Exchanges (US-friendly)</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Exchange</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">Coinbase</td>         <td class="chains-exp"><a href="https://coinbase.com" target="_blank" rel="noopener noreferrer">coinbase.com</a></td></tr>
+          <tr><td class="chains-td">Kraken</td>           <td class="chains-exp"><a href="https://kraken.com" target="_blank" rel="noopener noreferrer">kraken.com</a></td></tr>
+          <tr><td class="chains-td">Gemini</td>           <td class="chains-exp"><a href="https://gemini.com" target="_blank" rel="noopener noreferrer">gemini.com</a></td></tr>
+          <tr><td class="chains-td">Bitstamp</td>         <td class="chains-exp"><a href="https://bitstamp.net" target="_blank" rel="noopener noreferrer">bitstamp.net</a></td></tr>
+          <tr><td class="chains-td-last">Crypto.com</td>  <td class="chains-exp-last"><a href="https://crypto.com" target="_blank" rel="noopener noreferrer">crypto.com</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── International exchanges ─────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">International Exchanges</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Exchange</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">Binance</td>          <td class="chains-exp"><a href="https://binance.com" target="_blank" rel="noopener noreferrer">binance.com</a></td></tr>
+          <tr><td class="chains-td">OKX</td>              <td class="chains-exp"><a href="https://okx.com" target="_blank" rel="noopener noreferrer">okx.com</a></td></tr>
+          <tr><td class="chains-td">Bybit</td>            <td class="chains-exp"><a href="https://bybit.com" target="_blank" rel="noopener noreferrer">bybit.com</a></td></tr>
+          <tr><td class="chains-td">Kucoin</td>           <td class="chains-exp"><a href="https://kucoin.com" target="_blank" rel="noopener noreferrer">kucoin.com</a></td></tr>
+          <tr><td class="chains-td-last">Bitfinex</td>    <td class="chains-exp-last"><a href="https://bitfinex.com" target="_blank" rel="noopener noreferrer">bitfinex.com</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Fiat onramps ────────────────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">Fiat Onramps</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Provider</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">Moonpay</td>          <td class="chains-exp"><a href="https://moonpay.com" target="_blank" rel="noopener noreferrer">moonpay.com</a></td></tr>
+          <tr><td class="chains-td">Ramp</td>             <td class="chains-exp"><a href="https://ramp.network" target="_blank" rel="noopener noreferrer">ramp.network</a></td></tr>
+          <tr><td class="chains-td">Transak</td>          <td class="chains-exp"><a href="https://transak.com" target="_blank" rel="noopener noreferrer">transak.com</a></td></tr>
+          <tr><td class="chains-td-last">Onramper</td>    <td class="chains-exp-last"><a href="https://onramper.com" target="_blank" rel="noopener noreferrer">onramper.com</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Mobile & neobanks ───────────────────────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">Mobile Apps &amp; Neobanks</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">App</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">Cash App</td>         <td class="chains-exp"><a href="https://cash.app" target="_blank" rel="noopener noreferrer">cash.app</a></td></tr>
+          <tr><td class="chains-td">Strike</td>           <td class="chains-exp"><a href="https://strike.me" target="_blank" rel="noopener noreferrer">strike.me</a></td></tr>
+          <tr><td class="chains-td">Robinhood</td>        <td class="chains-exp"><a href="https://robinhood.com/crypto" target="_blank" rel="noopener noreferrer">robinhood.com</a></td></tr>
+          <tr><td class="chains-td">Revolut</td>          <td class="chains-exp"><a href="https://revolut.com" target="_blank" rel="noopener noreferrer">revolut.com</a></td></tr>
+          <tr><td class="chains-td-last">PayPal</td>      <td class="chains-exp-last"><a href="https://paypal.com/us/digital-wallet/manage-money/crypto" target="_blank" rel="noopener noreferrer">paypal.com</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ── Smart-account / account abstraction ─────────── -->
+    <div class="card chains-card">
+      <div class="chains-label">Smart Accounts (ERC-4337)</div>
+      <table class="chains-table">
+        <thead><tr><th class="chains-th">Wallet</th><th class="chains-th">URL</th></tr></thead>
+        <tbody>
+          <tr><td class="chains-td">Safe</td>             <td class="chains-exp"><a href="https://safe.global" target="_blank" rel="noopener noreferrer">safe.global</a></td></tr>
+          <tr><td class="chains-td">Ambire</td>           <td class="chains-exp"><a href="https://ambire.com" target="_blank" rel="noopener noreferrer">ambire.com</a></td></tr>
+          <tr><td class="chains-td">Argent</td>           <td class="chains-exp"><a href="https://argent.xyz" target="_blank" rel="noopener noreferrer">argent.xyz</a></td></tr>
+          <tr><td class="chains-td-last">Coinbase Smart Wallet</td><td class="chains-exp-last"><a href="https://keys.coinbase.com" target="_blank" rel="noopener noreferrer">keys.coinbase.com</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+</div><!-- /platforms -->
 
       </div>
     </main>

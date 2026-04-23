@@ -1112,14 +1112,14 @@ tbody td:nth-child(6) {
 }
 
 /* ── Marketplace asset column ─────────────────────────────────────────────── */
-/* Fix the first column width and force long coin names to wrap inside it, so
-   they can't bleed into the Volatility column next door. The extra right
-   padding guarantees breathing room even at the wrap boundary. */
+/* Asset (first) column: size to fit the longest coin name on one line.
+   `table-layout: auto` + no width cap lets the browser pick the natural width;
+   a sensible min-width keeps short-name rows from collapsing. */
 .marketplace-table { table-layout: auto; }
 .marketplace-table td:first-child,
 .marketplace-table th:first-child {
-  width: 180px;
-  max-width: 180px;
+  min-width: 180px;
+  white-space: nowrap;
   padding-right: 18px;
 }
 .marketplace-table td + td,
@@ -1157,9 +1157,7 @@ tbody td:nth-child(6) {
   overflow-wrap: anywhere;
 }
 .marketplace-table .coin-name {
-  white-space: normal;
-  overflow-wrap: anywhere;
-  word-break: break-word;
+  white-space: nowrap;
   line-height: 1.3;
 }
 
