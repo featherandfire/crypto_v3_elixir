@@ -7,6 +7,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  id-token: write   # for AWS OIDC
+  contents: read
+
 jobs:
   backend:
     name: Elixir — compile + test
@@ -48,8 +52,8 @@ jobs:
           path: |
             crypto_portfolio_v3/deps
             crypto_portfolio_v3/_build
-          key: ${{ runner.os }}-mix-${{ hashFiles('crypto_portfolio_v3/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-
+          key: ${{ runner.os }}-mix-test-${{ hashFiles('crypto_portfolio_v3/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-test-
 
       - name: Fetch deps
         run: mix deps.get --only test
@@ -85,3 +89,102 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  # ─────────────────────────────────────────────────────────────────
+  # CD — only on push to main after tests pass. PRs build + test only.
+  # ─────────────────────────────────────────────────────────────────
+  package:
+    name: Package release artifact
+    needs: [backend, frontend]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    outputs:
+      artifact_key: ${{ steps.upload.outputs.artifact_key }}
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Install Erlang/OTP + Elixir
+        uses: erlef/setup-beam@v1
+        with:
+          otp-version: '28.0'
+          elixir-version: '1.19.0-otp-28'
+
+      - name: Cache prod deps + _build
+        uses: actions/cache@v4
+        with:
+          path: |
+            crypto_portfolio_v3/deps
+            crypto_portfolio_v3/_build
+          key: ${{ runner.os }}-mix-prod-${{ hashFiles('crypto_portfolio_v3/mix.lock') }}
+          restore-keys: ${{ runner.os }}-mix-prod-
+
+      - name: Build Elixir release
+        working-directory: crypto_portfolio_v3
+        env:
+          MIX_ENV: prod
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
+          mix deps.get --only prod
+          mix compile
+          mix release
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Package artifacts
+        run: |
+          mkdir -p artifacts
+          tar -czf artifacts/release.tar.gz -C crypto_portfolio_v3/_build/prod/rel crypto_portfolio_v3
+          tar -czf artifacts/frontend.tar.gz -C frontend/dist .
+
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-2
+
+      - name: Upload artifacts to S3
+        id: upload
+        run: |
+          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-8)
+          KEY="releases/${SHA_SHORT}"
+          aws s3 cp artifacts/release.tar.gz "s3://${{ secrets.DEPLOY_S3_BUCKET }}/${KEY}/release.tar.gz"
+          aws s3 cp artifacts/frontend.tar.gz "s3://${{ secrets.DEPLOY_S3_BUCKET }}/${KEY}/frontend.tar.gz"
+          echo "artifact_key=${KEY}" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    name: Deploy to EC2
+    needs: [package]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: SSH to EC2 and deploy
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ec2-user
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: 22
+          command_timeout: 15m
+          script: |
+            set -e
+            cd ~/src/crypto_v3_elixir
+            git fetch origin main
+            git reset --hard origin/main
+            chmod +x scripts/deploy-remote.sh
+            bash scripts/deploy-remote.sh \
+              "${{ secrets.DEPLOY_S3_BUCKET }}" \
+              "${{ needs.package.outputs.artifact_key }}"
