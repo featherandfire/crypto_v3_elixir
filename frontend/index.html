@@ -2062,9 +2062,14 @@ animate();
         </template>
       </div>
 
-      <!-- Empty state after fetch -->
+      <!-- Empty state after fetch (only when chain detection also failed) -->
       <div x-show="!walletLoading && !walletError && walletTokens.length === 0 && walletAddress" class="wallet-empty">
-        No token balances found for this address.
+        Couldn't identify a chain for this address.
+      </div>
+
+      <!-- Placeholder hint when wallet is empty but we synthesized a native-asset row -->
+      <div x-show="walletTokens.length === 1 && walletTokens[0].placeholder" class="form-hint" style="margin-top:6px; font-size:11px; color: var(--muted)">
+        No balances detected. Importing this wallet will add it as a zero-amount holding for the chain's native asset — refresh later to pull in funds.
       </div>
 
       <!-- Import button -->

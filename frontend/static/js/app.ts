@@ -585,11 +585,39 @@ window.dashApp = () => ({
     try {
       const r = await apiFetch<{ balances: any[] }>(`/wallet/all/${encodeURIComponent(addr)}`);
       this.walletTokens = r.balances.map((t: any) => ({ ...t, selected: t.matched }));
+      if (this.walletTokens.length === 0) {
+        const placeholder = this.emptyWalletPlaceholder(addr);
+        if (placeholder) this.walletTokens = [placeholder];
+      }
     } catch (e) {
       this.walletError = (e as Error).message;
     } finally {
       this.walletLoading = false;
     }
+  },
+
+  emptyWalletPlaceholder(this: any, addr: string) {
+    const chain = this.walletChain(addr);
+    if (!chain) return null;
+    const NATIVE: Record<string, { coingecko_id: string; symbol: string; name: string; chain_name: string }> = {
+      evm:      { coingecko_id: 'ethereum', symbol: 'eth', name: 'Ethereum', chain_name: 'Ethereum' },
+      solana:   { coingecko_id: 'solana',   symbol: 'sol', name: 'Solana',   chain_name: 'Solana' },
+      tron:     { coingecko_id: 'tron',     symbol: 'trx', name: 'Tron',     chain_name: 'Tron' },
+      bitcoin:  { coingecko_id: 'bitcoin',  symbol: 'btc', name: 'Bitcoin',  chain_name: 'Bitcoin' },
+      litecoin: { coingecko_id: 'litecoin', symbol: 'ltc', name: 'Litecoin', chain_name: 'Litecoin' },
+    };
+    const n = NATIVE[chain.slug];
+    if (!n) return null;
+    return {
+      ...n,
+      amount: '0',
+      contract_address: null,
+      current_price_usd: null,
+      image_url: null,
+      matched: true,
+      selected: true,
+      placeholder: true,
+    };
   },
 
   async importSelectedWalletTokens(this: any) {
