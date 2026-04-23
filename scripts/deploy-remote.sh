@@ -1,53 +1,66 @@
 #!/usr/bin/env bash
 #
-# Runs on the EC2 host. Invoked by the deploy workflow via SSH.
+# Build + deploy on the EC2 host. Invoked over SSH by the deploy workflow.
 # Args:
-#   $1 — S3 bucket name (e.g. abcoins-deploys-prod)
-#   $2 — release key prefix  (e.g. releases/abc12345)
+#   $1 — short git SHA (used as release dir name)
 #
 # Assumes:
-#   - awscli installed + instance has an IAM role with s3:GetObject on the bucket
-#   - /opt/crypto/releases/ exists and is writable by `crypto`
-#   - sudoers has NOPASSWD for `ec2-user` on:
-#       /usr/bin/systemctl restart crypto-api
-#       /usr/bin/systemctl status crypto-api
-#       /usr/bin/rsync (for the /var/www/crypto copy)
-#       /usr/bin/chown
+#   - ~/src/crypto_v3_elixir is a clone of the repo; workflow has already
+#     `git pull`ed the latest main before invoking this script.
+#   - asdf + Erlang 28 + Elixir 1.19 available in ec2-user's shell.
+#   - Node 22 + npm available in ec2-user's shell.
+#   - /opt/crypto/releases/ exists and is writable by `crypto`.
+#   - /etc/sudoers.d/crypto-deploy allows NOPASSWD for:
+#       systemctl restart crypto-api, rsync, chown, tar, mkdir, ln, rm,
+#       and `sudo -u crypto bash ...` for migrations.
 #
 # Exits non-zero on any failure so the GitHub Action reports a failed deploy.
 
 set -euo pipefail
 
-BUCKET="${1:?bucket name required}"
-KEY="${2:?release key prefix required}"
+SHA_SHORT="${1:?short SHA required}"
 
-STAGE_DIR=$(mktemp -d)
-trap 'rm -rf "$STAGE_DIR"' EXIT
-
-SHA_SHORT="${KEY##*/}"
+REPO_DIR="$HOME/src/crypto_v3_elixir"
+BACKEND_DIR="$REPO_DIR/crypto_portfolio_v3"
+FRONTEND_DIR="$REPO_DIR/frontend"
 RELEASE_DIR="/opt/crypto/releases/${SHA_SHORT}"
 WEB_DIR="/var/www/crypto"
 
-echo "==> fetching release.tar.gz"
-aws s3 cp "s3://${BUCKET}/${KEY}/release.tar.gz" "${STAGE_DIR}/release.tar.gz" --no-progress
+# Make sure asdf is loaded even in a non-interactive SSH session.
+export ASDF_DIR="$HOME/.asdf"
+if [ -f "$ASDF_DIR/asdf.sh" ]; then
+  # shellcheck disable=SC1091
+  . "$ASDF_DIR/asdf.sh"
+fi
 
-echo "==> fetching frontend.tar.gz"
-aws s3 cp "s3://${BUCKET}/${KEY}/frontend.tar.gz" "${STAGE_DIR}/frontend.tar.gz" --no-progress
+echo "==> git status"
+cd "$REPO_DIR"
+git log -1 --oneline
 
-echo "==> extracting release to ${RELEASE_DIR}"
+echo "==> building Elixir release (MIX_ENV=prod)"
+cd "$BACKEND_DIR"
+export MIX_ENV=prod
+mix local.hex --force
+mix local.rebar --force
+mix deps.get --only prod
+mix compile
+mix release --overwrite
+
+echo "==> building frontend"
+cd "$FRONTEND_DIR"
+npm ci
+npm run build
+
+echo "==> staging release to ${RELEASE_DIR}"
 sudo mkdir -p "${RELEASE_DIR}"
-sudo tar -xzf "${STAGE_DIR}/release.tar.gz" -C "${RELEASE_DIR}" --strip-components=1
+sudo rsync -a --delete "${BACKEND_DIR}/_build/prod/rel/crypto_portfolio_v3/" "${RELEASE_DIR}/"
 sudo chown -R crypto:crypto "${RELEASE_DIR}"
 
 echo "==> flipping /opt/crypto/current symlink"
 sudo ln -sfn "${RELEASE_DIR}" /opt/crypto/current
 
-echo "==> extracting frontend to staging"
-mkdir -p "${STAGE_DIR}/dist"
-tar -xzf "${STAGE_DIR}/frontend.tar.gz" -C "${STAGE_DIR}/dist"
-
 echo "==> rsync frontend to ${WEB_DIR}"
-sudo rsync -a --delete "${STAGE_DIR}/dist/" "${WEB_DIR}/"
+sudo rsync -a --delete "${FRONTEND_DIR}/dist/" "${WEB_DIR}/"
 sudo chown -R caddy:caddy "${WEB_DIR}"
 
 echo "==> running migrations"
@@ -73,7 +86,7 @@ done
 
 echo "==> pruning old releases (keep last 5)"
 KEEP=5
-ls -1dt /opt/crypto/releases/*/ 2>/dev/null | tail -n +$((KEEP + 1)) | while read dir; do
+ls -1dt /opt/crypto/releases/*/ 2>/dev/null | tail -n +$((KEEP + 1)) | while read -r dir; do
   if [ "$(readlink -f /opt/crypto/current)" != "${dir%/}" ]; then
     sudo rm -rf "$dir"
     echo "    removed $dir"

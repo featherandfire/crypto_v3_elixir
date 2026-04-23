@@ -92,84 +92,12 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────────
   # CD — only on push to main after tests pass. PRs build + test only.
+  # Build happens on the EC2 itself to avoid glibc mismatch between
+  # ubuntu runners and Amazon Linux 2023.
   # ─────────────────────────────────────────────────────────────────
-  package:
-    name: Package release artifact
-    needs: [backend, frontend]
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    # Use 22.04 (glibc 2.35) for broader binary compat with AL2023 (glibc 2.34)
-    # than ubuntu-latest (24.04, glibc 2.39). If GLIBC errors return on the
-    # EC2, swap to a container build (amazonlinux:2023 image) for an exact match.
-    runs-on: ubuntu-22.04
-
-    outputs:
-      artifact_key: ${{ steps.upload.outputs.artifact_key }}
-
-    steps:
-      - uses: actions/checkout@v5
-
-      - name: Install Erlang/OTP + Elixir
-        uses: erlef/setup-beam@v1
-        with:
-          otp-version: '28.0'
-          elixir-version: '1.19.0-otp-28'
-
-      - name: Cache prod deps + _build
-        uses: actions/cache@v4
-        with:
-          path: |
-            crypto_portfolio_v3/deps
-            crypto_portfolio_v3/_build
-          key: ${{ runner.os }}-mix-prod-${{ hashFiles('crypto_portfolio_v3/mix.lock') }}
-          restore-keys: ${{ runner.os }}-mix-prod-
-
-      - name: Build Elixir release
-        working-directory: crypto_portfolio_v3
-        env:
-          MIX_ENV: prod
-        run: |
-          mix local.hex --force
-          mix local.rebar --force
-          mix deps.get --only prod
-          mix compile
-          mix release
-
-      - uses: actions/setup-node@v5
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Build frontend
-        working-directory: frontend
-        run: |
-          npm ci
-          npm run build
-
-      - name: Package artifacts
-        run: |
-          mkdir -p artifacts
-          tar -czf artifacts/release.tar.gz -C crypto_portfolio_v3/_build/prod/rel crypto_portfolio_v3
-          tar -czf artifacts/frontend.tar.gz -C frontend/dist .
-
-      - name: Configure AWS credentials (OIDC)
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
-          aws-region: us-east-2
-
-      - name: Upload artifacts to S3
-        id: upload
-        run: |
-          SHA_SHORT=$(echo "${{ github.sha }}" | cut -c1-8)
-          KEY="releases/${SHA_SHORT}"
-          aws s3 cp artifacts/release.tar.gz "s3://${{ secrets.DEPLOY_S3_BUCKET }}/${KEY}/release.tar.gz"
-          aws s3 cp artifacts/frontend.tar.gz "s3://${{ secrets.DEPLOY_S3_BUCKET }}/${KEY}/frontend.tar.gz"
-          echo "artifact_key=${KEY}" >> "$GITHUB_OUTPUT"
-
   deploy:
     name: Deploy to EC2
-    needs: [package]
+    needs: [backend, frontend]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
@@ -190,23 +118,22 @@ jobs:
             --protocol tcp --port 22 \
             --cidr "${IP}/32"
 
-      - name: SSH to EC2 and deploy
+      - name: SSH to EC2, pull, build, deploy
         uses: appleboy/ssh-action@v1
         with:
           host: ${{ secrets.DEPLOY_HOST }}
           username: ec2-user
           key: ${{ secrets.DEPLOY_SSH_KEY }}
           port: 22
-          command_timeout: 15m
+          command_timeout: 20m
           script: |
             set -e
             cd ~/src/crypto_v3_elixir
             git fetch origin main
             git reset --hard origin/main
             chmod +x scripts/deploy-remote.sh
-            bash scripts/deploy-remote.sh \
-              "${{ secrets.DEPLOY_S3_BUCKET }}" \
-              "${{ needs.package.outputs.artifact_key }}"
+            SHA_SHORT=$(git rev-parse --short=8 HEAD)
+            bash scripts/deploy-remote.sh "$SHA_SHORT"
 
       - name: Close SSH port
         if: always() && steps.open-ssh.outputs.runner_ip
