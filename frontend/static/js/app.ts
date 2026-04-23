@@ -317,9 +317,17 @@ window.loginApp = () => ({
 
 // ── Dashboard component ─────────────────────────────────────────────────────
 
+const VALID_PAGES = ['dashboard', 'market', 'resources', 'lookup', 'marketplace', 'platforms'];
+const restoredPage = (() => {
+  try {
+    const v = localStorage.getItem('currentPage');
+    return v && VALID_PAGES.includes(v) ? v : 'dashboard';
+  } catch { return 'dashboard'; }
+})();
+
 window.dashApp = () => ({
   // State
-  page: 'dashboard',
+  page: restoredPage,
   portfolios: [] as Portfolio[],
   activePortfolioId: null as number | null,
   portfolioDetail: null as any,
@@ -398,9 +406,15 @@ window.dashApp = () => ({
       await this.loadPortfolioDetail();
     }
     this.$watch('page', (p: string) => {
+      try { localStorage.setItem('currentPage', p); } catch {}
       if (p === 'market') this.loadMarket();
       if (p === 'marketplace') this.loadMarketplace();
     });
+
+    // If the restored page is market/marketplace, kick off its data load
+    // now — the $watch above only fires on future changes, not initial value.
+    if (this.page === 'market') this.loadMarket();
+    if (this.page === 'marketplace') this.loadMarketplace();
 
     this._refreshTimer = setInterval(async () => {
       if (this.activePortfolioId && !this.loadingPortfolio) {
@@ -751,6 +765,12 @@ window.dashApp = () => ({
       return Number.isFinite(v) && v > 0;
     });
 
+    // If our stored reference drifted from what Chart.js tracks (page flips,
+    // DOM swaps), reconcile to the one actually bound to this canvas so the
+    // next destroy/update targets a live instance.
+    const bound = Chart.getChart(canvas);
+    if (bound && bound !== this.pieChart) this.pieChart = bound;
+
     if (holdings.length === 0) {
       if (this.pieChart) {
         this.pieChart.destroy();
@@ -769,14 +789,21 @@ window.dashApp = () => ({
     const borderColors = colors.slice(0, data.length);
 
     // Update in place if the chart already exists — avoids destroy/recreate
-    // flicker on the 90s auto-refresh and rapid portfolio switches.
+    // flicker on the 90s auto-refresh and rapid portfolio switches. Wrap in
+    // try/catch: Chart.js occasionally throws "Cannot set 'fullSize'" when
+    // internal layout state is stale. In that case, rebuild.
     if (this.pieChart) {
-      this.pieChart.data.labels = labels;
-      this.pieChart.data.datasets[0].data = data;
-      this.pieChart.data.datasets[0].backgroundColor = bgColors;
-      this.pieChart.data.datasets[0].borderColor = borderColors;
-      this.pieChart.update('none');
-      return;
+      try {
+        this.pieChart.data.labels = labels;
+        this.pieChart.data.datasets[0].data = data;
+        this.pieChart.data.datasets[0].backgroundColor = bgColors;
+        this.pieChart.data.datasets[0].borderColor = borderColors;
+        this.pieChart.update('none');
+        return;
+      } catch {
+        this.pieChart.destroy();
+        this.pieChart = null;
+      }
     }
 
     const cfg: ChartConfiguration = {
