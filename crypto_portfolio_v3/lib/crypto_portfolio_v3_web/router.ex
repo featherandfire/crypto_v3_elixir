@@ -16,8 +16,6 @@ defmodule CryptoPortfolioV3Web.Router do
 
     post "/auth/register", AuthController, :register
     post "/auth/login", AuthController, :login
-    post "/auth/verify-email", AuthController, :verify_email
-    post "/auth/resend-code", AuthController, :resend_code
 
     get "/coins/top", CoinController, :top
     get "/coins/yearly-ranges", CoinController, :yearly_ranges
@@ -77,7 +75,6 @@ defmodule CryptoPortfolioV3Web.Router do
       pipe_through [:fetch_session, :protect_from_forgery]
 
       live_dashboard "/dashboard", metrics: CryptoPortfolioV3Web.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
 end

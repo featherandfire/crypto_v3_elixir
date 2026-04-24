@@ -922,17 +922,6 @@ tbody td:nth-child(6) {
 }
 .resend-btn:disabled { color: var(--muted); cursor: default; }
 
-/* Password field with a press-and-hold eye toggle on the right edge */
-.password-wrap { position: relative; }
-.password-wrap .form-input { padding-right: 40px; }
-.password-toggle {
-  position: absolute; top: 50%; right: 10px; transform: translateY(-50%);
-  background: none; border: none; padding: 4px; cursor: pointer;
-  color: var(--muted); display: inline-flex; align-items: center;
-  transition: color .15s;
-}
-.password-toggle:hover, .password-toggle:focus { color: var(--accent); outline: none; }
-
 /* Lookup page layout */
 .lookup-layout     { display: flex; gap: 24px; align-items: flex-start; }
 .lookup-left       { width: 210px; flex-shrink: 0; }

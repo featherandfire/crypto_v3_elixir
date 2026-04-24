@@ -1,8 +1,6 @@
 defmodule CryptoPortfolioV3Web.AuthControllerTest do
   use CryptoPortfolioV3Web.ConnCase, async: true
 
-  import Swoosh.TestAssertions
-
   alias CryptoPortfolioV3.Accounts
 
   @valid %{
@@ -12,19 +10,12 @@ defmodule CryptoPortfolioV3Web.AuthControllerTest do
   }
 
   describe "POST /api/auth/register" do
-    test "201 with user + verification message; no token; email sent", %{conn: conn} do
+    test "201 + token + user on valid payload", %{conn: conn} do
       conn = post(conn, ~p"/api/auth/register", @valid)
-      body = json_response(conn, 201)
-
-      assert body["user"]["username"] == "alice"
-      assert body["user"]["email"] == "alice@example.com"
-      assert body["message"] =~ "verification code"
-      refute Map.has_key?(body, "token")
-
-      assert_email_sent(fn email ->
-        assert email.subject =~ "confirm your email"
-        assert email.to == [{"", "alice@example.com"}]
-      end)
+      assert %{"user" => user, "token" => token} = json_response(conn, 201)
+      assert user["username"] == "alice"
+      assert user["email"] == "alice@example.com"
+      assert String.length(token) > 20
     end
 
     test "422 on duplicate username", %{conn: conn} do
@@ -42,77 +33,10 @@ defmodule CryptoPortfolioV3Web.AuthControllerTest do
     end
   end
 
-  describe "POST /api/auth/verify-email" do
-    setup do
-      {:ok, user} = Accounts.register_user(@valid)
-      {:ok, code, _record} = Accounts.create_verification_code(user)
-      %{user: user, code: code}
-    end
-
-    test "200 + token + marks user verified on correct code", %{conn: conn, code: code} do
-      conn =
-        post(conn, ~p"/api/auth/verify-email", %{"identifier" => "alice", "code" => code})
-
-      assert %{"user" => user, "token" => token} = json_response(conn, 200)
-      assert user["username"] == "alice"
-      assert String.length(token) > 20
-
-      reloaded = Accounts.get_user_by_identifier("alice")
-      assert reloaded.is_verified
-      assert reloaded.email_verified_at
-    end
-
-    test "401 on wrong code", %{conn: conn} do
-      conn =
-        post(conn, ~p"/api/auth/verify-email", %{"identifier" => "alice", "code" => "000000"})
-
-      assert %{"error" => "invalid_code"} = json_response(conn, 401)
-    end
-
-    test "401 on unknown identifier", %{conn: conn, code: code} do
-      conn =
-        post(conn, ~p"/api/auth/verify-email", %{"identifier" => "nobody", "code" => code})
-
-      assert %{"error" => "invalid_code"} = json_response(conn, 401)
-    end
-
-    test "409 once already verified", %{conn: conn, user: user, code: code} do
-      {:ok, _} = Accounts.verify_code(user, code)
-
-      conn =
-        post(conn, ~p"/api/auth/verify-email", %{"identifier" => "alice", "code" => code})
-
-      assert %{"error" => "already_verified"} = json_response(conn, 409)
-    end
-
-    test "429 after 5 wrong attempts; code is then dead", %{conn: conn, code: code} do
-      # 5 wrong codes → the 5th returns too_many_attempts and burns the code.
-      for _ <- 1..4 do
-        conn =
-          post(conn, ~p"/api/auth/verify-email", %{"identifier" => "alice", "code" => "000000"})
-
-        assert %{"error" => "invalid_code"} = json_response(conn, 401)
-      end
-
-      conn =
-        post(conn, ~p"/api/auth/verify-email", %{"identifier" => "alice", "code" => "000000"})
-
-      assert %{"error" => "too_many_attempts"} = json_response(conn, 429)
-
-      # Even the correct code no longer works on this record.
-      conn =
-        post(conn, ~p"/api/auth/verify-email", %{"identifier" => "alice", "code" => code})
-
-      # The record is consumed, so lookup finds no active row → 401 invalid_code.
-      assert %{"error" => "invalid_code"} = json_response(conn, 401)
-    end
-  end
-
   describe "POST /api/auth/login" do
     setup do
-      {:ok, user} = Accounts.register_user(@valid)
-      {:ok, verified} = verify_user(user)
-      %{user: verified}
+      {:ok, _} = Accounts.register_user(@valid)
+      :ok
     end
 
     test "200 + token on correct password (by username)", %{conn: conn} do
@@ -144,30 +68,11 @@ defmodule CryptoPortfolioV3Web.AuthControllerTest do
 
       assert %{"error" => "invalid_credentials"} = json_response(conn, 401)
     end
-
-    test "403 when email not yet verified", %{conn: conn} do
-      # Fresh unverified user — the setup above only verifies `alice`.
-      {:ok, _} =
-        Accounts.register_user(%{
-          "username" => "bob",
-          "email" => "bob@example.com",
-          "password" => "password1234"
-        })
-
-      conn =
-        post(conn, ~p"/api/auth/login", %{
-          "identifier" => "bob",
-          "password" => "password1234"
-        })
-
-      assert %{"error" => "email_not_verified"} = json_response(conn, 403)
-    end
   end
 
   describe "GET /api/auth/me" do
     setup do
-      {:ok, user} = Accounts.register_user(@valid)
-      {:ok, _} = verify_user(user)
+      {:ok, _} = Accounts.register_user(@valid)
       :ok
     end
 
@@ -200,12 +105,5 @@ defmodule CryptoPortfolioV3Web.AuthControllerTest do
 
       assert %{"error" => "unauthorized"} = json_response(conn, 401)
     end
-  end
-
-  # Helper — generate+consume a verification code so tests that need a
-  # logged-in user can skip the full HTTP flow.
-  defp verify_user(user) do
-    {:ok, code, _} = Accounts.create_verification_code(user)
-    Accounts.verify_code(user, code)
   end
 end

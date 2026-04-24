@@ -20,10 +20,6 @@ config :crypto_portfolio_v3, CryptoPortfolioV3Web.Endpoint,
   secret_key_base: "ZFtw5JK52PHnpf7rnQSpgNb7CP8K+3SoAAYatXq9AKuFwJMgdIfJI9UW8rjqkaBM",
   server: false
 
-# Mailer: capture emails in the test process inbox for assertions.
-config :crypto_portfolio_v3, CryptoPortfolioV3.Mailer, adapter: Swoosh.Adapters.Test
-config :swoosh, :api_client, false
-
 # Print only warnings and errors during test
 config :logger, level: :warning
 
