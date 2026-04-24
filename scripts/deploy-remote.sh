@@ -56,6 +56,15 @@ sudo mkdir -p "${RELEASE_DIR}"
 sudo rsync -a --delete "${BACKEND_DIR}/_build/prod/rel/crypto_portfolio_v3/" "${RELEASE_DIR}/"
 sudo chown -R crypto:crypto "${RELEASE_DIR}"
 
+echo "==> capturing current release as previous (for rollback)"
+if [ -L /opt/crypto/current ]; then
+  PREV_TARGET=$(readlink -f /opt/crypto/current)
+  if [ -n "$PREV_TARGET" ] && [ "$PREV_TARGET" != "${RELEASE_DIR}" ]; then
+    sudo ln -sfn "$PREV_TARGET" /opt/crypto/previous
+    echo "    previous -> $PREV_TARGET"
+  fi
+fi
+
 echo "==> flipping /opt/crypto/current symlink"
 sudo ln -sfn "${RELEASE_DIR}" /opt/crypto/current
 
@@ -75,8 +84,9 @@ echo "==> restarting crypto-api"
 sudo /usr/bin/systemctl restart crypto-api
 
 echo "==> waiting for service to be ready"
+# /api/health has no external dependencies — won't block on CoinGecko 429s.
 for i in $(seq 1 30); do
-  if curl -sf -o /dev/null -m 2 http://127.0.0.1:4000/api/coins/top; then
+  if curl -sf -o /dev/null -m 2 http://127.0.0.1:4000/api/health; then
     echo "==> service healthy"
     break
   fi

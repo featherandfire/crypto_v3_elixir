@@ -12,6 +12,8 @@ defmodule CryptoPortfolioV3Web.Router do
   scope "/api", CryptoPortfolioV3Web do
     pipe_through :api
 
+    get "/health", HealthController, :index
+
     post "/auth/register", AuthController, :register
     post "/auth/login", AuthController, :login
 
