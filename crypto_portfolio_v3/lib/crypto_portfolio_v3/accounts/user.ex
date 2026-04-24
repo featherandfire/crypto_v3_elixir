@@ -12,6 +12,7 @@ defmodule CryptoPortfolioV3.Accounts.User do
     field :password, :string, virtual: true, redact: true
     field :hashed_password, :string, redact: true
     field :is_verified, :boolean, default: false
+    field :email_verified_at, :utc_datetime_usec
 
     has_many :portfolios, Portfolio
 

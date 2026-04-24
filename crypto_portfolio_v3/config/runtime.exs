@@ -90,6 +90,27 @@ config :crypto_portfolio_v3, :pct_change_prefetcher,
 config :crypto_portfolio_v3, CryptoPortfolioV3Web.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
+# Mailer (prod only). Amazon SES over SMTP.
+# dev/test adapters are set in config/dev.exs and config/test.exs.
+if config_env() == :prod do
+  config :crypto_portfolio_v3, CryptoPortfolioV3.Mailer,
+    adapter: Swoosh.Adapters.SMTP,
+    relay: System.get_env("SES_SMTP_HOST", "email-smtp.us-east-2.amazonaws.com"),
+    port: String.to_integer(System.get_env("SES_SMTP_PORT", "587")),
+    username:
+      System.get_env("SES_SMTP_USERNAME") ||
+        raise("SES_SMTP_USERNAME is required in production"),
+    password:
+      System.get_env("SES_SMTP_PASSWORD") ||
+        raise("SES_SMTP_PASSWORD is required in production"),
+    tls: :always,
+    auth: :always,
+    retries: 2,
+    no_mx_lookups: false
+
+  config :swoosh, :api_client, false
+end
+
 if config_env() == :prod do
   database_url =
     System.get_env("DATABASE_URL") ||

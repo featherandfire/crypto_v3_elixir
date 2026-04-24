@@ -36,6 +36,7 @@ interface Portfolio {
 
 interface ApiError extends Error {
   status?: number;
+  retryAfter?: number;
 }
 
 // ── API client ──────────────────────────────────────────────────────────────
@@ -96,6 +97,7 @@ async function apiFetch<T = unknown>(path: string, opts: RequestInit = {}): Prom
     }
     const e: ApiError = new Error(msg);
     e.status = res.status;
+    if (typeof body.retry_after === 'number') e.retryAfter = body.retry_after;
     throw e;
   }
 
@@ -215,6 +217,7 @@ interface AuthStore {
   init(): Promise<void>;
   login(identifier: string, password: string): Promise<void>;
   register(username: string, email: string, password: string): Promise<void>;
+  verifyEmail(identifier: string, code: string): Promise<void>;
   logout(): void;
 }
 
@@ -263,9 +266,18 @@ document.addEventListener('alpine:init', () => {
     },
 
     async register(username, email, password) {
-      const res = await apiFetch<{ user: User; token: string }>('/auth/register', {
+      // No token returned — account is created unverified. User must submit
+      // the emailed 6-digit code via verifyEmail() to actually sign in.
+      await apiFetch<{ user: User; message: string }>('/auth/register', {
         method: 'POST',
         body: JSON.stringify({ username, email, password }),
+      });
+    },
+
+    async verifyEmail(identifier, code) {
+      const res = await apiFetch<{ user: User; token: string }>('/auth/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ identifier, code }),
       });
       localStorage.setItem('token', res.token);
       this.token = res.token;
@@ -286,12 +298,27 @@ document.addEventListener('alpine:init', () => {
 
 // ── Login component ─────────────────────────────────────────────────────────
 
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  invalid_credentials: 'Incorrect username or password.',
+  invalid_code: 'Invalid code.',
+  code_expired: 'This code has expired — please request a new one.',
+  email_not_verified: 'Email not verified. Please enter the 6-digit code we sent you.',
+  already_verified: 'This account is already verified. Please sign in.',
+  too_many_attempts: 'Too many incorrect attempts. Please request a new code.',
+};
+
+function humanizeAuthError(err: unknown): string {
+  const msg = (err as Error).message || 'Something went wrong.';
+  return AUTH_ERROR_MESSAGES[msg] ?? msg;
+}
+
 window.loginApp = () => ({
   tab: 'login' as 'login' | 'register',
   username: '', email: '', password: '',
   loading: false, error: '',
-  // verification stubs (backend has no email verification yet)
-  verifyStep: false, pendingEmail: '', verifyCode: '', resendCooldown: 0,
+  verifyStep: false, pendingEmail: '', pendingIdentifier: '', verifyCode: '', resendCooldown: 0,
+  _resendTimer: 0 as number,
+  pwVisible: false,
 
   async submit(this: any) {
     this.error = '';
@@ -300,19 +327,70 @@ window.loginApp = () => ({
       const auth = Alpine.store('auth') as AuthStore;
       if (this.tab === 'login') {
         await auth.login(this.username, this.password);
+        window.location.reload();
       } else {
         await auth.register(this.username, this.email, this.password);
+        this.pendingEmail = this.email;
+        this.pendingIdentifier = this.username;
+        this.verifyCode = '';
+        this.verifyStep = true;
       }
-      window.location.reload();
     } catch (e) {
-      this.error = (e as Error).message;
+      this.error = humanizeAuthError(e);
     } finally {
       this.loading = false;
     }
   },
 
-  async submitVerify() { /* no-op */ },
-  async resendCode() { /* no-op */ },
+  async submitVerify(this: any) {
+    this.error = '';
+    this.loading = true;
+    try {
+      const auth = Alpine.store('auth') as AuthStore;
+      await auth.verifyEmail(this.pendingIdentifier, this.verifyCode);
+      window.location.reload();
+    } catch (e) {
+      this.error = humanizeAuthError(e);
+    } finally {
+      this.loading = false;
+    }
+  },
+
+  async resendCode(this: any) {
+    if (this.resendCooldown > 0) return;
+    this.error = '';
+    this.loading = true;
+    try {
+      await apiFetch('/auth/resend-code', {
+        method: 'POST',
+        body: JSON.stringify({ identifier: this.pendingIdentifier }),
+      });
+      this._startResendCooldown(60);
+    } catch (e) {
+      const err = e as ApiError;
+      if (err.status === 429 && err.retryAfter) {
+        this._startResendCooldown(err.retryAfter);
+        this.error = `Please wait ${err.retryAfter}s before requesting another code.`;
+      } else {
+        this.error = humanizeAuthError(e);
+      }
+    } finally {
+      this.loading = false;
+    }
+  },
+
+  _startResendCooldown(this: any, seconds: number) {
+    this.resendCooldown = seconds;
+    clearInterval(this._resendTimer);
+    this._resendTimer = window.setInterval(() => {
+      this.resendCooldown -= 1;
+      if (this.resendCooldown <= 0) {
+        clearInterval(this._resendTimer);
+        this._resendTimer = 0;
+        this.resendCooldown = 0;
+      }
+    }, 1000);
+  },
 });
 
 // ── Dashboard component ─────────────────────────────────────────────────────
