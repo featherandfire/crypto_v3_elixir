@@ -106,16 +106,7 @@ if config_env() == :prod do
     tls: :always,
     auth: :always,
     retries: 2,
-    no_mx_lookups: false,
-    # OTP 28 tightened :ssl defaults — outbound TLS needs an explicit CA
-    # bundle to verify SES's server cert. Python smtplib picks this up from
-    # the OS; Erlang's :ssl does not unless we pass it in.
-    tls_options: [
-      verify: :verify_peer,
-      cacerts: :public_key.cacerts_get(),
-      server_name_indication: ~c"email-smtp.us-east-2.amazonaws.com",
-      depth: 3
-    ]
+    no_mx_lookups: false
 
   config :swoosh, :api_client, false
 end
