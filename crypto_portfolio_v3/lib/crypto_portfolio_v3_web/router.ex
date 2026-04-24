@@ -73,7 +73,6 @@ defmodule CryptoPortfolioV3Web.Router do
       pipe_through [:fetch_session, :protect_from_forgery]
 
       live_dashboard "/dashboard", metrics: CryptoPortfolioV3Web.Telemetry
-      forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
 end

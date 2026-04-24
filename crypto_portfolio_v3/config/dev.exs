@@ -26,10 +26,6 @@ config :crypto_portfolio_v3, CryptoPortfolioV3Web.Endpoint,
   secret_key_base: "RQEEyAfAZqw90Jx4Pl4iTdYMYjShHRjWnq8iXavHu3BeJ5RTJs78/G5kqJkxtcAw",
   watchers: []
 
-# Mailer: render emails at http://localhost:4000/dev/mailbox, no SMTP.
-config :crypto_portfolio_v3, CryptoPortfolioV3.Mailer, adapter: Swoosh.Adapters.Local
-config :swoosh, :api_client, false
-
 # ## SSL Support
 #
 # In order to use HTTPS in development, a self-signed
