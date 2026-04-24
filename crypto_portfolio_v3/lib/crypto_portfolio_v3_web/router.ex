@@ -26,6 +26,9 @@ defmodule CryptoPortfolioV3Web.Router do
 
     get "/lookup/:hash", LookupController, :show
 
+    # Temporary — SES bring-up smoke test. Token-gated. Remove after verification.
+    get "/_internal/ses-smoke", InternalController, :ses_smoke
+
     get "/wallet/chains", WalletController, :chains
     get "/wallet/from-tx/:hash", WalletController, :from_tx
     get "/wallet/all/:address", WalletController, :all
