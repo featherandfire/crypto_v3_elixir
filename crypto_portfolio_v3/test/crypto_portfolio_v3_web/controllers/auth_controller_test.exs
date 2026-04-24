@@ -1,6 +1,7 @@
 defmodule CryptoPortfolioV3Web.AuthControllerTest do
   use CryptoPortfolioV3Web.ConnCase, async: true
 
+  import Ecto.Query
   import Swoosh.TestAssertions
 
   alias CryptoPortfolioV3.Accounts
@@ -39,6 +40,60 @@ defmodule CryptoPortfolioV3Web.AuthControllerTest do
     test "422 on short password", %{conn: conn} do
       conn = post(conn, ~p"/api/auth/register", %{@valid | "password" => "short"})
       assert %{"errors" => %{"password" => [_ | _]}} = json_response(conn, 422)
+    end
+
+    test "unverified duplicate email → reuses row + sends fresh code", %{conn: conn} do
+      # First attempt — creates an unverified row.
+      {:ok, original} = Accounts.register_user(@valid)
+      {:ok, _, _} = Accounts.create_verification_code(original)
+
+      # Second attempt with the same email but a different username + password.
+      retry = %{
+        "username" => "alice2",
+        "email" => "alice@example.com",
+        "password" => "different-password-1234"
+      }
+
+      conn = post(conn, ~p"/api/auth/register", retry)
+      body = json_response(conn, 201)
+
+      assert body["user"]["username"] == "alice2"
+      refute Map.has_key?(body, "token")
+
+      # Same underlying row: id unchanged, email unchanged, new username.
+      reloaded = CryptoPortfolioV3.Repo.get(CryptoPortfolioV3.Accounts.User, original.id)
+      assert reloaded.id == original.id
+      assert reloaded.email == "alice@example.com"
+      assert reloaded.username == "alice2"
+      refute reloaded.is_verified
+
+      # Old codes are burnt (any unconsumed row for this user is now consumed).
+      active_codes =
+        from(v in CryptoPortfolioV3.Accounts.EmailVerification,
+          where: v.user_id == ^original.id and is_nil(v.consumed_at)
+        )
+        |> CryptoPortfolioV3.Repo.all()
+
+      # The fresh code created inside register → send_verification_code is one
+      # unconsumed row; the original one should be consumed.
+      assert length(active_codes) == 1
+
+      # A fresh email went out with the new code.
+      assert_email_sent(fn email ->
+        assert email.subject =~ "confirm your email"
+        assert email.to == [{"", "alice@example.com"}]
+      end)
+    end
+
+    test "verified duplicate email → 422", %{conn: conn} do
+      {:ok, user} = Accounts.register_user(@valid)
+      {:ok, code, _} = Accounts.create_verification_code(user)
+      {:ok, _} = Accounts.verify_code(user, code)
+
+      conn =
+        post(conn, ~p"/api/auth/register", %{@valid | "username" => "whoever"})
+
+      assert %{"errors" => %{"email" => [_ | _]}} = json_response(conn, 422)
     end
   end
 

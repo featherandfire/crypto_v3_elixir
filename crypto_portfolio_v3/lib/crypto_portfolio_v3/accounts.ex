@@ -10,10 +10,51 @@ defmodule CryptoPortfolioV3.Accounts do
   @resend_cooldown_seconds 60
   @max_verification_attempts 5
 
+  @doc """
+  Register a new user.
+
+  If an existing user owns the email but has not verified it yet, the row is
+  reused: the new username/password overwrite the old, any outstanding
+  verification codes are invalidated, and the caller treats the response as
+  a fresh signup. This keeps an abandoned registration from permanently
+  locking an email address (including legitimate retries after a failed
+  email delivery).
+
+  A verified user with the same email still rejects via the usual
+  `unique_constraint(:email)` changeset error.
+  """
   def register_user(attrs) do
-    %User{}
-    |> User.registration_changeset(attrs)
-    |> Repo.insert()
+    email = Map.get(attrs, "email") || Map.get(attrs, :email)
+
+    case email && Repo.get_by(User, email: email) do
+      %User{is_verified: false} = existing ->
+        upsert_unverified_user(existing, attrs)
+
+      _ ->
+        %User{}
+        |> User.registration_changeset(attrs)
+        |> Repo.insert()
+    end
+  end
+
+  # Reuse the unverified row: apply the new attrs via the registration
+  # changeset (re-hashes password, re-validates everything), and wipe out
+  # any live verification codes in the same transaction so the next
+  # create_verification_code/1 call starts clean.
+  defp upsert_unverified_user(%User{} = user, attrs) do
+    now = DateTime.utc_now()
+
+    Repo.transaction(fn ->
+      from(v in EmailVerification,
+        where: v.user_id == ^user.id and is_nil(v.consumed_at)
+      )
+      |> Repo.update_all(set: [consumed_at: now])
+
+      case user |> User.registration_changeset(attrs) |> Repo.update() do
+        {:ok, updated} -> updated
+        {:error, cs} -> Repo.rollback(cs)
+      end
+    end)
   end
 
   def get_user(id), do: Repo.get(User, id)
