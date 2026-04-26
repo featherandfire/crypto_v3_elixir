@@ -26,8 +26,10 @@ defmodule CryptoPortfolioV3.Chain.EnrichedWallet do
   """
   @spec fetch_all(binary()) :: {:ok, [map()]}
   def fetch_all(address) when is_binary(address) do
-    chain_count = length(ChainInfo.list())
-
+    # Cap chain-level concurrency so we don't fire 22+ simultaneous Etherscan
+    # requests (11 chains × 2 calls each) and trip the free-tier 5 req/sec
+    # rate limit. Process 3 chains at a time; full 11-chain sweep finishes
+    # in ~3-5s instead of one chain showing up + the rest silently 429ing.
     balances =
       ChainInfo.list()
       |> Task.async_stream(
@@ -37,7 +39,7 @@ defmodule CryptoPortfolioV3.Chain.EnrichedWallet do
             _ -> []
           end
         end,
-        max_concurrency: chain_count,
+        max_concurrency: 3,
         timeout: 90_000,
         on_timeout: :kill_task
       )

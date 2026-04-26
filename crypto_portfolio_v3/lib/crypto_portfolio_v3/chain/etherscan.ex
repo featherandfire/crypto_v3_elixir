@@ -139,7 +139,10 @@ defmodule CryptoPortfolioV3.Chain.Etherscan do
       Req.new(
         base_url: cfg[:base_url],
         receive_timeout: cfg[:timeout_ms],
-        retry: :transient,
+        # `:safe_transient` catches 429 in addition to connect errors and 5xx —
+        # crucial for the multi-chain fan-out where parallel requests easily
+        # exceed Etherscan's free-tier 5 req/sec budget.
+        retry: :safe_transient,
         max_retries: 3,
         retry_delay: fn attempt -> trunc(1000 * :math.pow(2, attempt)) end
       )
