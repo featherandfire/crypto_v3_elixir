@@ -219,6 +219,7 @@ interface AuthStore {
   login(identifier: string, password: string): Promise<void>;
   register(username: string, email: string, password: string): Promise<void>;
   verifyEmail(identifier: string, code: string): Promise<void>;
+  resetPassword(identifier: string, code: string, newPassword: string): Promise<void>;
   logout(): void;
 }
 
@@ -285,6 +286,16 @@ document.addEventListener('alpine:init', () => {
       this.user = res.user;
     },
 
+    async resetPassword(identifier, code, newPassword) {
+      const res = await apiFetch<{ user: User; token: string }>('/auth/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ identifier, code, new_password: newPassword }),
+      });
+      localStorage.setItem('token', res.token);
+      this.token = res.token;
+      this.user = res.user;
+    },
+
     logout() {
       this.token = null;
       this.user = null;
@@ -306,6 +317,7 @@ const AUTH_ERROR_MESSAGES: Record<string, string> = {
   email_not_verified: 'Email not verified. Please enter the 6-digit code we sent you.',
   already_verified: 'This account is already verified. Please sign in.',
   too_many_attempts: 'Too many incorrect attempts. Please request a new code.',
+  reset_failed: 'Could not send reset code. Please try again in a moment.',
 };
 
 function humanizeAuthError(err: unknown): string {
@@ -320,6 +332,12 @@ window.loginApp = () => ({
   verifyStep: false, pendingEmail: '', pendingIdentifier: '', verifyCode: '', resendCooldown: 0,
   _resendTimer: 0 as number,
   pwVisible: false,
+  // Forgot-password flow has two sub-states: 'request' (enter identifier) and
+  // 'reset' (enter code + new password). null means the flow is closed.
+  forgotStep: null as null | 'request' | 'reset',
+  forgotIdentifier: '', forgotCode: '', forgotNewPassword: '',
+  forgotInfo: '',
+  forgotPwVisible: false,
 
   async submit(this: any) {
     this.error = '';
@@ -365,6 +383,85 @@ window.loginApp = () => ({
       await apiFetch('/auth/resend-code', {
         method: 'POST',
         body: JSON.stringify({ identifier: this.pendingIdentifier }),
+      });
+      this._startResendCooldown(60);
+    } catch (e) {
+      const err = e as ApiError;
+      if (err.status === 429 && err.retryAfter) {
+        this._startResendCooldown(err.retryAfter);
+        this.error = `Please wait ${err.retryAfter}s before requesting another code.`;
+      } else {
+        this.error = humanizeAuthError(e);
+      }
+    } finally {
+      this.loading = false;
+    }
+  },
+
+  openForgot(this: any) {
+    this.error = '';
+    this.forgotInfo = '';
+    this.forgotIdentifier = this.username || this.email || '';
+    this.forgotCode = '';
+    this.forgotNewPassword = '';
+    this.forgotStep = 'request';
+  },
+
+  closeForgot(this: any) {
+    this.forgotStep = null;
+    this.error = '';
+    this.forgotInfo = '';
+  },
+
+  async submitForgotRequest(this: any) {
+    this.error = '';
+    this.loading = true;
+    try {
+      await apiFetch<{ message: string }>('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ identifier: this.forgotIdentifier }),
+      });
+      this.forgotInfo = 'If that account exists, a 6-digit code is on its way.';
+      this.forgotCode = '';
+      this.forgotStep = 'reset';
+      this._startResendCooldown(60);
+    } catch (e) {
+      const err = e as ApiError;
+      if (err.status === 429 && err.retryAfter) {
+        this._startResendCooldown(err.retryAfter);
+        this.error = `Please wait ${err.retryAfter}s before requesting another code.`;
+        // Still advance to the reset step — they have a code from the prior request.
+        this.forgotStep = 'reset';
+      } else {
+        this.error = humanizeAuthError(e);
+      }
+    } finally {
+      this.loading = false;
+    }
+  },
+
+  async submitForgotReset(this: any) {
+    this.error = '';
+    this.loading = true;
+    try {
+      const auth = Alpine.store('auth') as AuthStore;
+      await auth.resetPassword(this.forgotIdentifier, this.forgotCode, this.forgotNewPassword);
+      window.location.reload();
+    } catch (e) {
+      this.error = humanizeAuthError(e);
+    } finally {
+      this.loading = false;
+    }
+  },
+
+  async resendForgotCode(this: any) {
+    if (this.resendCooldown > 0) return;
+    this.error = '';
+    this.loading = true;
+    try {
+      await apiFetch('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ identifier: this.forgotIdentifier }),
       });
       this._startResendCooldown(60);
     } catch (e) {

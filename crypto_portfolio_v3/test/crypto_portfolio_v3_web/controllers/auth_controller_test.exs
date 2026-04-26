@@ -202,6 +202,157 @@ defmodule CryptoPortfolioV3Web.AuthControllerTest do
     end
   end
 
+  describe "POST /api/auth/forgot-password" do
+    setup do
+      {:ok, user} = Accounts.register_user(@valid)
+      {:ok, verified} = verify_user(user)
+      %{user: verified}
+    end
+
+    test "200 + email sent for a registered user", %{conn: conn} do
+      conn = post(conn, ~p"/api/auth/forgot-password", %{"identifier" => "alice"})
+
+      assert %{"message" => msg} = json_response(conn, 200)
+      assert msg =~ "If that account exists"
+
+      assert_email_sent(fn email ->
+        assert email.subject =~ "reset your password"
+        assert email.to == [{"", "alice@example.com"}]
+      end)
+    end
+
+    test "200 with no email sent for unknown identifier (anti-enumeration)", %{conn: conn} do
+      conn = post(conn, ~p"/api/auth/forgot-password", %{"identifier" => "nobody"})
+
+      assert %{"message" => _} = json_response(conn, 200)
+      assert_no_email_sent()
+    end
+
+    test "429 when called twice inside the cooldown window", %{conn: conn} do
+      _ = post(conn, ~p"/api/auth/forgot-password", %{"identifier" => "alice"})
+      conn = post(conn, ~p"/api/auth/forgot-password", %{"identifier" => "alice"})
+
+      assert %{"error" => "throttled", "retry_after" => secs} = json_response(conn, 429)
+      assert secs > 0 and secs <= 60
+    end
+  end
+
+  describe "POST /api/auth/reset-password" do
+    setup do
+      {:ok, user} = Accounts.register_user(@valid)
+      {:ok, verified} = verify_user(user)
+      {:ok, code, _} = Accounts.create_password_reset(verified)
+      %{user: verified, code: code}
+    end
+
+    test "200 + token on correct code + valid new password; old password no longer works",
+         %{conn: conn, code: code} do
+      conn =
+        post(conn, ~p"/api/auth/reset-password", %{
+          "identifier" => "alice",
+          "code" => code,
+          "new_password" => "brand-new-pass-9876"
+        })
+
+      assert %{"user" => _, "token" => token} = json_response(conn, 200)
+      assert String.length(token) > 20
+
+      # New password works.
+      ok =
+        post(build_conn(), ~p"/api/auth/login", %{
+          "identifier" => "alice",
+          "password" => "brand-new-pass-9876"
+        })
+
+      assert %{"token" => _} = json_response(ok, 200)
+
+      # Old password no longer works.
+      bad =
+        post(build_conn(), ~p"/api/auth/login", %{
+          "identifier" => "alice",
+          "password" => "password1234"
+        })
+
+      assert %{"error" => "invalid_credentials"} = json_response(bad, 401)
+    end
+
+    test "401 invalid_code on wrong code", %{conn: conn} do
+      conn =
+        post(conn, ~p"/api/auth/reset-password", %{
+          "identifier" => "alice",
+          "code" => "000000",
+          "new_password" => "brand-new-pass-9876"
+        })
+
+      assert %{"error" => "invalid_code"} = json_response(conn, 401)
+    end
+
+    test "401 invalid_code on unknown identifier", %{conn: conn, code: code} do
+      conn =
+        post(conn, ~p"/api/auth/reset-password", %{
+          "identifier" => "nobody",
+          "code" => code,
+          "new_password" => "brand-new-pass-9876"
+        })
+
+      assert %{"error" => "invalid_code"} = json_response(conn, 401)
+    end
+
+    test "422 with errors on weak new password; code is preserved (still usable)",
+         %{conn: conn, code: code} do
+      bad =
+        post(conn, ~p"/api/auth/reset-password", %{
+          "identifier" => "alice",
+          "code" => code,
+          "new_password" => "short"
+        })
+
+      assert %{"errors" => %{"password" => [_ | _]}} = json_response(bad, 422)
+
+      # Same code can still complete the reset with a valid password.
+      good =
+        post(build_conn(), ~p"/api/auth/reset-password", %{
+          "identifier" => "alice",
+          "code" => code,
+          "new_password" => "brand-new-pass-9876"
+        })
+
+      assert %{"token" => _} = json_response(good, 200)
+    end
+
+    test "429 too_many_attempts after 5 wrong codes; correct code is then dead",
+         %{conn: conn, code: code} do
+      for _ <- 1..4 do
+        conn =
+          post(conn, ~p"/api/auth/reset-password", %{
+            "identifier" => "alice",
+            "code" => "000000",
+            "new_password" => "brand-new-pass-9876"
+          })
+
+        assert %{"error" => "invalid_code"} = json_response(conn, 401)
+      end
+
+      capped =
+        post(conn, ~p"/api/auth/reset-password", %{
+          "identifier" => "alice",
+          "code" => "000000",
+          "new_password" => "brand-new-pass-9876"
+        })
+
+      assert %{"error" => "too_many_attempts"} = json_response(capped, 429)
+
+      dead =
+        post(build_conn(), ~p"/api/auth/reset-password", %{
+          "identifier" => "alice",
+          "code" => code,
+          "new_password" => "brand-new-pass-9876"
+        })
+
+      assert %{"error" => "invalid_code"} = json_response(dead, 401)
+    end
+  end
+
   # Helper — generate+consume a verification code so tests that need a
   # logged-in user can skip the full HTTP flow.
   defp verify_user(user) do

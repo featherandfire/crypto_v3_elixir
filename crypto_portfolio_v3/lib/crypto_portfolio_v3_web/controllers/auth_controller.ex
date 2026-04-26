@@ -124,6 +124,73 @@ defmodule CryptoPortfolioV3Web.AuthController do
     json(conn, %{user: Serializer.user(conn.assigns.current_user)})
   end
 
+  # Always returns 200 with a generic message, even if the identifier matches
+  # no user — this prevents the endpoint from being used to enumerate accounts.
+  def forgot_password(conn, %{"identifier" => id}) when is_binary(id) do
+    case Accounts.resend_password_reset(id) do
+      {:ok, code, user} ->
+        user |> Emails.password_reset_email(code) |> Mailer.deliver()
+        json(conn, %{message: "If that account exists, a reset code has been sent."})
+
+      {:error, {:throttled, seconds}} ->
+        conn
+        |> put_status(:too_many_requests)
+        |> put_resp_header("retry-after", Integer.to_string(seconds))
+        |> json(%{error: "throttled", retry_after: seconds})
+
+      # :user_not_found collapses into the same 200 to avoid enumeration.
+      {:error, :user_not_found} ->
+        json(conn, %{message: "If that account exists, a reset code has been sent."})
+
+      {:error, _} ->
+        conn
+        |> put_status(:internal_server_error)
+        |> json(%{error: "reset_failed"})
+    end
+  end
+
+  def forgot_password(conn, _) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "missing identifier"})
+  end
+
+  def reset_password(conn, %{"identifier" => id, "code" => code, "new_password" => pw})
+      when is_binary(id) and is_binary(code) and is_binary(pw) do
+    user = Accounts.get_user_by_identifier(id)
+
+    case user && Accounts.verify_password_reset(user, code, pw) do
+      {:ok, updated_user} ->
+        json(conn, %{user: Serializer.user(updated_user), token: issue_token(updated_user)})
+
+      {:error, :expired} ->
+        conn
+        |> put_status(:unauthorized)
+        |> json(%{error: "code_expired"})
+
+      {:error, :too_many_attempts} ->
+        conn
+        |> put_status(:too_many_requests)
+        |> json(%{error: "too_many_attempts"})
+
+      {:error, %Ecto.Changeset{} = cs} ->
+        conn
+        |> put_status(:unprocessable_entity)
+        |> json(%{errors: translate_errors(cs)})
+
+      _ ->
+        conn
+        |> put_status(:unauthorized)
+        |> json(%{error: "invalid_code"})
+    end
+  end
+
+  def reset_password(conn, _) do
+    conn
+    |> put_status(:bad_request)
+    |> json(%{error: "missing identifier, code, or new_password"})
+  end
+
   defp send_verification_code(%User{} = user) do
     with {:ok, code, _} <- Accounts.create_verification_code(user),
          {:ok, _} <- user |> Emails.verification_email(code) |> Mailer.deliver() do

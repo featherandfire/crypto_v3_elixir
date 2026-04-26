@@ -18,6 +18,8 @@ defmodule CryptoPortfolioV3Web.Router do
     post "/auth/login", AuthController, :login
     post "/auth/verify-email", AuthController, :verify_email
     post "/auth/resend-code", AuthController, :resend_code
+    post "/auth/forgot-password", AuthController, :forgot_password
+    post "/auth/reset-password", AuthController, :reset_password
 
     get "/coins/top", CoinController, :top
     get "/coins/yearly-ranges", CoinController, :yearly_ranges

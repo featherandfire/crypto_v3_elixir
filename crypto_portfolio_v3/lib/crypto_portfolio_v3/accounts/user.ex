@@ -48,6 +48,15 @@ defmodule CryptoPortfolioV3.Accounts.User do
     |> unique_constraint(:email)
   end
 
+  @doc "Changeset that rotates the password. Used by the password-reset flow."
+  def change_password_changeset(user, attrs) do
+    user
+    |> cast(attrs, [:password])
+    |> validate_required([:password])
+    |> validate_length(:password, min: 8, max: 72)
+    |> put_password_hash()
+  end
+
   defp put_password_hash(%Ecto.Changeset{valid?: true, changes: %{password: pw}} = cs) do
     cs
     |> put_change(:hashed_password, Bcrypt.hash_pwd_salt(pw))

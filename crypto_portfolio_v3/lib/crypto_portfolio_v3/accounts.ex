@@ -1,14 +1,18 @@
 defmodule CryptoPortfolioV3.Accounts do
-  @moduledoc "User registration, lookup, password authentication, and email verification."
+  @moduledoc "User registration, lookup, password authentication, email verification, and password reset."
 
   import Ecto.Query
 
   alias CryptoPortfolioV3.Repo
-  alias CryptoPortfolioV3.Accounts.{EmailVerification, User}
+  alias CryptoPortfolioV3.Accounts.{EmailVerification, PasswordReset, User}
 
   @verification_ttl_seconds 600
   @resend_cooldown_seconds 60
   @max_verification_attempts 5
+
+  @password_reset_ttl_seconds 600
+  @password_reset_cooldown_seconds 60
+  @max_password_reset_attempts 5
 
   def register_user(attrs) do
     %User{}
@@ -197,6 +201,168 @@ defmodule CryptoPortfolioV3.Accounts do
   defp generate_code do
     <<n::unsigned-integer-size(32)>> = :crypto.strong_rand_bytes(4)
     rem(n, 1_000_000) |> Integer.to_string() |> String.pad_leading(6, "0")
+  end
+
+  # ── Password reset ────────────────────────────────────────────────────────
+
+  @doc """
+  Generate a password-reset code, bcrypt-hash and persist it, and return
+  `{:ok, plain_code, reset}` so the caller can email the plain code.
+  """
+  @spec create_password_reset(User.t()) ::
+          {:ok, binary(), PasswordReset.t()} | {:error, Ecto.Changeset.t()}
+  def create_password_reset(%User{} = user) do
+    code = generate_code()
+    expires_at = DateTime.utc_now() |> DateTime.add(@password_reset_ttl_seconds, :second)
+
+    attrs = %{
+      user_id: user.id,
+      code_hash: Bcrypt.hash_pwd_salt(code),
+      expires_at: expires_at
+    }
+
+    %PasswordReset{}
+    |> Ecto.Changeset.cast(attrs, [:user_id, :code_hash, :expires_at])
+    |> Ecto.Changeset.validate_required([:user_id, :code_hash, :expires_at])
+    |> Repo.insert()
+    |> case do
+      {:ok, record} -> {:ok, code, record}
+      {:error, cs} -> {:error, cs}
+    end
+  end
+
+  @doc """
+  Redeem a password-reset code: verify the code, rotate the password, and
+  mark the record consumed. Runs the rotation + consumption in one
+  transaction so a partial failure cannot leave a usable code behind.
+  """
+  @spec verify_password_reset(User.t(), binary(), binary()) ::
+          {:ok, User.t()}
+          | {:error,
+             :invalid
+             | :expired
+             | :too_many_attempts
+             | Ecto.Changeset.t()}
+  def verify_password_reset(%User{} = user, code, new_password)
+      when is_binary(code) and is_binary(new_password) do
+    now = DateTime.utc_now()
+
+    record =
+      Repo.one(
+        from r in PasswordReset,
+          where: r.user_id == ^user.id and is_nil(r.consumed_at),
+          order_by: [desc: r.inserted_at],
+          limit: 1
+      )
+
+    cond do
+      is_nil(record) ->
+        Bcrypt.no_user_verify()
+        {:error, :invalid}
+
+      DateTime.compare(record.expires_at, now) != :gt ->
+        {:error, :expired}
+
+      record.attempts >= @max_password_reset_attempts ->
+        record |> Ecto.Changeset.change(consumed_at: now) |> Repo.update()
+        {:error, :too_many_attempts}
+
+      not Bcrypt.verify_pass(code, record.code_hash) ->
+        handle_wrong_reset_code(record, now)
+
+      true ->
+        # Validate the new password BEFORE consuming the code so a weak
+        # password doesn't burn the user's only valid attempt.
+        cs = User.change_password_changeset(user, %{password: new_password})
+
+        if cs.valid? do
+          Repo.transaction(fn ->
+            {:ok, _} =
+              record
+              |> Ecto.Changeset.change(consumed_at: now)
+              |> Repo.update()
+
+            {:ok, updated_user} = Repo.update(cs)
+            updated_user
+          end)
+        else
+          {:error, cs}
+        end
+    end
+  end
+
+  def verify_password_reset(_, _, _), do: {:error, :invalid}
+
+  defp handle_wrong_reset_code(%PasswordReset{id: id, attempts: current}, now) do
+    new_count = current + 1
+
+    updates = [attempts: new_count]
+    updates = if new_count >= @max_password_reset_attempts, do: [{:consumed_at, now} | updates], else: updates
+
+    from(r in PasswordReset, where: r.id == ^id)
+    |> Repo.update_all(set: updates)
+
+    if new_count >= @max_password_reset_attempts do
+      {:error, :too_many_attempts}
+    else
+      {:error, :invalid}
+    end
+  end
+
+  @doc """
+  Issue a fresh password-reset code for the user matched by identifier,
+  subject to a per-user cooldown. Returns `{:ok, code, user}` on success.
+  Caller emails the plain code.
+
+  Errors:
+    * `:user_not_found`      — collapsed to a generic 200 by the controller
+                               to avoid account enumeration
+    * `{:throttled, secs}`   — last code was issued too recently
+  """
+  @spec resend_password_reset(binary()) ::
+          {:ok, binary(), User.t()}
+          | {:error,
+             :user_not_found
+             | {:throttled, non_neg_integer()}
+             | Ecto.Changeset.t()}
+  def resend_password_reset(identifier) when is_binary(identifier) do
+    case get_user_by_identifier(identifier) do
+      nil ->
+        {:error, :user_not_found}
+
+      %User{} = user ->
+        case most_recent_password_reset(user) do
+          %PasswordReset{inserted_at: ts} ->
+            age = DateTime.diff(DateTime.utc_now(), ts, :second)
+
+            if age < @password_reset_cooldown_seconds do
+              {:error, {:throttled, @password_reset_cooldown_seconds - age}}
+            else
+              issue_fresh_password_reset(user)
+            end
+
+          nil ->
+            issue_fresh_password_reset(user)
+        end
+    end
+  end
+
+  def resend_password_reset(_), do: {:error, :user_not_found}
+
+  defp most_recent_password_reset(%User{id: uid}) do
+    Repo.one(
+      from r in PasswordReset,
+        where: r.user_id == ^uid,
+        order_by: [desc: r.inserted_at],
+        limit: 1
+    )
+  end
+
+  defp issue_fresh_password_reset(%User{} = user) do
+    case create_password_reset(user) do
+      {:ok, code, _record} -> {:ok, code, user}
+      {:error, cs} -> {:error, cs}
+    end
   end
 
   @doc """
