@@ -1377,10 +1377,24 @@ animate();
           <div x-show="lookupResult?.matches?.length > 0">
             <template x-for="m in (lookupResult?.matches ?? [])" :key="m.chain">
               <div class="match-row">
-                <div class="match-dot" :style="`background:${m.color}`"></div>
+                <!-- Chain logo (cryptocurrency-icons CDN). Falls back to a
+                     colored dot in the chain's brand color if the icon
+                     fails to load. -->
+                <img
+                  class="match-logo"
+                  :src="chainLogoUrl(m.chain)"
+                  :alt="m.chain_name"
+                  x-show="chainLogoUrl(m.chain)"
+                  @error="$el.style.display='none'; $el.nextElementSibling.style.display='inline-block'" />
+                <div class="match-dot"
+                     :style="`display:${chainLogoUrl(m.chain) ? 'none' : 'inline-block'}; background:${m.color}`"></div>
                 <div class="match-info">
                   <div class="match-chain-name" x-text="m.chain_name"></div>
                   <a :href="m.explorer_link" target="_blank" rel="noopener noreferrer" class="match-explorer-link" x-text="m.explorer_link"></a>
+                </div>
+                <div class="match-value no-shrink" x-show="lookupValues[m.chain] != null">
+                  <div class="match-value-label">Value</div>
+                  <div class="match-value-amt" x-text="lookupValues[m.chain] != null ? fmtUSD(lookupValues[m.chain]) : ''"></div>
                 </div>
                 <span class="badge no-shrink" :class="lookupConfidenceClass(m.confidence)" x-text="lookupConfidenceLabel(m.confidence)"></span>
                 <a :href="m.explorer_link" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm no-shrink">Open ↗</a>

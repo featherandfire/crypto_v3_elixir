@@ -386,6 +386,10 @@ window.dashApp = () => ({
   lookupQuery: '',
   lookupLoading: false,
   lookupResult: null as any,
+  // Native-asset USD value per chain for the currently looked-up address.
+  // Keyed by chain slug (eth, polygon, solana, tron, etc.). null = not
+  // fetched yet; undefined = no value to show; number = the value in USD.
+  lookupValues: {} as Record<string, number | null>,
   lookupError: '',
 
   // Marketplace
@@ -970,13 +974,74 @@ window.dashApp = () => ({
     this.lookupLoading = true;
     this.lookupError = '';
     this.lookupResult = null;
+    this.lookupValues = {};
     try {
       this.lookupResult = await apiFetch(`/lookup/${encodeURIComponent(q)}`);
+      // If the input is a wallet address (not a tx hash), fetch native
+      // balances per chain so we can show per-chain USD values inline.
+      this.fetchLookupValues(q, this.lookupResult?.type);
     } catch (e) {
       this.lookupError = (e as Error).message;
     } finally {
       this.lookupLoading = false;
     }
+  },
+
+  // Populates `lookupValues` keyed by chain slug. Native balance only,
+  // multiplied by current price. Runs in the background — values appear
+  // as each chain responds.
+  async fetchLookupValues(this: any, addr: string, type: string | undefined) {
+    if (!type || !addr) return;
+    const ETH_SENTINEL = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
+
+    if (type === 'evm_address') {
+      // Reuse the multi-chain fan-out we use for portfolio import.
+      try {
+        const res = await apiFetch<{ balances: any[] }>(`/wallet/all/${encodeURIComponent(addr)}`);
+        const next: Record<string, number> = {};
+        for (const b of (res.balances ?? [])) {
+          // Native balances only (EVM sentinel address marks the native asset).
+          if ((b.contract_address ?? '').toLowerCase() !== ETH_SENTINEL) continue;
+          const price = Number(b.current_price_usd);
+          const amount = Number(b.amount);
+          if (Number.isFinite(price) && Number.isFinite(amount)) {
+            next[b.chain] = (next[b.chain] ?? 0) + price * amount;
+          }
+        }
+        this.lookupValues = { ...this.lookupValues, ...next };
+      } catch { /* ignore — value column just stays empty */ }
+      return;
+    }
+
+    if (type === 'sol_address') {
+      try {
+        const res = await apiFetch<{ balances: any[] }>(`/wallet/solana/${encodeURIComponent(addr)}`);
+        const native = (res.balances ?? []).find((b: any) => b.coingecko_id === 'solana');
+        if (native) {
+          const price = Number(native.current_price_usd);
+          const amount = Number(native.amount);
+          if (Number.isFinite(price) && Number.isFinite(amount)) {
+            this.lookupValues = { ...this.lookupValues, solana: price * amount };
+          }
+        }
+      } catch { /* ignore */ }
+      return;
+    }
+
+    if (type === 'tron_address') {
+      try {
+        const res = await apiFetch<{ balances: any[] }>(`/wallet/tron/${encodeURIComponent(addr)}`);
+        const native = (res.balances ?? []).find((b: any) => b.coingecko_id === 'tron');
+        if (native) {
+          const price = Number(native.current_price_usd);
+          const amount = Number(native.amount);
+          if (Number.isFinite(price) && Number.isFinite(amount)) {
+            this.lookupValues = { ...this.lookupValues, tron: price * amount };
+          }
+        }
+      } catch { /* ignore */ }
+    }
+    // BTC / LTC: no balance endpoint yet — value column stays empty.
   },
 
   // ── Template helpers ──────────────────────────────────────────────────────
@@ -1077,6 +1142,32 @@ window.dashApp = () => ({
       return { slug: 'litecoin', name: 'Litecoin', color: '#BFBBBB' };
     if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) return { slug: 'solana', name: 'Solana', color: '#9945FF' };
     return null;
+  },
+
+  // Chain logo URLs. Native-asset chains use cryptocurrency-icons (consistent
+  // visual style); L2s with their own brand identity use icons.llamao.fi
+  // (DefiLlama's chain icon set).
+  chainLogoUrl(slug: string | null | undefined): string | null {
+    if (!slug) return null;
+    const URLS: Record<string, string> = {
+      eth: 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/eth.svg',
+      bsc: 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/bnb.svg',
+      polygon: 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/matic.svg',
+      avalanche: 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/avax.svg',
+      solana: 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/sol.svg',
+      tron: 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/trx.svg',
+      bitcoin: 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/btc.svg',
+      litecoin: 'https://cdn.jsdelivr.net/npm/cryptocurrency-icons@0.18.1/svg/color/ltc.svg',
+      // L2s — chain-specific logos via DefiLlama's icon CDN.
+      arbitrum: 'https://icons.llamao.fi/icons/chains/rsz_arbitrum',
+      optimism: 'https://icons.llamao.fi/icons/chains/rsz_optimism',
+      base:     'https://icons.llamao.fi/icons/chains/rsz_base',
+      linea:    'https://icons.llamao.fi/icons/chains/rsz_linea',
+      zksync:   'https://icons.llamao.fi/icons/chains/rsz_era',
+      scroll:   'https://icons.llamao.fi/icons/chains/rsz_scroll',
+      blast:    'https://icons.llamao.fi/icons/chains/rsz_blast',
+    };
+    return URLS[slug] ?? null;
   },
 
   // Per-holding chain display. Prefers the explicit `chain` slug saved at
