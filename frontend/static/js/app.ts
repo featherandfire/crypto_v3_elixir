@@ -49,6 +49,7 @@ const DECIMAL_FIELDS = new Set([
   'current_value_usd', 'total_cost_usd', 'pnl_usd', 'pnl_pct',
   'total_value_usd', 'total_pnl_usd', 'total_pnl_pct',
   'balance', 'fee_pct', 'price_change_200d', 'price_change_1y',
+  'gas_usd', 'gas_native',
 ]);
 
 function parseDecimalsDeep<T>(obj: T): T {
@@ -317,12 +318,14 @@ window.loginApp = () => ({
 
 // ── Dashboard component ─────────────────────────────────────────────────────
 
-const VALID_PAGES = ['dashboard', 'market', 'resources', 'lookup', 'marketplace', 'platforms'];
+const VALID_PAGES = ['portfolios', 'market', 'resources', 'lookup', 'marketplace', 'platforms'];
 const restoredPage = (() => {
   try {
     const v = localStorage.getItem('currentPage');
-    return v && VALID_PAGES.includes(v) ? v : 'dashboard';
-  } catch { return 'dashboard'; }
+    // Migrate old 'dashboard' value silently for users who saved it before the rename.
+    if (v === 'dashboard') return 'portfolios';
+    return v && VALID_PAGES.includes(v) ? v : 'portfolios';
+  } catch { return 'portfolios'; }
 })();
 
 window.dashApp = () => ({
@@ -343,6 +346,9 @@ window.dashApp = () => ({
   coinSearch: '',
   priceChart: null as Chart | null,
   selectedChartCoin: null as string | null,
+  // Cache the /coins/:id/history responses keyed by `${coin}:${days}` with a
+  // 5-minute TTL so flipping between range buttons doesn't re-hit the API.
+  priceChartCache: new Map<string, { ts: number; prices: Array<{ timestamp: number; price: number }> }>(),
 
   // Add portfolio modal
   showAddPortfolio: false,
@@ -472,13 +478,35 @@ window.dashApp = () => ({
   async loadLastBuyFees(this: any) {
     const SOL_RE = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
     const EVM_RE = /^0x[0-9a-fA-F]{40}$/;
+    const EVM_CHAINS = new Set(['eth', 'bsc', 'polygon', 'arbitrum', 'optimism', 'avalanche', 'base', 'linea', 'zksync', 'scroll', 'blast']);
+    // 24h cache: tx hashes don't change. Avoids re-hitting Etherscan on every
+    // dashboard refresh, where rate limits cause some holdings to come back
+    // empty even when prior calls succeeded.
+    const CACHE_TTL_S = 24 * 60 * 60;
+    const cacheKey = (id: number) => `lbf:${id}`;
+
     const holdings = this.portfolioDetail?.holdings ?? [];
     const nextState: Record<number, any> = {};
     const jobs: Array<{ id: number; url: string }> = [];
     for (const h of holdings) {
+      // Cache hit — use stored response, skip network entirely.
+      const cached = lsGet<any>(cacheKey(h.id));
+      if (cached && typeof cached === 'object') {
+        nextState[h.id] = cached;
+        continue;
+      }
+
       const addr = h.wallet_address ?? '';
+      // Prefer the chain stored on the holding (set during wallet import).
+      // Fall back to address-shape detection — accurate for Solana, defaults
+      // to ETH for EVM-shaped addresses on legacy rows.
+      const storedChain = typeof h.chain === 'string' ? h.chain : null;
       let url: string | null = null;
-      if (EVM_RE.test(addr)) {
+      if (storedChain && EVM_CHAINS.has(storedChain)) {
+        url = `/wallet/${storedChain}/${encodeURIComponent(addr)}/last-buy-fees?coingecko_id=${encodeURIComponent(h.coin.coingecko_id)}`;
+      } else if (storedChain === 'solana') {
+        url = `/wallet/solana/${encodeURIComponent(addr)}/last-buy-fees?coingecko_id=${encodeURIComponent(h.coin.coingecko_id)}`;
+      } else if (EVM_RE.test(addr)) {
         url = `/wallet/eth/${encodeURIComponent(addr)}/last-buy-fees?coingecko_id=${encodeURIComponent(h.coin.coingecko_id)}`;
       } else if (SOL_RE.test(addr)) {
         url = `/wallet/solana/${encodeURIComponent(addr)}/last-buy-fees?coingecko_id=${encodeURIComponent(h.coin.coingecko_id)}`;
@@ -496,6 +524,12 @@ window.dashApp = () => ({
       try {
         const res = await apiFetch<{ fees: any }>(job.url);
         this.lastBuyFees = { ...this.lastBuyFees, [job.id]: res.fees };
+        // Persist successful responses only — don't cache 'unavailable' or
+        // null results, so a transient rate-limit doesn't poison the cache
+        // for a full day.
+        if (res.fees && typeof res.fees === 'object') {
+          lsSet(cacheKey(job.id), res.fees, CACHE_TTL_S);
+        }
       } catch {
         this.lastBuyFees = { ...this.lastBuyFees, [job.id]: 'unavailable' };
       }
@@ -649,6 +683,7 @@ window.dashApp = () => ({
         amount: token.amount,
         avg_buy_price: null,
         wallet_address: walletAddr,
+        chain: token.chain ?? null,
         contract_address: token.contract_address,
       };
       if (!token.matched) {
@@ -849,10 +884,20 @@ window.dashApp = () => ({
     if (!canvas) return;
     if (this.lineChart) this.lineChart.destroy();
 
+    const cacheKey = `${coingeckoId}:${days}`;
+    const cached = this.priceChartCache.get(cacheKey);
+    const TTL_MS = 5 * 60 * 1000;
+
     try {
-      const data = await apiFetch<{ prices: Array<{ timestamp: number; price: number }> }>(
-        `/coins/${coingeckoId}/history?days=${days}`,
-      );
+      let data: { prices: Array<{ timestamp: number; price: number }> };
+      if (cached && Date.now() - cached.ts < TTL_MS) {
+        data = { prices: cached.prices };
+      } else {
+        data = await apiFetch<{ prices: Array<{ timestamp: number; price: number }> }>(
+          `/coins/${coingeckoId}/history?days=${days}`,
+        );
+        this.priceChartCache.set(cacheKey, { ts: Date.now(), prices: data.prices });
+      }
       const labels = data.prices.map((p) => new Date(p.timestamp).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
       const prices = data.prices.map((p) => p.price);
 
@@ -1032,6 +1077,66 @@ window.dashApp = () => ({
       return { slug: 'litecoin', name: 'Litecoin', color: '#BFBBBB' };
     if (/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) return { slug: 'solana', name: 'Solana', color: '#9945FF' };
     return null;
+  },
+
+  // Per-holding chain display. Prefers the explicit `chain` slug saved at
+  // wallet-import time (gives us the specific EVM chain, not just "EVM"),
+  // and falls back to address-shape detection for legacy holdings without
+  // a stored chain.
+  holdingChain(this: any, h: any) {
+    const SLUGS: Record<string, { name: string; color: string }> = {
+      eth:       { name: 'Ethereum',  color: '#627EEA' },
+      bsc:       { name: 'BNB Chain', color: '#F3BA2F' },
+      polygon:   { name: 'Polygon',   color: '#8247E5' },
+      arbitrum:  { name: 'Arbitrum',  color: '#28A0F0' },
+      optimism:  { name: 'Optimism',  color: '#FF0420' },
+      avalanche: { name: 'Avalanche', color: '#E84142' },
+      base:      { name: 'Base',      color: '#0052FF' },
+      linea:     { name: 'Linea',     color: '#61DFFF' },
+      zksync:    { name: 'zkSync',    color: '#4E529A' },
+      scroll:    { name: 'Scroll',    color: '#FFEEDA' },
+      blast:     { name: 'Blast',     color: '#FCFC03' },
+      solana:    { name: 'Solana',    color: '#9945FF' },
+      tron:      { name: 'Tron',      color: '#EF0027' },
+      bitcoin:   { name: 'Bitcoin',   color: '#F7931A' },
+      litecoin:  { name: 'Litecoin',  color: '#BFBBBB' },
+    };
+    const stored = typeof h?.chain === 'string' ? SLUGS[h.chain] : null;
+    if (stored) return { slug: h.chain, ...stored };
+    return this.walletChain(h?.wallet_address ?? null);
+  },
+
+  // True when the holding's coin has a CoinGecko price match (real price &
+  // image). Used to split the holdings table into "main" and "spam/airdrop"
+  // sections — unmatched tokens are typically junk a wallet received.
+  isHoldingMatched(h: any) {
+    return !!(h?.coin?.current_price_usd != null && h?.coin?.image_url);
+  },
+
+  matchedHoldings(this: any) {
+    return this.filteredHoldings().filter((h: any) => this.isHoldingMatched(h));
+  },
+
+  unmatchedHoldings(this: any) {
+    return this.filteredHoldings().filter((h: any) => !this.isHoldingMatched(h));
+  },
+
+  // Matched first so they render at the top; the unmatched rows below them
+  // are hidden via per-row x-show until the toggle is clicked.
+  displayHoldings(this: any) {
+    return [...this.matchedHoldings(), ...this.unmatchedHoldings()];
+  },
+
+  showUnmatchedHoldings: false,
+
+  async copyAddress(this: any, address: string) {
+    if (!address) return;
+    try {
+      await navigator.clipboard.writeText(address);
+      (Alpine.store('toast') as ToastStore).show('Address copied');
+    } catch {
+      (Alpine.store('toast') as ToastStore).show('Copy failed', 'error');
+    }
   },
 
   walletIsSolana(addr: string) {

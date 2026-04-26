@@ -523,15 +523,22 @@ a:hover { color: var(--accent-hover); }
 
 .table-wrap { overflow-x: auto; }
 
-/* Holdings table: user-resizable vertically. Drag the handle in the
-   bottom-right corner to grow or shrink. */
+/* Holdings table: defaults to fitting all rows (page scrolls if tall),
+   but the user can drag the bottom-right corner to set a fixed height.
+   Once dragged, an inner scrollbar appears when content overflows. */
 .holdings-table-wrap {
   resize: vertical;
   overflow: auto;
-  min-height: 260px;
-  max-height: 85vh;
-  height: 420px;
+  min-height: 200px;
   border-bottom: 1px dashed var(--border);  /* hint there's a resize edge */
+}
+
+.unmatched-toggle-row td {
+  transition: background .15s, color .15s;
+}
+.unmatched-toggle-row:hover td {
+  background: var(--surface2);
+  color: var(--accent);
 }
 
 table { width: 100%; border-collapse: collapse; }
@@ -1255,6 +1262,16 @@ tbody td:nth-child(6) {
   background: rgba(180,77,255,0.15);
   border-color: var(--accent, #b47dff);
   color: var(--accent, #b47dff);
+}
+
+.wallet-copy-btn {
+  background: none; border: none; padding: 2px 4px; margin-left: 4px;
+  color: var(--muted); cursor: pointer; display: inline-flex; align-items: center;
+  border-radius: 3px; transition: color .15s, background .15s;
+}
+.wallet-copy-btn:hover {
+  color: var(--accent, #b47dff);
+  background: rgba(180,77,255,0.12);
 }
 
 /* Tx hash link in the holdings table — full hash, wraps within the cell */

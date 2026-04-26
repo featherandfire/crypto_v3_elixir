@@ -70,7 +70,7 @@
     <!-- ── Wallet Import tab ───────────────────────────────────────────── -->
     <div x-show="holdingModalTab==='wallet'">
       <div class="form-group">
-        <label class="form-label">Transaction Hash <span style="color:var(--muted); font-weight:400; font-size:11px">(optional — auto-fills the wallet below)</span></label>
+        <label class="form-label" style="color:var(--text)"><strong>Transaction</strong> Hash</label>
         <div class="wallet-addr-row">
           <input
             class="form-input wallet-addr-input"
@@ -81,7 +81,7 @@
           />
           <button class="btn btn-outline no-shrink" type="button" @click="resolveWalletFromTx()" :disabled="txResolving || !txHash">
             <span x-show="txResolving" class="spinner spinner-sm"></span>
-            <span x-show="!txResolving">Find Wallet</span>
+            <span x-show="!txResolving">Find</span>
           </button>
         </div>
         <div x-show="txResolveInfo" class="form-hint" style="margin-top:6px; font-size:11px; color: var(--accent)" x-text="txResolveInfo"></div>
@@ -89,7 +89,7 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label">Wallet Address</label>
+        <label class="form-label" style="color:var(--text)"><strong>Wallet</strong> Address</label>
         <div class="wallet-addr-row">
           <input
             class="form-input wallet-addr-input"
@@ -100,7 +100,7 @@
           />
           <button class="btn btn-outline no-shrink" type="button" @click="fetchWalletTokens()" :disabled="walletLoading || !walletAddress">
             <span x-show="walletLoading" class="spinner spinner-sm"></span>
-            <span x-show="!walletLoading">Fetch</span>
+            <span x-show="!walletLoading">Find</span>
           </button>
         </div>
         <p class="form-hint" style="margin-top:6px; font-size:11px; color: var(--muted)">
