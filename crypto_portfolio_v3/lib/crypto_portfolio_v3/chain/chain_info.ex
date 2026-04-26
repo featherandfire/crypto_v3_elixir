@@ -88,6 +88,54 @@ defmodule CryptoPortfolioV3.Chain.ChainInfo do
       explorer_base: "https://basescan.org",
       color: "#0052FF",
       probe: false
+    },
+    "linea" => %{
+      chain_id: 59_144,
+      name: "Linea",
+      native_symbol: "ETH",
+      native_name: "Ethereum",
+      native_cg_id: "ethereum",
+      cg_platform: "linea",
+      rpc_url: "https://rpc.linea.build",
+      explorer_base: "https://lineascan.build",
+      color: "#61DFFF",
+      probe: false
+    },
+    "zksync" => %{
+      chain_id: 324,
+      name: "zkSync Era",
+      native_symbol: "ETH",
+      native_name: "Ethereum",
+      native_cg_id: "ethereum",
+      cg_platform: "zksync",
+      rpc_url: "https://mainnet.era.zksync.io",
+      explorer_base: "https://explorer.zksync.io",
+      color: "#4E529A",
+      probe: false
+    },
+    "scroll" => %{
+      chain_id: 534_352,
+      name: "Scroll",
+      native_symbol: "ETH",
+      native_name: "Ethereum",
+      native_cg_id: "ethereum",
+      cg_platform: "scroll",
+      rpc_url: "https://rpc.scroll.io",
+      explorer_base: "https://scrollscan.com",
+      color: "#FFEEDA",
+      probe: false
+    },
+    "blast" => %{
+      chain_id: 81_457,
+      name: "Blast",
+      native_symbol: "ETH",
+      native_name: "Ethereum",
+      native_cg_id: "ethereum",
+      cg_platform: "blast",
+      rpc_url: "https://rpc.blast.io",
+      explorer_base: "https://blastscan.io",
+      color: "#FCFC03",
+      probe: false
     }
   }
 

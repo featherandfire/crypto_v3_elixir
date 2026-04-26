@@ -148,6 +148,10 @@ defmodule CryptoPortfolioV3.Chain.EvmTx do
          router: Routers.name(tx["to"]),
          routers: if(Routers.name(tx["to"]), do: [Routers.name(tx["to"])], else: []),
          fee_sol: format_gas(gas_native, chain.native_symbol, gas_usd),
+         # Structured numeric gas data — frontend formats however it wants.
+         gas_usd: gas_usd,
+         gas_native: gas_native,
+         gas_native_symbol: chain.native_symbol,
          fee_display: nil,
          sent: format_amount(sent_amount, sent_symbol),
          received: format_amount(received, target_symbol),

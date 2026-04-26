@@ -68,6 +68,7 @@ defmodule CryptoPortfolioV3Web.Serializer do
       portfolio_id: h.portfolio_id,
       coin_id: h.coin_id,
       wallet_address: h.wallet_address,
+      chain: h.chain,
       amount: d_to_s(h.amount),
       avg_buy_price: d_to_s(h.avg_buy_price),
       created_at: h.inserted_at,

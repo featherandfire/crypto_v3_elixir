@@ -79,6 +79,7 @@ defmodule CryptoPortfolioV3.Portfolios do
         "portfolio_id" => portfolio_id,
         "coin_id" => coin.id,
         "wallet_address" => normalize_wallet(Map.get(attrs, "wallet_address")),
+        "chain" => Map.get(attrs, "chain"),
         "amount" => Map.get(attrs, "amount"),
         "avg_buy_price" => Map.get(attrs, "avg_buy_price")
       }
