@@ -90,23 +90,16 @@ config :crypto_portfolio_v3, :pct_change_prefetcher,
 config :crypto_portfolio_v3, CryptoPortfolioV3Web.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]
 
-# Mailer (prod only). Resend over SMTP.
+# Mailer (prod only). Resend over its HTTPS API (Swoosh + Req).
 # dev/test adapters are set in config/dev.exs and config/test.exs.
 if config_env() == :prod do
   config :crypto_portfolio_v3, CryptoPortfolioV3.Mailer,
-    adapter: Swoosh.Adapters.SMTP,
-    relay: System.get_env("RESEND_SMTP_HOST", "smtp.resend.com"),
-    port: String.to_integer(System.get_env("RESEND_SMTP_PORT", "587")),
-    username: System.get_env("RESEND_SMTP_USERNAME", "resend"),
-    password:
+    adapter: Swoosh.Adapters.Resend,
+    api_key:
       System.get_env("RESEND_API_KEY") ||
-        raise("RESEND_API_KEY is required in production"),
-    tls: :always,
-    auth: :always,
-    retries: 2,
-    no_mx_lookups: false
+        raise("RESEND_API_KEY is required in production")
 
-  config :swoosh, :api_client, false
+  config :swoosh, :api_client, Swoosh.ApiClient.Req
 end
 
 if config_env() == :prod do
