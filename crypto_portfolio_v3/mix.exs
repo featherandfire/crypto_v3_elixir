@@ -52,7 +52,9 @@ defmodule CryptoPortfolioV3.MixProject do
       {:bandit, "~> 1.5"},
       {:bcrypt_elixir, "~> 3.2"},
       {:req, "~> 0.5"},
-      {:dotenvy, "~> 1.1"}
+      {:dotenvy, "~> 1.1"},
+      {:swoosh, "~> 1.17"},
+      {:gen_smtp, "~> 1.2"}
     ]
   end
 
