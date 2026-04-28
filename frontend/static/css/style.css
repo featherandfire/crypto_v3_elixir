@@ -388,6 +388,129 @@ a:hover { color: var(--accent-hover); }
 .fee-tier-legend .legend-arrow { color: var(--muted); margin: 0 4px; }
 .fee-tier-legend .legend-text { color: var(--muted); }
 
+/* Wallet tutorial step viewer. */
+.tutorial-progress {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.tutorial-progress-text {
+  font-size: 12.5px;
+  color: var(--muted);
+  letter-spacing: .04em;
+  flex-shrink: 0;
+}
+.tutorial-progress-text strong { color: var(--accent); font-weight: 700; }
+.tutorial-dots {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+  flex: 1;
+}
+.tutorial-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  padding: 0;
+  transition: background-color .15s, border-color .15s, transform .15s;
+}
+.tutorial-dot.done { background: var(--accent-dim); border-color: var(--accent); }
+.tutorial-dot.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  transform: scale(1.4);
+  box-shadow: 0 0 6px var(--accent);
+}
+.tutorial-dot:hover { border-color: var(--accent); }
+
+.tutorial-viewer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.tutorial-image-wrap {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color .15s, box-shadow .15s;
+  min-height: 320px;
+  max-height: 70vh;
+  overflow: hidden;
+}
+.tutorial-image-wrap:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px rgba(180, 77, 255, 0.18);
+}
+.tutorial-image-wrap.cursor-end { cursor: default; }
+.tutorial-image-wrap.cursor-end:hover { border-color: var(--border); box-shadow: none; }
+.tutorial-image {
+  max-width: 100%;
+  max-height: calc(70vh - 36px);
+  object-fit: contain;
+  border-radius: 6px;
+}
+.tutorial-arrow {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  cursor: pointer;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all .15s;
+}
+.tutorial-arrow:hover:not(:disabled) {
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(180,77,255,0.3);
+}
+.tutorial-arrow:disabled { opacity: .3; cursor: default; }
+
+.tutorial-caption {
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+  background: var(--surface);
+  border-left: 3px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 0 6px 6px 0;
+  margin: 0 0 18px;
+}
+
+.tutorial-nav {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.tutorial-nav .btn { flex: 0 0 auto; }
+.tutorial-nav .btn-primary { margin-left: auto; }
+.tutorial-keyboard-hint {
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: .04em;
+  font-family: var(--mono);
+  flex: 1;
+  text-align: center;
+}
+
 /* Wallet Address fast-facts page. */
 .addr-intro { padding: 16px 20px; margin-bottom: 24px; line-height: 1.55; font-size: 13.5px; color: var(--text); }
 .addr-intro p { margin: 0; }
@@ -545,6 +668,61 @@ a:hover { color: var(--accent-hover); }
   flex-direction: column;
   gap: 10px;
   transition: border-color .15s, box-shadow .15s;
+  position: relative;
+}
+
+/* Radiating-star CTA in the bottom-right corner of a wallet card. Two
+   pseudo-elements emit outward-expanding accent rings on a 2s loop;
+   the star icon itself stays in place. */
+.wallet-tutorial-star {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  z-index: 1;
+  filter: drop-shadow(0 0 6px rgba(180, 77, 255, 0.7));
+  animation: tutorial-star-pulse 2s ease-in-out infinite;
+}
+.wallet-tutorial-star::before,
+.wallet-tutorial-star::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(1);
+  opacity: .6;
+  animation: tutorial-star-radiate 2s ease-out infinite;
+  pointer-events: none;
+}
+.wallet-tutorial-star::after { animation-delay: 1s; }
+.wallet-tutorial-star:hover { color: var(--accent-hover); }
+.wallet-tutorial-star:hover::before,
+.wallet-tutorial-star:hover::after { opacity: .9; }
+@keyframes tutorial-star-radiate {
+  0%   { transform: translate(-50%, -50%) scale(1);   opacity: .6; }
+  100% { transform: translate(-50%, -50%) scale(2.6); opacity: 0; }
+}
+@keyframes tutorial-star-pulse {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .wallet-tutorial-star { animation: none; }
+  .wallet-tutorial-star::before,
+  .wallet-tutorial-star::after { animation: none; opacity: .8; }
 }
 .wallet101-card:hover {
   border-color: var(--accent);
@@ -1220,8 +1398,6 @@ tbody td:nth-child(6) {
   display: flex;
   align-items: center;
 }
-
-/* left label */
 .ticker-label {
   flex-shrink: 0;
   padding: 0 14px;
@@ -1239,7 +1415,6 @@ tbody td:nth-child(6) {
   text-shadow: 0 0 8px rgba(180,77,255,0.6);
   white-space: nowrap;
 }
-
 .ticker-track {
   flex: 1;
   overflow: hidden;
@@ -1248,12 +1423,10 @@ tbody td:nth-child(6) {
   align-items: center;
   mask-image: linear-gradient(90deg, transparent 0%, black 4%, black 96%, transparent 100%);
 }
-
 @keyframes ticker-scroll {
   from { transform: translateX(0); }
   to   { transform: translateX(-50%); }
 }
-
 .ticker-content {
   display: inline-flex;
   align-items: center;
@@ -1261,7 +1434,6 @@ tbody td:nth-child(6) {
   animation: ticker-scroll 60s linear infinite;
   white-space: nowrap;
 }
-
 .ticker-item {
   display: inline-flex;
   align-items: center;
@@ -1271,18 +1443,8 @@ tbody td:nth-child(6) {
   font-family: var(--mono);
   border-right: 1px solid rgba(38,29,74,0.8);
 }
-
-.ticker-sym {
-  color: var(--text);
-  font-weight: 600;
-  font-size: 10px;
-  letter-spacing: .06em;
-}
-
-.ticker-price {
-  color: var(--muted);
-}
-
+.ticker-sym { color: var(--text); font-weight: 600; font-size: 10px; letter-spacing: .06em; }
+.ticker-price { color: var(--muted); }
 .ticker-up   { color: var(--green); }
 .ticker-down { color: var(--red); }
 

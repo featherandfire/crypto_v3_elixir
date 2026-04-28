@@ -538,7 +538,7 @@ window.loginApp = () => ({
 
 // ── Dashboard component ─────────────────────────────────────────────────────
 
-const VALID_PAGES = ['portfolios', 'market', 'resources', 'lookup', 'marketplace', 'platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds'];
+const VALID_PAGES = ['portfolios', 'market', 'resources', 'lookup', 'marketplace', 'platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds', 'wallet-tutorial'];
 
 // Editorial content for the Wallet Address page. Keep examples real and
 // well-known (e.g. Satoshi's genesis address) so readers see something they
@@ -621,6 +621,227 @@ const CHAIN_ADDRESS_FORMATS: ChainAddressFormat[] = [
     length: '58–103 chars',
     example: 'addr1qx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwq2ytjqp',
     note: 'Among the longest addresses in common use.',
+  },
+];
+
+// "Pick a Coin 101" — primers and use-case picker.
+type CoinPrimer = {
+  ticker: string;
+  name: string;
+  oneliner: string;
+  goodFor: string;
+};
+
+const COIN_PRIMERS: CoinPrimer[] = [
+  {
+    ticker: 'BTC',
+    name: 'Bitcoin',
+    oneliner: 'The original cryptocurrency. Hard-capped at 21M coins, ~16-year track record. Most often described as "digital gold."',
+    goodFor: 'Long-term holding. Not for spending.',
+  },
+  {
+    ticker: 'ETH',
+    name: 'Ethereum',
+    oneliner: 'The largest programmable-blockchain platform. Native currency for paying gas and running smart contracts.',
+    goodFor: 'DeFi, NFTs, most on-chain apps.',
+  },
+  {
+    ticker: 'USDC',
+    name: 'USD Coin',
+    oneliner: 'Stablecoin pegged 1:1 to the US dollar. Issued by Circle, audited monthly, redeemable.',
+    goodFor: 'Holding "digital cash" without crypto volatility.',
+  },
+  {
+    ticker: 'SOL',
+    name: 'Solana',
+    oneliner: 'High-throughput layer-1 blockchain. Sub-second blocks, sub-cent fees.',
+    goodFor: 'Fast/cheap transactions, gaming, low-cost NFTs.',
+  },
+  {
+    ticker: 'DOGE',
+    name: 'Dogecoin',
+    oneliner: 'Meme-driven coin that started as a joke and became culturally significant. Endorsed (and pumped) by Elon Musk.',
+    goodFor: 'Speculation and entertainment. Not a serious store of value.',
+  },
+  {
+    ticker: 'XMR',
+    name: 'Monero',
+    oneliner: 'Privacy-by-default cryptocurrency. Sender, recipient, and amount are all obscured on-chain.',
+    goodFor: 'Financial privacy — but harder to acquire than the others.',
+  },
+];
+
+type CoinUseCase = {
+  purpose: string;
+  scenario: string;
+  primary: string;
+  alternatives: string;
+  why: string;
+  watchOut: string;
+};
+
+const COIN_USE_CASES: CoinUseCase[] = [
+  {
+    purpose: 'Long-term store of value',
+    scenario: '"I want to put funds away for 5+ years — digital gold."',
+    primary: 'Bitcoin (BTC)',
+    alternatives: 'A smaller allocation in Ethereum (ETH) for diversification.',
+    why: 'Longest track record (since 2009), largest network effect, hard supply cap of 21M coins. The crypto most resistant to going to zero.',
+    watchOut: 'Still volatile — 50%+ drawdowns in bear markets are normal. Only buy with money you genuinely won\'t need to touch for years.',
+  },
+  {
+    purpose: 'DeFi, NFTs, and on-chain apps',
+    scenario: '"I want to use Uniswap, OpenSea, lending protocols, anything DeFi."',
+    primary: 'Ethereum (ETH)',
+    alternatives: 'Solana (SOL) if speed and cost matter more than ecosystem size.',
+    why: 'Ethereum has by far the most decentralized apps and the deepest liquidity. Almost every major DeFi protocol launched there first.',
+    watchOut: 'Gas fees on Ethereum L1 can spike to $5–50 per transaction. Most active users actually transact on L2s (Arbitrum, Base, Optimism) which inherit ETH security at a fraction of the cost.',
+  },
+  {
+    purpose: 'Stable dollar exposure',
+    scenario: '"I want crypto that doesn\'t move with the market — keep $1 = $1."',
+    primary: 'USDC',
+    alternatives: 'DAI (decentralized backing), USDT (largest but less audit transparency).',
+    why: 'USDC is fully reserved, audited monthly, and redeemable 1:1 by Circle. The most regulator-friendly stablecoin.',
+    watchOut: 'Stablecoins are not FDIC-insured. USDC briefly depegged to $0.87 during the March 2023 Silicon Valley Bank crisis. Treat it as bank-like, not bank-equivalent.',
+  },
+  {
+    purpose: 'Cheap, fast on-chain payments',
+    scenario: '"I want to send small amounts without paying $20 in gas."',
+    primary: 'Solana (SOL)',
+    alternatives: 'Litecoin (LTC), Polygon, Bitcoin Lightning Network.',
+    why: 'SOL transactions cost fractions of a cent and confirm in under a second.',
+    watchOut: 'Solana has had multiple network outages. The chain recovers, but it\'s younger and less battle-tested than Bitcoin or Ethereum.',
+  },
+  {
+    purpose: 'Earning yield from staking',
+    scenario: '"I want passive income from a coin I\'m already holding."',
+    primary: 'Ethereum staking (~3–4% APY)',
+    alternatives: 'Solana staking (~7%), Cosmos (ATOM).',
+    why: 'ETH staking is the safest staking play because the network is huge and slashing risk is low. You lock ETH, validators run, the network pays interest.',
+    watchOut: 'Staking ties up funds — ETH has an exit queue that can take days. Validator misbehavior can be slashed (lost stake). Some "yield" products in DeFi pay much higher rates and carry much higher risk; check what you\'re actually staking into.',
+  },
+  {
+    purpose: 'Financial privacy',
+    scenario: '"I want transactions that aren\'t publicly traceable."',
+    primary: 'Monero (XMR)',
+    alternatives: 'Zcash (ZEC) — privacy is opt-in, default transactions are public.',
+    why: 'XMR obscures sender, recipient, and amount by default using ring signatures, stealth addresses, and bulletproofs.',
+    watchOut: 'Major exchanges (Binance, Kraken in some jurisdictions) have delisted XMR under regulatory pressure. Acquiring it usually means smaller exchanges, peer-to-peer markets, or atomic swaps.',
+  },
+  {
+    purpose: 'Speculation / culture / memes',
+    scenario: '"I want to bet on a community or vibe — entertainment money."',
+    primary: 'Dogecoin (DOGE)',
+    alternatives: 'Whatever has a strong community right now — these come and go.',
+    why: 'Cultural value is real even when fundamental value is shaky. DOGE has 12+ years of memes, mainstream recognition, and high-profile endorsements behind it.',
+    watchOut: 'Memecoins have NO claim to fundamental value. Treat as gambling money. Only put in what you would be completely fine losing — assume zero.',
+  },
+];
+
+// "Buy a Coin 101" — where to buy and what order type to use.
+type BuyPlatform = {
+  type: string;
+  examples: string;
+  pros: string[];
+  cons: string[];
+  bestFor: string;
+};
+
+const BUY_PLATFORMS: BuyPlatform[] = [
+  {
+    type: 'Centralized exchange (CEX)',
+    examples: 'Coinbase, Kraken, Binance, Gemini, OKX',
+    pros: [
+      'Easiest fiat → crypto path (bank transfer, debit card)',
+      'High liquidity — you can buy real size without moving the price',
+      'Hundreds of coins, professional trading UI, fast support',
+    ],
+    cons: [
+      'KYC required (ID, sometimes a selfie + utility bill)',
+      'You don\'t actually custody the coins until you withdraw',
+      'Counterparty risk — FTX collapsed with billions of customer funds',
+      'The "Simple"/"Buy" button is 1–4% more expensive than the Pro/Advanced UI',
+    ],
+    bestFor: 'First-time fiat purchases, then withdraw to self-custody for the long-term hold.',
+  },
+  {
+    type: 'Decentralized exchange (DEX)',
+    examples: 'Uniswap (Ethereum/L2s), Jupiter (Solana), PancakeSwap (BNB), Raydium (Solana)',
+    pros: [
+      'No KYC, no account — connect a wallet and trade',
+      'You stay in self-custody the whole time',
+      'Access to thousands of tokens that never list on big exchanges',
+    ],
+    cons: [
+      'You need crypto already (chicken-and-egg — fund it from a CEX or P2P first)',
+      'UX is harder — slippage, gas, approvals, network selection',
+      'Most "long-tail" tokens are scams or rug-pulls; do real homework',
+    ],
+    bestFor: 'Trading once you\'re already on-chain. Obscure or pre-CEX altcoins.',
+  },
+  {
+    type: 'Stockbroker / fintech app',
+    examples: 'Cash App, PayPal, Venmo, Robinhood',
+    pros: [
+      'Lowest-friction UX — uses your existing app and bank link',
+      'Good for tiny first purchases as a learning exercise',
+    ],
+    cons: [
+      'On many of these, you don\'t own the coin — you own a claim against the platform. You may not be able to withdraw to a real wallet.',
+      'Limited coin selection',
+      'Wider spreads than crypto-native exchanges',
+    ],
+    bestFor: 'Trying it out with $20. Not a real long-term setup — verify withdrawal is allowed before buying serious money.',
+  },
+  {
+    type: 'Peer-to-peer (P2P)',
+    examples: 'HodlHodl (BTC), Bisq (BTC), Cake Wallet (XMR), LocalCryptos',
+    pros: [
+      'Privacy — no exchange KYC, no on-chain link to your bank',
+      'Access to delisted coins (Monero, etc.)',
+      'No centralized platform to collapse',
+    ],
+    cons: [
+      'Slow — escrow, dispute periods, manual matching',
+      'Trust required — the counterparty might not deliver',
+      'Limited liquidity, especially for altcoins',
+    ],
+    bestFor: 'Privacy-conscious buyers, hard-to-find coins, very large transactions.',
+  },
+];
+
+type OrderType = {
+  name: string;
+  shortDesc: string;
+  bestFor: string;
+  watchOut: string;
+};
+
+const ORDER_TYPES: OrderType[] = [
+  {
+    name: 'Market order',
+    shortDesc: '"Buy right now at whatever the current price is."',
+    bestFor: 'Small amounts on liquid coins (BTC, ETH, SOL, USDC). Speed over price.',
+    watchOut: 'On illiquid pairs, your buy can move the price — you may pay noticeably more than the quote.',
+  },
+  {
+    name: 'Limit order',
+    shortDesc: '"Buy only if the price drops to X or below."',
+    bestFor: 'When you\'re not in a rush and you have a target entry price.',
+    watchOut: 'The order may never fill if the price doesn\'t reach your target. You can wait days for nothing.',
+  },
+  {
+    name: 'Recurring buy (DCA)',
+    shortDesc: '"Buy $X every week/month, automatically, regardless of price."',
+    bestFor: 'Long-term position-building. The ultimate "I don\'t want to time the market" answer.',
+    watchOut: 'Each transaction pays its own fee. Some platforms charge more for recurring buys than manual ones.',
+  },
+  {
+    name: 'Convert / Instant buy',
+    shortDesc: '"One click, the platform quotes a price, you accept."',
+    bestFor: 'Absolute beginners on their first $20 purchase. The friendliest UI.',
+    watchOut: 'The most expensive way to buy. Spread + fees are bundled into one price — typically 1–4% worse than using the Pro/Advanced UI for the same trade.',
   },
 ];
 
@@ -744,6 +965,7 @@ type WalletEntry = {
   stat: string;
   statSource: string;
   platform: 'laptop-first' | 'mobile-first' | 'both';
+  hasTutorial?: boolean;  // true → show the radiating-star button that opens the wallet-tutorial page
 };
 
 const WALLETS_101: WalletEntry[] = [
@@ -770,6 +992,7 @@ const WALLETS_101: WalletEntry[] = [
     stat: '~70M+ wallets created (cumulative)',
     statSource: 'Trust Wallet / Binance, 2024',
     platform: 'mobile-first',
+    hasTutorial: true,
   },
   {
     name: 'MetaMask',
@@ -904,11 +1127,16 @@ const restoredPage = (() => {
 window.dashApp = () => ({
   // State
   page: restoredPage,
-  platformsOpen: ['platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds'].includes(restoredPage),
+  platformsOpen: ['platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds', 'wallet-tutorial'].includes(restoredPage),
+  currentTutorialWallet: '' as string,
   wallets101: WALLETS_101,
   chainAddressFormats: CHAIN_ADDRESS_FORMATS,
   namingServices: NAMING_SERVICES,
   fundingMethods: FUNDING_METHODS,
+  coinPrimers: COIN_PRIMERS,
+  coinUseCases: COIN_USE_CASES,
+  buyPlatforms: BUY_PLATFORMS,
+  orderTypes: ORDER_TYPES,
   portfolios: [] as Portfolio[],
   activePortfolioId: null as number | null,
   portfolioDetail: null as any,

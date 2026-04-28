@@ -2187,6 +2187,15 @@ animate();
                   </ul>
                 </div>
                 <a class="wallet101-link" :href="w.url" target="_blank" rel="noopener noreferrer" x-text="w.url.replace(/^https?:\/\//, '')"></a>
+                <button
+                  class="wallet-tutorial-star"
+                  x-show="w.hasTutorial"
+                  @click="currentTutorialWallet = w.slug; page = 'wallet-tutorial'"
+                  :title="`Open ${w.name} setup tutorial`"
+                  type="button"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
+                </button>
               </div>
             </template>
           </div>
@@ -2227,6 +2236,15 @@ animate();
                   </ul>
                 </div>
                 <a class="wallet101-link" :href="w.url" target="_blank" rel="noopener noreferrer" x-text="w.url.replace(/^https?:\/\//, '')"></a>
+                <button
+                  class="wallet-tutorial-star"
+                  x-show="w.hasTutorial"
+                  @click="currentTutorialWallet = w.slug; page = 'wallet-tutorial'"
+                  :title="`Open ${w.name} setup tutorial`"
+                  type="button"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
+                </button>
               </div>
             </template>
           </div>
@@ -2235,6 +2253,106 @@ animate();
             Stats are snapshots, not live numbers — verify on each wallet's official site or app store before relying on them. None of this is financial advice.
           </p>
         </div><!-- /wallet -->
+
+        <div x-show="page==='wallet-tutorial'">
+          <template x-if="wallets101.find(w => w.slug === currentTutorialWallet)">
+            <div
+              x-data="{
+                w: wallets101.find(w => w.slug === currentTutorialWallet),
+                step: 1,
+                total: 24,
+                captions: [
+                  'Download Trust Wallet app from the App Store — mobile.',
+                  'Create wallet — prepare to note wallet ID and fund wallet.',
+                  'Review the links in the app — navigate around.',
+                  'Navigating…',
+                  'Wallets come with seed / secret phrases that identify security and ownership of the wallet.',
+                  'Note — this phrase creates primary ownership. Very important that you record it and keep it safe.',
+                  'Noted safety concern.',
+                  'Back it up via cloud or manually. Manually = writing it down via paper and pen, usually a phrase or set of words.',
+                  'Click Fund the account.',
+                  'Loading wallet with small increments — purchasing fractional Bitcoin for $5 with a debit card.',
+                  'You can choose different coins to purchase with different methods of payment.',
+                  'Confirm order details.',
+                  'Traditional wire transfer requires a minimum amount for this specific wallet.',
+                  'KYC (Know Your Customer) — identity information collected to comply with regulations the platform is subject to.',
+                  'The more KYC data collected, the more compliant the platform is with its regulators.',
+                  'Additional KYC fields — continuing the identity verification flow.',
+                  'Final KYC fields before submission.',
+                  'Email notification of profile processing.',
+                  'Account processing completed.',
+                  'KYC verified in the mobile app.',
+                  'Confirmation of purchase order for Ethereum coin. NOTE the wallet address.',
+                  'Transaction processing.',
+                  'Transaction success.',
+                  'Review the wallet address on the corresponding coin portal.'
+                ],
+                next() { this.step = Math.min(this.total, this.step + 1); },
+                prev() { this.step = Math.max(1, this.step - 1); },
+                jump(n) { this.step = Math.max(1, Math.min(this.total, n)); }
+              }"
+              @keydown.right.window="page === 'wallet-tutorial' && next()"
+              @keydown.left.window="page === 'wallet-tutorial' && prev()"
+            >
+              <div class="page-title-block">
+                <h2 class="page-title">
+                  <span class="wallet101-logo-wrap" style="width:32px;height:32px;border-radius:6px">
+                    <img class="wallet101-logo" :src="`/static/wallet-logos/${w.slug}.svg`" :alt="`${w.name} logo`" @error="$el.parentElement.classList.add('logo-missing')" />
+                    <span class="wallet101-logo-fallback" x-text="w.name.charAt(0)"></span>
+                  </span>
+                  <span x-text="`Set up ${w.name}`"></span>
+                </h2>
+                <p class="page-subtitle">A step-by-step walkthrough for creating a new <span x-text="w.name"></span> wallet, with screenshots from a real setup. Use the arrow keys, the buttons below, or click the image to advance.</p>
+              </div>
+
+              <div class="back-link-wrap" style="text-align:left; margin-bottom:14px">
+                <button type="button" class="back-btn" @click="page='wallet'">&larr; Back to Pick a Wallet</button>
+              </div>
+
+              <!-- Progress strip -->
+              <div class="tutorial-progress">
+                <div class="tutorial-progress-text">
+                  Step <strong x-text="step"></strong> of <span x-text="total"></span>
+                </div>
+                <div class="tutorial-dots">
+                  <template x-for="n in total" :key="n">
+                    <button
+                      class="tutorial-dot"
+                      :class="{active: n === step, done: n < step}"
+                      @click="jump(n)"
+                      :title="`Jump to step ${n}`"
+                      type="button"
+                    ></button>
+                  </template>
+                </div>
+              </div>
+
+              <!-- Image viewer -->
+              <div class="tutorial-viewer">
+                <button class="tutorial-arrow tutorial-arrow-left" @click="prev()" :disabled="step === 1" type="button" aria-label="Previous step">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                </button>
+                <div class="tutorial-image-wrap" @click="next()" :class="{'cursor-end': step === total}">
+                  <img class="tutorial-image" :src="`/static/wallet-tutorials/${w.slug}/step-${step}.png`" :alt="`${w.name} setup, step ${step}`" />
+                </div>
+                <button class="tutorial-arrow tutorial-arrow-right" @click="next()" :disabled="step === total" type="button" aria-label="Next step">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+
+              <!-- Caption -->
+              <p class="tutorial-caption" x-text="captions[step - 1]"></p>
+
+              <!-- Bottom nav -->
+              <div class="tutorial-nav">
+                <button class="btn btn-outline" @click="prev()" :disabled="step === 1" type="button">&larr; Previous</button>
+                <span class="tutorial-keyboard-hint">← / → keys to navigate</span>
+                <button class="btn btn-primary" @click="next()" :disabled="step === total" type="button" x-show="step < total">Next &rarr;</button>
+                <button class="btn btn-primary" @click="page='wallet'" type="button" x-show="step === total">Done — back to Pick a Wallet</button>
+              </div>
+            </div>
+          </template>
+        </div><!-- /wallet-tutorial -->
 
         <div x-show="page==='wallet-address'">
           <div class="page-title-block">
@@ -2396,16 +2514,164 @@ animate();
 
         <div x-show="page==='pick-a-coin'">
           <div class="page-title-block">
-            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>Pick a coin</h2>
-            <p class="page-subtitle">Coming soon.</p>
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>Pick a Coin 101</h2>
+            <p class="page-subtitle">Skip the noise. What each major coin actually does, and which one fits your reason for buying.</p>
           </div>
+
+          <div class="addr-intro card">
+            <p>
+              There are <strong>thousands</strong> of cryptocurrencies, but most beginners only need to understand five or six. The trick isn't picking the "best" coin — there isn't one. It's picking the right one <em>for the job</em>: storing value, paying for things, exploring DeFi, earning yield, or just betting on a meme.
+            </p>
+            <p style="margin-top:10px">
+              Below: short primers on the major coins, then a use-case picker that tells you which coin actually fits what you're trying to do.
+            </p>
+          </div>
+
+          <h3 class="wallet101-section-heading">Coins, decoded</h3>
+          <div class="addr-naming-grid">
+            <template x-for="c in coinPrimers" :key="c.ticker">
+              <div class="addr-naming-card">
+                <div class="addr-naming-head">
+                  <h4 class="addr-naming-name" x-text="c.name"></h4>
+                  <code class="addr-naming-suffix" x-text="c.ticker"></code>
+                </div>
+                <p style="font-size:12.5px; color:var(--text); line-height:1.5; margin:0" x-text="c.oneliner"></p>
+                <div class="addr-format-example" style="margin-top:4px">
+                  <div class="addr-format-label">Good for</div>
+                  <div style="font-size:12px; color:var(--text); line-height:1.45" x-text="c.goodFor"></div>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <h3 class="wallet101-section-heading">What are you trying to do?</h3>
+          <p class="addr-section-blurb">
+            Find the row that matches your goal. The "primary" recommendation is the most boring, well-trodden answer — usually the right call for someone learning.
+          </p>
+          <div class="addr-format-grid">
+            <template x-for="u in coinUseCases" :key="u.purpose">
+              <div class="addr-format-card">
+                <div class="addr-format-head">
+                  <h4 class="addr-format-chain" x-text="u.purpose"></h4>
+                </div>
+                <p style="font-size:12px; color:var(--muted); margin:0; font-style:italic; line-height:1.45" x-text="u.scenario"></p>
+                <div class="addr-format-meta" style="grid-template-columns: 1fr">
+                  <div>
+                    <span class="addr-format-label">Primary</span>
+                    <span style="color:var(--accent); font-weight:600" x-text="u.primary"></span>
+                  </div>
+                  <div>
+                    <span class="addr-format-label">Also consider</span>
+                    <span x-text="u.alternatives"></span>
+                  </div>
+                </div>
+                <div class="addr-format-example">
+                  <div class="addr-format-label">Why</div>
+                  <div style="font-size:12px; color:var(--text); line-height:1.5" x-text="u.why"></div>
+                </div>
+                <p class="addr-format-note" x-text="'Watch out: ' + u.watchOut"></p>
+              </div>
+            </template>
+          </div>
+
+          <p class="wallet101-disclaimer">
+            None of this is financial advice. Crypto is volatile — assume any coin could lose 80%+ in a bear market. Only put in what you can afford to lose. Past performance does not predict future returns.
+          </p>
         </div><!-- /pick-a-coin -->
 
         <div x-show="page==='buy-a-coin'">
           <div class="page-title-block">
-            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Buy a coin</h2>
-            <p class="page-subtitle">Coming soon.</p>
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Buy a Coin 101</h2>
+            <p class="page-subtitle">Where to actually buy, which order type to use, and how to avoid paying 4% extra for the same trade.</p>
           </div>
+
+          <div class="addr-intro card">
+            <p>
+              Once you know <em>which</em> coin you want, the next decision is <strong>where</strong> and <strong>how</strong>. Different platforms have very different costs, and the same platform can charge you 1–4% more or less depending on which button you click. The cheapest, most boring path for a first purchase is: <strong>fiat → centralized exchange → Pro/Advanced UI → limit order → withdraw to your own wallet.</strong>
+            </p>
+          </div>
+
+          <h3 class="wallet101-section-heading">Where to buy</h3>
+          <div class="addr-format-grid">
+            <template x-for="p in buyPlatforms" :key="p.type">
+              <div class="addr-format-card">
+                <div class="addr-format-head">
+                  <h4 class="addr-format-chain" x-text="p.type"></h4>
+                </div>
+                <div class="addr-format-meta" style="grid-template-columns: 1fr">
+                  <div>
+                    <span class="addr-format-label">Examples</span>
+                    <span x-text="p.examples"></span>
+                  </div>
+                </div>
+                <div class="wallet101-pros">
+                  <div class="wallet101-pc-label">Pros</div>
+                  <ul>
+                    <template x-for="pro in p.pros" :key="pro"><li x-text="pro"></li></template>
+                  </ul>
+                </div>
+                <div class="wallet101-cons">
+                  <div class="wallet101-pc-label">Cons</div>
+                  <ul>
+                    <template x-for="con in p.cons" :key="con"><li x-text="con"></li></template>
+                  </ul>
+                </div>
+                <div class="addr-format-example">
+                  <div class="addr-format-label">Best for</div>
+                  <div style="font-size:12px; color:var(--text); line-height:1.45" x-text="p.bestFor"></div>
+                </div>
+              </div>
+            </template>
+          </div>
+
+          <h3 class="wallet101-section-heading">Order types</h3>
+          <p class="addr-section-blurb">
+            Every exchange has these four buttons under different names. Pick the one that matches your situation.
+          </p>
+          <div class="addr-naming-grid">
+            <template x-for="o in orderTypes" :key="o.name">
+              <div class="addr-naming-card">
+                <div class="addr-naming-head">
+                  <h4 class="addr-naming-name" x-text="o.name"></h4>
+                </div>
+                <p style="font-size:12.5px; color:var(--text); line-height:1.5; margin:0; font-style:italic" x-text="o.shortDesc"></p>
+                <div class="addr-naming-meta">
+                  <div><span class="addr-format-label">Best for</span><span x-text="o.bestFor"></span></div>
+                </div>
+                <p class="addr-format-note" x-text="'Watch out: ' + o.watchOut"></p>
+              </div>
+            </template>
+          </div>
+
+          <h3 class="wallet101-section-heading">Best practices</h3>
+          <div class="addr-pitfalls card">
+            <ul>
+              <li><strong>Use the "Pro" or "Advanced" trading UI, not the simple "Buy" button.</strong> Same platform, same coin, but the Pro UI is typically 1–3% cheaper because it skips the bundled spread. Coinbase is the most extreme example — Coinbase Advanced fees are a fraction of basic Coinbase.</li>
+              <li><strong>Use limit orders if you're not in a rush.</strong> Set the order at the price you'd be happy buying at, then walk away. You'll get a better fill than a market order most of the time.</li>
+              <li><strong>DCA (dollar-cost average) for long-term positions.</strong> Buy a fixed amount weekly or monthly, regardless of price. The point isn't to maximize returns — it's to make the timing decision automatic so you can't talk yourself out of it during a crash.</li>
+              <li><strong>Withdraw to your own wallet for sums you care about.</strong> Exchanges are on-ramps, not vaults. "Not your keys, not your coins" — if the exchange goes down (FTX, Mt. Gox), the funds on it are at risk. For real holdings, move them to self-custody.</li>
+              <li><strong>Confirm the network before withdrawing.</strong> Same coin can exist on multiple chains. Withdrawing USDC over Ethereum to a wallet only set up for Polygon strands the funds. Match the dropdowns on both sides.</li>
+              <li><strong>Save records.</strong> Every buy creates a tax event eventually (when you eventually sell). The exchange will probably keep records, but exporting your own CSV is cheap insurance.</li>
+            </ul>
+          </div>
+
+          <h3 class="wallet101-section-heading">Don't dos <span class="wallet101-tag" style="text-transform:none">avoid</span></h3>
+          <div class="addr-pitfalls card">
+            <ul>
+              <li><strong>Don't buy at the top of a hype cycle.</strong> The hardest emotional buys are the ones made when prices have just doubled and everyone on Twitter is excited. Those are usually the worst entries. If you're in a rush to buy because of news, that's a signal to wait.</li>
+              <li><strong>Don't use leverage, margin, futures, or perpetuals as a beginner.</strong> These products amplify gains and losses — including all the way to liquidation, where your collateral is wiped out. Starting with leverage is how most new accounts blow up.</li>
+              <li><strong>Don't buy random tokens on a DEX without verifying.</strong> The vast majority of long-tail tokens listed on Uniswap, Raydium, etc. are scams or rug-pulls. Always verify the contract address against the project's official site (typed by hand, not from search ads).</li>
+              <li><strong>Don't leave large amounts on an exchange long-term.</strong> Use it to buy and withdraw. FTX, Mt. Gox, QuadrigaCX — exchanges go down, sometimes with everyone's money. Treat custodial accounts like a checking account, not a savings account.</li>
+              <li><strong>Don't buy "investment products" thinking they're spot.</strong> Bitcoin futures, levered ETFs, perpetual swaps — these are bets <em>about</em> the price, not actual ownership of the coin. Their behavior diverges from spot over time, often badly.</li>
+              <li><strong>Don't trust unsolicited DMs about your purchase.</strong> "We noticed an issue with your withdrawal — click here to verify" — that's always a phishing flow. Real exchanges and wallets don't DM you.</li>
+              <li><strong>Don't share screenshots showing your balance.</strong> It's an open invitation for scammers to target you with personalized attacks.</li>
+              <li><strong>Don't assume "convert" or "instant buy" is the same price as the Pro UI.</strong> It almost never is. The convenience comes at a real cost — sometimes 3–4% per trade.</li>
+            </ul>
+          </div>
+
+          <p class="wallet101-disclaimer">
+            None of this is financial advice. Crypto purchases are volatile and can lose substantial value. Verify fees, withdrawal rules, and tax treatment with the platform you're actually using before transacting.
+          </p>
         </div><!-- /buy-a-coin -->
 
         <div x-show="page==='transaction-hash'">
@@ -2427,29 +2693,29 @@ animate();
 
   </div>
 
-  <div class="ticker-strip" x-show="topCoins.length > 0">
-  <div class="ticker-label">&#9632; 1Y</div>
-  <div class="ticker-track">
-    <div class="ticker-content">
-      <!-- set 1 -->
-      <template x-for="c in topCoins.slice(0,25)" :key="'a-'+c.id">
-        <span class="ticker-item">
-          <span class="ticker-sym" x-text="c.symbol.toUpperCase()"></span>
-          <span class="ticker-price" x-text="(c.current_price_usd ?? 0) >= 1000 ? '$'+(c.current_price_usd).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '$'+(c.current_price_usd ?? 0).toFixed(4)"></span>
-          <span :class="(c.price_change_1y ?? 0) >= 0 ? 'ticker-up' : 'ticker-down'" x-text="c.price_change_1y != null ? ((c.price_change_1y >= 0 ? '+' : '')+c.price_change_1y.toFixed(2)+'%') : '—'"></span>
-        </span>
-      </template>
-      <!-- set 2 — duplicate for seamless loop -->
-      <template x-for="c in topCoins.slice(0,25)" :key="'b-'+c.id">
-        <span class="ticker-item">
-          <span class="ticker-sym" x-text="c.symbol.toUpperCase()"></span>
-          <span class="ticker-price" x-text="(c.current_price_usd ?? 0) >= 1000 ? '$'+(c.current_price_usd).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '$'+(c.current_price_usd ?? 0).toFixed(4)"></span>
-          <span :class="(c.price_change_1y ?? 0) >= 0 ? 'ticker-up' : 'ticker-down'" x-text="c.price_change_1y != null ? ((c.price_change_1y >= 0 ? '+' : '')+c.price_change_1y.toFixed(2)+'%') : '—'"></span>
-        </span>
-      </template>
+  <div class="ticker-strip" x-show="topCoins.length >= 5">
+    <div class="ticker-label">&#9632; 1Y</div>
+    <div class="ticker-track">
+      <div class="ticker-content">
+        <!-- set 1 -->
+        <template x-for="c in topCoins.slice(0,25)" :key="'a-'+c.coingecko_id">
+          <span class="ticker-item">
+            <span class="ticker-sym" x-text="c.symbol.toUpperCase()"></span>
+            <span class="ticker-price" x-text="(c.current_price_usd ?? 0) >= 1000 ? '$'+(c.current_price_usd).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '$'+(c.current_price_usd ?? 0).toFixed(4)"></span>
+            <span :class="(c.price_change_1y ?? 0) >= 0 ? 'ticker-up' : 'ticker-down'" x-text="c.price_change_1y != null ? ((c.price_change_1y >= 0 ? '+' : '')+c.price_change_1y.toFixed(2)+'%') : '—'"></span>
+          </span>
+        </template>
+        <!-- set 2 — duplicate for seamless loop -->
+        <template x-for="c in topCoins.slice(0,25)" :key="'b-'+c.coingecko_id">
+          <span class="ticker-item">
+            <span class="ticker-sym" x-text="c.symbol.toUpperCase()"></span>
+            <span class="ticker-price" x-text="(c.current_price_usd ?? 0) >= 1000 ? '$'+(c.current_price_usd).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '$'+(c.current_price_usd ?? 0).toFixed(4)"></span>
+            <span :class="(c.price_change_1y ?? 0) >= 0 ? 'ticker-up' : 'ticker-down'" x-text="c.price_change_1y != null ? ((c.price_change_1y >= 0 ? '+' : '')+c.price_change_1y.toFixed(2)+'%') : '—'"></span>
+          </span>
+        </template>
+      </div>
     </div>
   </div>
-</div>
 
   <div class="modal-backdrop" x-show="showAddPortfolio" @click.self="showAddPortfolio=false">
   <div class="modal">
