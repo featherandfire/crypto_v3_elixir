@@ -145,6 +145,22 @@ a:hover { color: var(--accent-hover); }
   filter: drop-shadow(0 0 4px rgba(180,77,255,0.8));
 }
 
+/* Expandable parent + nested child rows. The chevron at the right edge
+   rotates 180° when the section is open. Children are indented and use
+   a slightly smaller icon. */
+.nav-item-parent .nav-item-label { flex: 1; }
+.nav-chevron {
+  margin-left: auto;
+  transition: transform .2s ease;
+  opacity: .7;
+}
+.nav-chevron.open { transform: rotate(180deg); }
+.nav-children .nav-item-child {
+  padding-left: 44px;        /* line up with parent label, indented */
+  font-size: 12.5px;
+}
+.nav-children .nav-item-child svg { opacity: .85; }
+
 .sidebar-footer {
   padding: 16px 20px;
   border-top: 1px solid var(--border);
@@ -332,6 +348,423 @@ a:hover { color: var(--accent-hover); }
   border-color: var(--accent);
   color: var(--accent);
   box-shadow: 0 0 8px rgba(180,77,255,0.2);
+}
+
+/* Fee-tier indicator: 5-step green→red scale, used on funding methods. */
+.fee-tier-scale {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  margin-top: 6px;
+}
+.fee-tier-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  opacity: .35;
+  display: inline-block;
+  transition: transform .15s, opacity .15s, box-shadow .15s;
+}
+.fee-tier-dot.tier-1 { background: #5dd49a; color: #5dd49a; }
+.fee-tier-dot.tier-2 { background: #b8d65d; color: #b8d65d; }
+.fee-tier-dot.tier-3 { background: #e0c815; color: #e0c815; }
+.fee-tier-dot.tier-4 { background: #f5973d; color: #f5973d; }
+.fee-tier-dot.tier-5 { background: #ff5d5d; color: #ff5d5d; }
+.fee-tier-dot.active {
+  opacity: 1;
+  transform: scale(1.5);
+  box-shadow: 0 0 6px currentColor;
+}
+.fee-tier-legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--muted);
+  margin: -4px 0 12px;
+  letter-spacing: .03em;
+}
+.fee-tier-legend .fee-tier-dot { opacity: 1; }
+.fee-tier-legend .legend-arrow { color: var(--muted); margin: 0 4px; }
+.fee-tier-legend .legend-text { color: var(--muted); }
+
+/* Wallet Address fast-facts page. */
+.addr-intro { padding: 16px 20px; margin-bottom: 24px; line-height: 1.55; font-size: 13.5px; color: var(--text); }
+.addr-intro p { margin: 0; }
+.addr-warning { color: #ff8a8a; font-weight: 600; }
+.addr-section-blurb { font-size: 12.5px; color: var(--muted); margin: -4px 0 12px; line-height: 1.5; }
+.addr-section-blurb code { font-family: var(--mono); color: var(--accent); background: var(--surface2); padding: 1px 5px; border-radius: 3px; }
+
+.addr-format-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.addr-format-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.addr-format-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.addr-format-chain { font-size: 14px; font-weight: 700; margin: 0; color: var(--text); }
+.addr-format-prefix { font-size: 11.5px; color: var(--muted); }
+.addr-format-prefix code {
+  font-family: var(--mono);
+  color: var(--accent);
+  background: var(--surface2);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-weight: 600;
+  margin-left: 4px;
+}
+.addr-format-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text);
+}
+.addr-format-label {
+  display: block;
+  text-transform: uppercase;
+  font-size: 9.5px;
+  letter-spacing: .1em;
+  color: var(--muted);
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+.addr-format-example {
+  background: var(--surface2);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.addr-format-example code {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  color: var(--accent);
+  word-break: break-all;
+  display: block;
+}
+.addr-format-note {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-style: italic;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.addr-naming-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.addr-naming-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.addr-naming-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.addr-naming-name { font-size: 14px; font-weight: 700; margin: 0; color: var(--text); }
+.addr-naming-suffix {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  background: var(--surface2);
+  padding: 1px 8px;
+  border-radius: 3px;
+}
+.addr-naming-meta { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: var(--text); }
+.addr-naming-meta code { font-family: var(--mono); color: var(--accent); }
+
+.addr-pitfalls { padding: 14px 18px; line-height: 1.55; font-size: 13px; color: var(--text); }
+.addr-pitfalls ul { margin: 0; padding-left: 20px; }
+.addr-pitfalls li { margin-bottom: 10px; }
+.addr-pitfalls li:last-child { margin-bottom: 0; }
+.addr-pitfalls code { font-family: var(--mono); font-size: 11.5px; color: var(--accent); background: var(--surface2); padding: 1px 5px; border-radius: 3px; }
+
+/* Wallet 101 page — pros/cons cards + intro panel. */
+.wallet101-intro { padding: 16px 20px; margin-bottom: 24px; line-height: 1.55; font-size: 13.5px; color: var(--text); }
+.wallet101-intro p { margin: 0; }
+.wallet101-section-heading {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  color: var(--muted);
+  margin: 28px 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.wallet101-tag {
+  font-size: 10px;
+  letter-spacing: .12em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 100, 100, 0.15);
+  color: #ff8a8a;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.wallet101-tag-cold {
+  background: rgba(100, 180, 255, 0.15);
+  color: #6fb8ff;
+}
+.wallet101-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+.wallet101-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color .15s, box-shadow .15s;
+}
+.wallet101-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(180, 77, 255, 0.18);
+}
+.wallet101-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.wallet101-card-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+.wallet101-logo-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--surface2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  overflow: hidden;
+  position: relative;
+}
+/* Logos with dark/black strokes get a white chip so they're visible against
+   the dark theme. Targeted by image filename via :has(). */
+.wallet101-logo-wrap:has(img[src$="ledger.svg"]),
+.wallet101-logo-wrap:has(img[src$="trezor.svg"]) {
+  background: #ffffff;
+}
+.wallet101-logo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 4px;
+}
+.wallet101-logo-fallback {
+  display: none;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--accent);
+}
+.wallet101-logo-wrap.logo-missing .wallet101-logo { display: none; }
+.wallet101-logo-wrap.logo-missing .wallet101-logo-fallback { display: block; }
+.wallet101-name { font-size: 16px; font-weight: 700; margin: 0; color: var(--text); }
+.wallet101-chain { font-size: 11px; color: var(--muted); letter-spacing: .04em; }
+.wallet101-platform {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--accent);
+  letter-spacing: .04em;
+}
+.wallet101-platform svg.dim {
+  opacity: .25;
+  stroke: var(--muted);
+}
+.wallet101-platform-label {
+  margin-left: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .1em;
+  font-size: 10.5px;
+}
+.wallet101-stat {
+  background: var(--surface2);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.wallet101-stat-num { font-size: 13px; font-weight: 600; color: var(--accent); }
+.wallet101-stat-src { font-size: 10.5px; color: var(--muted); margin-top: 2px; }
+.wallet101-pros, .wallet101-cons { font-size: 12.5px; line-height: 1.45; }
+.wallet101-pc-label {
+  font-size: 11px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.wallet101-pros .wallet101-pc-label { color: #5dd49a; }
+.wallet101-cons .wallet101-pc-label { color: #ff8a8a; }
+.wallet101-pros ul, .wallet101-cons ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.wallet101-pros li, .wallet101-cons li {
+  padding-left: 18px;
+  position: relative;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+.wallet101-pros li::before {
+  content: "+";
+  position: absolute;
+  left: 4px;
+  color: #5dd49a;
+  font-weight: 700;
+}
+.wallet101-cons li::before {
+  content: "−";
+  position: absolute;
+  left: 4px;
+  color: #ff8a8a;
+  font-weight: 700;
+}
+.wallet101-link {
+  font-size: 12px;
+  font-family: var(--mono);
+  color: var(--accent);
+  text-decoration: none;
+  margin-top: auto;
+  padding-top: 4px;
+}
+.wallet101-link:hover { text-decoration: underline; }
+.wallet101-disclaimer {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 28px;
+  font-style: italic;
+}
+
+/* Animated category nav at the top of the Platforms page. All rules are
+   scoped under .platforms-anim-nav so they can't leak into the rest of the
+   app. The body-color cycling from the original demo is intentionally
+   omitted — the app's dark theme stays put. */
+.platforms-anim-nav {
+  --bgColorMenu: var(--surface);
+  --duration: .5s;
+  display: flex;
+  justify-content: center;
+  margin: 0 0 28px;
+}
+.platforms-anim-nav .menu {
+  margin: 0;
+  display: flex;
+  width: 100%;
+  font-size: 0.96em;
+  padding: 0 2.85em;
+  position: relative;
+  align-items: center;
+  justify-content: space-around;
+  background-color: var(--bgColorMenu);
+}
+.platforms-anim-nav .menu__item {
+  all: unset;
+  flex-grow: 1;
+  z-index: 100;
+  display: flex;
+  cursor: pointer;
+  position: relative;
+  border-radius: 50%;
+  align-items: center;
+  will-change: transform;
+  justify-content: center;
+  padding: 0.55em 0 0.85em;
+  transition: transform var(--timeOut, var(--duration));
+}
+.platforms-anim-nav .menu__item::before {
+  content: "";
+  z-index: -1;
+  width: 4.2em;
+  height: 4.2em;
+  border-radius: 50%;
+  position: absolute;
+  transform: scale(0);
+  transition: background-color var(--duration), transform var(--duration);
+}
+.platforms-anim-nav .menu__item.active {
+  transform: translate3d(0, -.2em, 0);
+}
+.platforms-anim-nav .menu__item.active::before {
+  transform: scale(1);
+  background-color: var(--accent);
+}
+.platforms-anim-nav .menu__item:hover::before {
+  transform: scale(1);
+  background-color: var(--accent-dim);
+}
+.platforms-anim-nav .icon {
+  width: 2.6em;
+  height: 2.6em;
+  stroke: white;
+  fill: transparent;
+  stroke-width: 1pt;
+  stroke-miterlimit: 10;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 400;
+}
+.platforms-anim-nav .menu__item.active .icon {
+  animation: platforms-anim-nav-strok 0.5s reverse;
+  filter: drop-shadow(0 0 6px rgba(180, 77, 255, 0.6));
+}
+@keyframes platforms-anim-nav-strok {
+  100% { stroke-dashoffset: 400; }
+}
+.platforms-anim-nav .menu__border {
+  left: 0;
+  bottom: 99%;
+  width: 10.9em;
+  height: 2.4em;
+  position: absolute;
+  clip-path: url(#platforms-anim-nav-clip);
+  will-change: transform;
+  background-color: var(--bgColorMenu);
+  transition: transform var(--timeOut, var(--duration));
+}
+.platforms-anim-nav .svg-container {
+  width: 0;
+  height: 0;
+}
+@media screen and (max-width: 50em) {
+  .platforms-anim-nav .menu { font-size: .8em; }
 }
 
 /* Breathing accent border, used to draw the eye to a primary CTA. */
@@ -971,7 +1404,8 @@ tbody td:nth-child(6) {
 .lookup-search     { display: flex; gap: 8px; margin-bottom: 24px; }
 .lookup-input      { font-family: monospace; font-size: 13px; flex: 1; }
 .page-title-block  { margin-bottom: 24px; }
-.page-title        { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+.page-title        { font-size: 22px; font-weight: 700; margin-bottom: 6px; display: inline-flex; align-items: center; gap: 12px; }
+.page-title-icon   { width: 24px; height: 24px; stroke: var(--accent); fill: transparent; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; filter: drop-shadow(0 0 4px rgba(180,77,255,0.5)); }
 .page-subtitle     { color: var(--muted); font-size: 13px; }
 
 .coin-stack  { display: flex; align-items: center; margin-top: 12px; padding-top: 8px; padding-left: 7px; overflow: hidden; max-width: 100%; mask-image: linear-gradient(to right, black 90%, transparent 100%); -webkit-mask-image: linear-gradient(to right, black 90%, transparent 100%); }

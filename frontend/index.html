@@ -640,9 +640,40 @@ animate();
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
       Marketplace
     </div>
-    <div class="nav-item" :class="{active: page==='platforms'}" @click="page='platforms'">
+    <div class="nav-item nav-item-parent" :class="{active: page==='platforms', expanded: platformsOpen}" @click="page='platforms'; platformsOpen = true">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/><path d="M6 14h4"/></svg>
-      Platforms
+      <span class="nav-item-label">Platforms</span>
+      <svg class="nav-chevron" :class="{open: platformsOpen}" @click.stop="platformsOpen = !platformsOpen" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="nav-children" x-show="platformsOpen">
+      <div class="nav-item nav-item-child" :class="{active: page==='wallet'}" @click="page='wallet'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2"/><path d="M3 11h3c.8 0 1.6.3 2.1.9l1.1.9c1.6 1.6 4.1 1.6 5.7 0l1.1-.9c.5-.5 1.3-.9 2.1-.9H21"/></svg>
+        Wallet
+      </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='wallet-address'}" @click="page='wallet-address'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 22a1 1 0 0 1-1-1v-4a1 1 0 0 1 .445-.832l3-2a1 1 0 0 1 1.11 0l3 2A1 1 0 0 1 22 17v4a1 1 0 0 1-1 1z"/><path d="M18 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 .601.2"/><path d="M18 22v-3"/><circle cx="10" cy="10" r="3"/></svg>
+        Wallet address
+      </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='fund-account'}" @click="page='fund-account'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+        Fund account
+      </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='pick-a-coin'}" @click="page='pick-a-coin'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>
+        Pick a coin
+      </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='buy-a-coin'}" @click="page='buy-a-coin'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        Buy a coin
+      </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='transaction-hash'}" @click="page='transaction-hash'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>
+        Transaction hash
+      </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='exchange-funds'}" @click="page='exchange-funds'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+        Exchange funds
+      </div>
     </div>
   </nav>
 
@@ -1037,7 +1068,7 @@ animate();
 
   <!-- Page title -->
   <div class="page-title-block">
-    <h2 class="page-title">Resources</h2>
+    <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>Resources</h2>
     <p class="page-subtitle">Reference of supported chains, explorers, and adjacent on-chain tooling</p>
     <div class="coin-stack" x-show="topCoins.length">
       <template x-for="c in topCoins.slice(0, 80)" :key="c.coingecko_id">
@@ -1369,7 +1400,7 @@ animate();
 
   <!-- Page title -->
   <div class="page-title-block">
-    <h2 class="page-title">Blockchain Hash Lookup</h2>
+    <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Blockchain Hash Lookup</h2>
     <p class="page-subtitle">Paste any transaction hash, wallet address, or block hash to identify its chain and open the right explorer</p>
   </div>
 
@@ -1652,7 +1683,7 @@ animate();
         <div x-show="page==='marketplace'" x-init="$watch('page', p => p === 'marketplace' && loadMarketplace())">
 
   <div class="page-title-block">
-    <h2 class="page-title">Marketplace</h2>
+    <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>Marketplace</h2>
     <p class="page-subtitle">Top crypto assets ranked by price</p>
     <div class="coin-stack" x-show="marketplaceCoins.length">
       <template x-for="p in marketplaceCoins.slice((mkPage-1)*mkPerPage, (mkPage-1)*mkPerPage + mkPerPage + 30)" :key="p.base_asset">
@@ -1851,10 +1882,72 @@ animate();
 
 </div>
 
-        <div x-show="page==='platforms'">
+        <div x-show="page==='platforms'" x-init="$nextTick(() => window.initPlatformsAnimNav && window.initPlatformsAnimNav())">
+
+  <!-- Decorative animated category nav. Click-to-activate with a clip-path
+       border that follows the selected button. Filtering is not wired yet —
+       buttons just update active state for now. -->
+  <div class="platforms-anim-nav">
+    <menu class="menu">
+      <button class="menu__item active" style="--bgColorItem: #5da9ff;" type="button" @click="page='wallet'" title="Wallet">
+        <svg class="icon" viewBox="0 0 24 24">
+          <rect width="18" height="18" x="3" y="3" rx="2"/>
+          <path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2"/>
+          <path d="M3 11h3c.8 0 1.6.3 2.1.9l1.1.9c1.6 1.6 4.1 1.6 5.7 0l1.1-.9c.5-.5 1.3-.9 2.1-.9H21"/>
+        </svg>
+      </button>
+      <button class="menu__item" style="--bgColorItem: #4d77ff;" type="button" @click="page='wallet-address'" title="Wallet address">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M15 22a1 1 0 0 1-1-1v-4a1 1 0 0 1 .445-.832l3-2a1 1 0 0 1 1.11 0l3 2A1 1 0 0 1 22 17v4a1 1 0 0 1-1 1z"/>
+          <path d="M18 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 .601.2"/>
+          <path d="M18 22v-3"/>
+          <circle cx="10" cy="10" r="3"/>
+        </svg>
+      </button>
+      <button class="menu__item" style="--bgColorItem: #4d4dff;" type="button" @click="page='fund-account'" title="Fund account">
+        <svg class="icon" viewBox="0 0 24 24">
+          <rect width="20" height="14" x="2" y="5" rx="2"/>
+          <line x1="2" x2="22" y1="10" y2="10"/>
+        </svg>
+      </button>
+      <button class="menu__item" style="--bgColorItem: #6b4dff;" type="button" @click="page='pick-a-coin'" title="Pick a coin">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/>
+        </svg>
+      </button>
+      <button class="menu__item" style="--bgColorItem: #8a4dff;" type="button" @click="page='buy-a-coin'" title="Buy a coin">
+        <svg class="icon" viewBox="0 0 24 24">
+          <line x1="12" x2="12" y1="2" y2="22"/>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+        </svg>
+      </button>
+      <button class="menu__item" style="--bgColorItem: #b44dff;" type="button" @click="page='transaction-hash'" title="Transaction hash">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/>
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+        </svg>
+      </button>
+      <button class="menu__item" style="--bgColorItem: #d566ff;" type="button" @click="page='exchange-funds'" title="Exchange funds">
+        <svg class="icon" viewBox="0 0 24 24">
+          <path d="m17 2 4 4-4 4"/>
+          <path d="M3 11v-1a4 4 0 0 1 4-4h14"/>
+          <path d="m7 22-4-4 4-4"/>
+          <path d="M21 13v1a4 4 0 0 1-4 4H3"/>
+        </svg>
+      </button>
+      <div class="menu__border"></div>
+    </menu>
+    <div class="svg-container">
+      <svg viewBox="0 0 202.9 45.5">
+        <clipPath id="platforms-anim-nav-clip" clipPathUnits="objectBoundingBox" transform="scale(0.0049285362247413 0.021978021978022)">
+          <path d="M6.7,45.5c5.7,0.1,14.1-0.4,23.3-4c5.7-2.3,9.9-5,18.1-10.5c10.7-7.1,11.8-9.2,20.6-14.3c5-2.9,9.2-5.2,15.2-7 c7.1-2.1,13.3-2.3,17.6-2.1c4.2-0.2,10.5,0.1,17.6,2.1c6.1,1.8,10.2,4.1,15.2,7c8.8,5,9.9,7.1,20.6,14.3c8.3,5.5,12.4,8.2,18.1,10.5 c9.2,3.6,17.6,4.2,23.3,4H6.7z"/>
+        </clipPath>
+      </svg>
+    </div>
+  </div>
 
   <div class="page-title-block">
-    <h2 class="page-title">Platforms</h2>
+    <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/><path d="M6 14h4"/></svg>Platforms</h2>
     <p class="page-subtitle">Where to set up a wallet, buy crypto, or hold custody &mdash; grouped by type</p>
   </div>
 
@@ -2036,6 +2129,298 @@ animate();
   </div>
 
 </div><!-- /platforms -->
+
+        <div x-show="page==='wallet'">
+          <div class="page-title-block">
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2"/><path d="M3 11h3c.8 0 1.6.3 2.1.9l1.1.9c1.6 1.6 4.1 1.6 5.7 0l1.1-.9c.5-.5 1.3-.9 2.1-.9H21"/></svg>Pick a Wallet</h2>
+            <p class="page-subtitle">A short, opinionated guide to the wallets new users actually consider — with real tradeoffs and rough popularity stats.</p>
+          </div>
+
+          <div class="wallet101-intro card">
+            <p>
+              <strong>Self-custody</strong> wallets (every wallet on this page) put the seed phrase in your hands. Lose it and the funds are gone.
+            </p>
+            <p style="margin-top:10px">
+              <strong>Custodial accounts</strong> (Coinbase exchange, Kraken, Binance) hold the keys for you — easier, but you don't actually own the assets. Most newbies start custodial, learn the ropes, then graduate to self-custody.
+            </p>
+            <p style="margin-top:10px">
+              <span class="wallet101-tag">hot</span> = software wallet, keys live on a device that touches the internet.
+            </p>
+            <p style="margin-top:10px">
+              <span class="wallet101-tag wallet101-tag-cold">cold</span> = hardware wallet, keys never leave a dedicated offline device. For meaningful sums, use a hardware wallet paired with a hot wallet for daily use.
+            </p>
+          </div>
+
+          <h3 class="wallet101-section-heading">Software wallets <span class="wallet101-tag">hot</span></h3>
+          <div class="wallet101-grid">
+            <template x-for="w in wallets101.filter(x => x.kind === 'software')" :key="w.name">
+              <div class="wallet101-card">
+                <div class="wallet101-card-head">
+                  <div class="wallet101-logo-wrap">
+                    <img class="wallet101-logo" :src="`/static/wallet-logos/${w.slug}.svg`" :alt="`${w.name} logo`" loading="lazy" @error="$el.parentElement.classList.add('logo-missing')" />
+                    <span class="wallet101-logo-fallback" x-text="w.name.charAt(0)"></span>
+                  </div>
+                  <div class="wallet101-card-head-text">
+                    <h4 class="wallet101-name" x-text="w.name"></h4>
+                    <span class="wallet101-chain" x-text="w.chain"></span>
+                  </div>
+                </div>
+                <div class="wallet101-platform" :title="w.platform === 'laptop-first' ? 'Laptop-first — best on desktop' : w.platform === 'mobile-first' ? 'Mobile-first — best on phone' : 'Both — equally good on laptop and mobile'">
+                  <svg :class="{dim: w.platform === 'mobile-first'}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  <svg :class="{dim: w.platform === 'laptop-first'}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                  <span class="wallet101-platform-label" x-text="w.platform === 'laptop-first' ? 'Laptop-first' : w.platform === 'mobile-first' ? 'Mobile-first' : 'Both'"></span>
+                </div>
+                <div class="wallet101-stat">
+                  <div class="wallet101-stat-num" x-text="w.stat"></div>
+                  <div class="wallet101-stat-src" x-text="w.statSource"></div>
+                </div>
+                <div class="wallet101-pros">
+                  <div class="wallet101-pc-label">Pros</div>
+                  <ul>
+                    <template x-for="p in w.pros" :key="p"><li x-text="p"></li></template>
+                  </ul>
+                </div>
+                <div class="wallet101-cons">
+                  <div class="wallet101-pc-label">Cons</div>
+                  <ul>
+                    <template x-for="c in w.cons" :key="c"><li x-text="c"></li></template>
+                  </ul>
+                </div>
+                <a class="wallet101-link" :href="w.url" target="_blank" rel="noopener noreferrer" x-text="w.url.replace(/^https?:\/\//, '')"></a>
+              </div>
+            </template>
+          </div>
+
+          <h3 class="wallet101-section-heading">Hardware wallets <span class="wallet101-tag wallet101-tag-cold">cold</span></h3>
+          <div class="wallet101-grid">
+            <template x-for="w in wallets101.filter(x => x.kind === 'hardware')" :key="w.name">
+              <div class="wallet101-card">
+                <div class="wallet101-card-head">
+                  <div class="wallet101-logo-wrap">
+                    <img class="wallet101-logo" :src="`/static/wallet-logos/${w.slug}.svg`" :alt="`${w.name} logo`" loading="lazy" @error="$el.parentElement.classList.add('logo-missing')" />
+                    <span class="wallet101-logo-fallback" x-text="w.name.charAt(0)"></span>
+                  </div>
+                  <div class="wallet101-card-head-text">
+                    <h4 class="wallet101-name" x-text="w.name"></h4>
+                    <span class="wallet101-chain" x-text="w.chain"></span>
+                  </div>
+                </div>
+                <div class="wallet101-platform" :title="w.platform === 'laptop-first' ? 'Laptop-first — best on desktop' : w.platform === 'mobile-first' ? 'Mobile-first — best on phone' : 'Both — equally good on laptop and mobile'">
+                  <svg :class="{dim: w.platform === 'mobile-first'}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                  <svg :class="{dim: w.platform === 'laptop-first'}" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                  <span class="wallet101-platform-label" x-text="w.platform === 'laptop-first' ? 'Laptop-first' : w.platform === 'mobile-first' ? 'Mobile-first' : 'Both'"></span>
+                </div>
+                <div class="wallet101-stat">
+                  <div class="wallet101-stat-num" x-text="w.stat"></div>
+                  <div class="wallet101-stat-src" x-text="w.statSource"></div>
+                </div>
+                <div class="wallet101-pros">
+                  <div class="wallet101-pc-label">Pros</div>
+                  <ul>
+                    <template x-for="p in w.pros" :key="p"><li x-text="p"></li></template>
+                  </ul>
+                </div>
+                <div class="wallet101-cons">
+                  <div class="wallet101-pc-label">Cons</div>
+                  <ul>
+                    <template x-for="c in w.cons" :key="c"><li x-text="c"></li></template>
+                  </ul>
+                </div>
+                <a class="wallet101-link" :href="w.url" target="_blank" rel="noopener noreferrer" x-text="w.url.replace(/^https?:\/\//, '')"></a>
+              </div>
+            </template>
+          </div>
+
+          <p class="wallet101-disclaimer">
+            Stats are snapshots, not live numbers — verify on each wallet's official site or app store before relying on them. None of this is financial advice.
+          </p>
+        </div><!-- /wallet -->
+
+        <div x-show="page==='wallet-address'">
+          <div class="page-title-block">
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><path d="M15 22a1 1 0 0 1-1-1v-4a1 1 0 0 1 .445-.832l3-2a1 1 0 0 1 1.11 0l3 2A1 1 0 0 1 22 17v4a1 1 0 0 1-1 1z"/><path d="M18 10a8 8 0 0 0-16 0c0 4.993 5.539 10.193 7.399 11.799a1 1 0 0 0 .601.2"/><path d="M18 22v-3"/><circle cx="10" cy="10" r="3"/></svg>Wallet Address Fast Facts</h2>
+            <p class="page-subtitle">How to identify which chain an address is on, the naming services that map names to addresses, and the pitfalls that strand funds.</p>
+          </div>
+
+          <div class="addr-intro card">
+            <p>
+              A <strong>wallet address</strong> is the public-facing identifier of an account on a chain — derived from the public key, used to receive funds. Share it freely.
+            </p>
+            <p style="margin-top:10px">
+              An address is <strong>not</strong> the same as a <strong>seed phrase</strong> or <strong>private key</strong>. Those are the secrets that control the account.
+            </p>
+            <p style="margin-top:10px" class="addr-warning">
+              Anyone with the seed phrase can drain the account — never type it into a website, send it in a message, or store it where someone else can read it.
+            </p>
+          </div>
+
+          <h3 class="wallet101-section-heading">Identify the chain at a glance</h3>
+          <div class="addr-format-grid">
+            <template x-for="f in chainAddressFormats" :key="f.chain">
+              <div class="addr-format-card">
+                <div class="addr-format-head">
+                  <h4 class="addr-format-chain" x-text="f.chain"></h4>
+                  <span class="addr-format-prefix">starts with <code x-text="f.prefix"></code></span>
+                </div>
+                <div class="addr-format-meta">
+                  <div><span class="addr-format-label">Encoding</span><span x-text="f.encoding"></span></div>
+                  <div><span class="addr-format-label">Length</span><span x-text="f.length"></span></div>
+                </div>
+                <div class="addr-format-example">
+                  <div class="addr-format-label">Example</div>
+                  <code x-text="f.example"></code>
+                </div>
+                <p class="addr-format-note" x-show="f.note" x-text="f.note"></p>
+              </div>
+            </template>
+          </div>
+
+          <h3 class="wallet101-section-heading">Naming services <span class="wallet101-tag wallet101-tag-cold" style="text-transform:none">human-readable</span></h3>
+          <p class="addr-section-blurb">
+            Names like <code>vitalik.eth</code> resolve to a regular wallet address. The chain only ever stores the address — the name is a lookup layer on top, similar to DNS.
+          </p>
+          <div class="addr-naming-grid">
+            <template x-for="n in namingServices" :key="n.name">
+              <div class="addr-naming-card">
+                <div class="addr-naming-head">
+                  <h4 class="addr-naming-name" x-text="n.name"></h4>
+                  <code class="addr-naming-suffix" x-text="n.suffix"></code>
+                </div>
+                <div class="addr-naming-meta">
+                  <div><span class="addr-format-label">Chain</span><span x-text="n.chain"></span></div>
+                  <div><span class="addr-format-label">Example</span><code x-text="n.example"></code></div>
+                </div>
+                <a class="wallet101-link" :href="n.url" target="_blank" rel="noopener noreferrer" x-text="n.url.replace(/^https?:\/\//, '')"></a>
+              </div>
+            </template>
+          </div>
+
+          <h3 class="wallet101-section-heading">Common pitfalls</h3>
+          <div class="addr-pitfalls card">
+            <ul>
+              <li><strong>Wrong chain = lost money.</strong> A wallet can show the same address on Ethereum, Polygon, and BSC — but the chains are separate. Both apps need to be on the same network when you send. Funds sent on the wrong one don't appear on the right one.</li>
+              <li><strong>Don't trust just the first and last few characters.</strong> Scammers send tiny fake transactions from addresses that look almost identical to ones you've used before, hoping you'll copy theirs from your history. Always read the full address — especially the middle.</li>
+              <li><strong>Bitcoin caps matter, Ethereum's don't.</strong> If a Bitcoin address starts with <code>bc1</code>, it must be lowercase. Ethereum addresses can be any case. Either way, copy-paste — don't retype.</li>
+              <li><strong>Some chains need a memo or tag.</strong> When you deposit XRP, Stellar, or EOS to an exchange, there's an extra ID number that must travel with the address. Forgetting it can lose the funds.</li>
+              <li><strong>Lookalike names exist.</strong> A name like <code>vitalik.eth</code> can be impersonated with a capital "O" instead of zero, or a lowercase "l" instead of "1". Before sending real money, check the actual address the name resolves to.</li>
+              <li><strong>There's no undo.</strong> Crypto sends are final — no support agent can reverse one. Even the "burn" address <code>0x000…0000</code> is just an address nobody can spend from. A typo can't be fixed.</li>
+            </ul>
+          </div>
+        </div><!-- /wallet-address -->
+
+        <div x-show="page==='fund-account'">
+          <div class="page-title-block">
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>Fund Your Account 101</h2>
+            <p class="page-subtitle">Funding methods, what each one actually costs, and the mistakes that turn small typos into permanent losses.</p>
+          </div>
+
+          <div class="addr-intro card">
+            <p>
+              "Funding" means two different things depending on where you are. On a <strong>custodial exchange</strong> (Coinbase, Kraken, Binance), you deposit fiat — USD, EUR — that gets credited as a balance. On a <strong>self-custody wallet</strong>, you fund by sending crypto from another address (an exchange withdrawal, a peer transfer, a bridge from another chain).
+            </p>
+            <p style="margin-top:10px">
+              The path with the lowest total cost is almost always: <strong>ACH into an exchange → buy crypto on the exchange → withdraw to your self-custody wallet.</strong> Every step has tradeoffs in speed, fee, and reversibility.
+            </p>
+          </div>
+
+          <h3 class="wallet101-section-heading">Funding methods</h3>
+          <div class="fee-tier-legend">
+            <span>Fee scale:</span>
+            <span class="fee-tier-dot tier-1"></span>
+            <span class="legend-text">cheapest</span>
+            <span class="legend-arrow">→</span>
+            <span class="fee-tier-dot tier-5"></span>
+            <span class="legend-text">most expensive</span>
+          </div>
+          <div class="addr-format-grid">
+            <template x-for="m in fundingMethods" :key="m.name">
+              <div class="addr-format-card">
+                <div class="addr-format-head">
+                  <h4 class="addr-format-chain" x-text="m.name"></h4>
+                  <span class="addr-format-prefix" x-text="m.speed"></span>
+                </div>
+                <div class="addr-format-meta">
+                  <div>
+                    <span class="addr-format-label">Fee</span>
+                    <span x-text="m.fee"></span>
+                    <div class="fee-tier-scale">
+                      <span class="fee-tier-dot tier-1" :class="{active: m.feeTier === 1}"></span>
+                      <span class="fee-tier-dot tier-2" :class="{active: m.feeTier === 2}"></span>
+                      <span class="fee-tier-dot tier-3" :class="{active: m.feeTier === 3}"></span>
+                      <span class="fee-tier-dot tier-4" :class="{active: m.feeTier === 4}"></span>
+                      <span class="fee-tier-dot tier-5" :class="{active: m.feeTier === 5}"></span>
+                    </div>
+                  </div>
+                  <div><span class="addr-format-label">Cap</span><span x-text="m.cap"></span></div>
+                </div>
+                <div class="addr-format-example">
+                  <div class="addr-format-label">Best for</div>
+                  <div style="font-size:12px; color:var(--text); line-height:1.45" x-text="m.bestFor"></div>
+                </div>
+                <p class="addr-format-note" x-text="m.watchOut"></p>
+              </div>
+            </template>
+          </div>
+
+          <h3 class="wallet101-section-heading">Best practices</h3>
+          <div class="addr-pitfalls card">
+            <ul>
+              <li><strong>Test with a small amount first.</strong> Send $5–20 before sending real money, and wait for it to land at the right place. A test fee is the cheapest insurance you can buy.</li>
+              <li><strong>Pick the same network on both sides.</strong> When you withdraw from an exchange to a wallet, both screens have a network dropdown — they have to match. Same address, wrong network, lost money.</li>
+              <li><strong>Copy the address fresh every time.</strong> Don't reuse a saved one from last week — exchanges sometimes change their deposit addresses, and people switch wallets. Grab a new copy from the source.</li>
+              <li><strong>Use a name when you can.</strong> A name like <code>vitalik.eth</code> (or <code>someone.sol</code>, <code>you.crypto</code>) is way harder to mistype than a 42-character address. Most wallets handle the lookup automatically.</li>
+              <li><strong>Some chains need an extra "memo" or "tag".</strong> When depositing XRP, Stellar, or EOS to an exchange, there's an extra ID number that must go with the address. Forgetting it can lose the funds.</li>
+              <li><strong>Save the receipt.</strong> Every send produces a transaction ID — note it with the amount and recipient. Useful for taxes, disputes, and confirming things landed.</li>
+              <li><strong>Use real two-factor on the source account.</strong> A hardware key (like a YubiKey) or an authenticator app — not SMS. Phone-number 2FA can be bypassed by hijacking your number and isn't safe for an account that moves money.</li>
+            </ul>
+          </div>
+
+          <h3 class="wallet101-section-heading">Don't dos <span class="wallet101-tag" style="text-transform:none">avoid</span></h3>
+          <div class="addr-pitfalls card">
+            <ul>
+              <li><strong>Don't fund a wallet you haven't tested.</strong> A wallet's whole point is that the seed phrase recovers it. Before putting real money in, prove the seed works — delete the wallet, reinstall it, and restore from the phrase. Practice on an empty one.</li>
+              <li><strong>Avoid credit cards.</strong> They get billed as a "cash advance," which means a card-network fee, an extra cash-advance fee, and interest accruing daily with no grace period. A $1,000 purchase can cost $40+ upfront plus 25–30% APR.</li>
+              <li><strong>Don't send the full amount on the first try.</strong> Test small first. The minutes saved by skipping a test are the same minutes spent trying to recover funds that went to the wrong place.</li>
+              <li><strong>Don't trust DMs from "support."</strong> No real exchange or wallet will message you on Twitter, Discord, or Telegram. Anyone offering to "help with your funding issue" is almost always a scam.</li>
+              <li><strong>Don't share screenshots with addresses visible.</strong> Scammers can use the first and last few characters of an address to generate a fake lookalike, then try to slip it into your transaction history.</li>
+              <li><strong>Don't fund on public Wi-Fi without a VPN.</strong> Anything involving real money deserves a few seconds of paranoia.</li>
+              <li><strong>Read the network warnings.</strong> When a wallet pops up "this looks like an Ethereum address — are you sure you want to send on Polygon?" — read it. That's your only chance to undo the mistake.</li>
+              <li><strong>Don't fund on shared or work computers.</strong> Browser extensions, screen recorders, and IT admin tools can all leak credentials.</li>
+            </ul>
+          </div>
+
+          <p class="wallet101-disclaimer">
+            None of this is financial advice. Fees, caps, and policies vary by platform and country — verify on the platform you're using before transacting.
+          </p>
+        </div><!-- /fund-account -->
+
+        <div x-show="page==='pick-a-coin'">
+          <div class="page-title-block">
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>Pick a coin</h2>
+            <p class="page-subtitle">Coming soon.</p>
+          </div>
+        </div><!-- /pick-a-coin -->
+
+        <div x-show="page==='buy-a-coin'">
+          <div class="page-title-block">
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><line x1="12" x2="12" y1="2" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>Buy a coin</h2>
+            <p class="page-subtitle">Coming soon.</p>
+          </div>
+        </div><!-- /buy-a-coin -->
+
+        <div x-show="page==='transaction-hash'">
+          <div class="page-title-block">
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>Transaction hash</h2>
+            <p class="page-subtitle">Coming soon.</p>
+          </div>
+        </div><!-- /transaction-hash -->
+
+        <div x-show="page==='exchange-funds'">
+          <div class="page-title-block">
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>Exchange funds</h2>
+            <p class="page-subtitle">Coming soon.</p>
+          </div>
+        </div><!-- /exchange-funds -->
 
       </div>
     </main>

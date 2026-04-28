@@ -197,8 +197,53 @@ declare global {
     fmtCoinFees: typeof fmtCoinFees;
     fmtYieldIncome: typeof fmtYieldIncome;
     _hardCapLabel: typeof _hardCapLabel;
+    initPlatformsAnimNav?: () => void;
   }
 }
+
+// Wires the animated category nav at the top of the Platforms page. Idempotent
+// per-mount — Alpine calls it via x-init each time the page becomes visible.
+// The clip-path border slides to follow the active button; body-color cycling
+// from the original demo is intentionally dropped to preserve the app theme.
+function initPlatformsAnimNav() {
+  const menu = document.querySelector<HTMLElement>('.platforms-anim-nav .menu');
+  if (!menu || menu.dataset.animNavInit === '1') return;
+  menu.dataset.animNavInit = '1';
+
+  const items = Array.from(menu.querySelectorAll<HTMLElement>('.menu__item'));
+  const border = menu.querySelector<HTMLElement>('.menu__border');
+  if (!border || items.length === 0) return;
+
+  let active = menu.querySelector<HTMLElement>('.menu__item.active') ?? items[0];
+
+  const offsetBorder = (el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    const left = Math.floor(rect.left - menu.getBoundingClientRect().left - (border.offsetWidth - rect.width) / 2);
+    border.style.transform = `translate3d(${left}px, 0, 0)`;
+  };
+
+  const click = (item: HTMLElement) => {
+    menu.style.removeProperty('--timeOut');
+    if (active === item) return;
+    active.classList.remove('active');
+    item.classList.add('active');
+    active = item;
+    offsetBorder(active);
+  };
+
+  items.forEach((item) => item.addEventListener('click', () => click(item)));
+
+  // Initial position. Run on next frame so getBoundingClientRect picks up the
+  // final layout (Alpine x-show flips display between renders).
+  requestAnimationFrame(() => offsetBorder(active));
+
+  window.addEventListener('resize', () => {
+    offsetBorder(active);
+    menu.style.setProperty('--timeOut', 'none');
+  });
+}
+
+window.initPlatformsAnimNav = initPlatformsAnimNav;
 
 window.Alpine = Alpine;
 window.fmtUSD = fmtUSD;
@@ -493,7 +538,360 @@ window.loginApp = () => ({
 
 // ── Dashboard component ─────────────────────────────────────────────────────
 
-const VALID_PAGES = ['portfolios', 'market', 'resources', 'lookup', 'marketplace', 'platforms'];
+const VALID_PAGES = ['portfolios', 'market', 'resources', 'lookup', 'marketplace', 'platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds'];
+
+// Editorial content for the Wallet Address page. Keep examples real and
+// well-known (e.g. Satoshi's genesis address) so readers see something they
+// can verify externally rather than fabricated strings.
+type ChainAddressFormat = {
+  chain: string;
+  prefix: string;
+  encoding: string;
+  length: string;
+  example: string;
+  note?: string;
+};
+
+const CHAIN_ADDRESS_FORMATS: ChainAddressFormat[] = [
+  {
+    chain: 'Ethereum / EVM (BSC, Polygon, Arbitrum, Optimism, Base, Avalanche)',
+    prefix: '0x',
+    encoding: 'hex (EIP-55 mixed-case checksum optional)',
+    length: '42 chars',
+    example: '0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045',
+    note: 'Same address works across every EVM chain — but the asset is chain-specific. Sending USDC on Ethereum to a Polygon address with the same string strands the funds.',
+  },
+  {
+    chain: 'Bitcoin — legacy (P2PKH)',
+    prefix: '1',
+    encoding: 'base58',
+    length: '26–35 chars',
+    example: '1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa',
+    note: 'Satoshi\'s genesis address. Older format; higher fees than segwit.',
+  },
+  {
+    chain: 'Bitcoin — script (P2SH, multisig)',
+    prefix: '3',
+    encoding: 'base58',
+    length: '34 chars',
+    example: '3J98t1WpEZ73CNmQviecrnyiWrnqRhWNLy',
+  },
+  {
+    chain: 'Bitcoin — segwit (P2WPKH / Taproot)',
+    prefix: 'bc1',
+    encoding: 'bech32 / bech32m (lowercase only)',
+    length: '42–62 chars',
+    example: 'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq',
+    note: 'Lower fees, better error detection. Most modern wallets default to this.',
+  },
+  {
+    chain: 'Solana',
+    prefix: '(none)',
+    encoding: 'base58 (Ed25519 public key)',
+    length: '32–44 chars',
+    example: 'DRpbCBMxVnDK7maPM5tGv6MvB3v1sRMC86PZ8okm21hy',
+    note: 'No prefix — addresses look like random alphanumeric strings.',
+  },
+  {
+    chain: 'Tron',
+    prefix: 'T',
+    encoding: 'base58 (similar to Bitcoin)',
+    length: '34 chars',
+    example: 'TJYeasLud3oRZ1c1HnkZcKn5VxXwmBCBT2',
+  },
+  {
+    chain: 'Litecoin',
+    prefix: 'L / M / ltc1',
+    encoding: 'base58 (legacy) or bech32 (segwit)',
+    length: '26–62 chars',
+    example: 'ltc1qg9stkxrszkdqsuj92lm4c7akvk36zvhqw7p6ck',
+  },
+  {
+    chain: 'XRP / Ripple',
+    prefix: 'r',
+    encoding: 'base58 (custom alphabet)',
+    length: '25–35 chars',
+    example: 'rEb8TK3gBgk5auZkwc6sHnwrGVJH8DuaLh',
+    note: 'Often paired with a "destination tag" — exchanges require it for deposits.',
+  },
+  {
+    chain: 'Cardano',
+    prefix: 'addr1',
+    encoding: 'bech32',
+    length: '58–103 chars',
+    example: 'addr1qx2fxv2umyhttkxyxp8x0dlpdt3k6cwng5pxj3jhsydzer3jcu5d8ps7zex2k2xt3uqxgjqnnj83ws8lhrn648jjxtwq2ytjqp',
+    note: 'Among the longest addresses in common use.',
+  },
+];
+
+type FundingMethod = {
+  name: string;
+  speed: string;
+  fee: string;
+  // Fee tier on a 5-step scale: 1 = cheapest (green), 5 = most expensive (red).
+  feeTier: 1 | 2 | 3 | 4 | 5;
+  cap: string;
+  bestFor: string;
+  watchOut: string;
+};
+
+const FUNDING_METHODS: FundingMethod[] = [
+  {
+    name: 'ACH bank transfer',
+    speed: '1–5 business days',
+    fee: 'usually free',
+    feeTier: 1,
+    cap: '$10k–25k/day (varies)',
+    bestFor: 'Cost-conscious deposits of any size — the cheapest path.',
+    watchOut: 'First-ever ACH on most exchanges has a 7–10 day hold before withdrawal. Some US banks flag crypto transfers and freeze them until you call.',
+  },
+  {
+    name: 'Crypto deposit (wallet → wallet)',
+    speed: 'Minutes (varies by chain)',
+    fee: 'Network gas only — pennies on Solana/Polygon, $0.50–$50 on Ethereum L1',
+    feeTier: 2,
+    cap: 'Effectively unlimited',
+    bestFor: 'Moving funds you already hold elsewhere — exchange to self-custody, or between exchanges.',
+    watchOut: 'You must select the same network on both sides. Sending USDC over Ethereum to an address only set up for Polygon strands the funds.',
+  },
+  {
+    name: 'Wire transfer',
+    speed: 'Same day',
+    fee: '$10–30 outgoing + $0–15 incoming',
+    feeTier: 3,
+    cap: 'Bank-set, often $50k+/day',
+    bestFor: 'Larger one-time deposits where speed matters.',
+    watchOut: 'Wires are irreversible — typo in account or routing number = funds lost or stuck in a manual recovery process.',
+  },
+  {
+    name: 'Debit card',
+    speed: 'Instant',
+    fee: '~3–4% (paid to card networks)',
+    feeTier: 4,
+    cap: '$1k–5k/day on most platforms',
+    bestFor: 'Small first purchases when you want it on-chain immediately.',
+    watchOut: 'Fee compounds — a 3.5% fee on $1,000 is $35 you don\'t recoup. Use ACH if you\'re not in a rush.',
+  },
+  {
+    name: 'Apple Pay / Google Pay',
+    speed: 'Instant',
+    fee: '~3–4% (debit-card-equivalent)',
+    feeTier: 4,
+    cap: '$1k–5k/day',
+    bestFor: 'Mobile-first users who already have a card linked.',
+    watchOut: 'Same fee structure as debit cards — convenience, not a discount.',
+  },
+  {
+    name: 'Credit card',
+    speed: 'Instant',
+    fee: '~4% platform fee + cash-advance fee + interest from day 1',
+    feeTier: 5,
+    cap: 'Card-issuer dependent',
+    bestFor: 'Almost nothing. Flagged as a "cash advance" by most banks.',
+    watchOut: 'Cash-advance APR is typically 25–30%, accruing daily with no grace period. Never use a credit card if you can avoid it.',
+  },
+];
+
+type NamingService = {
+  name: string;
+  suffix: string;
+  chain: string;
+  example: string;
+  url: string;
+};
+
+const NAMING_SERVICES: NamingService[] = [
+  {
+    name: 'ENS',
+    suffix: '.eth',
+    chain: 'Ethereum + most EVM L2s',
+    example: 'vitalik.eth',
+    url: 'https://ens.domains',
+  },
+  {
+    name: 'SNS / Bonfida',
+    suffix: '.sol',
+    chain: 'Solana',
+    example: 'phantom.sol',
+    url: 'https://www.sns.id',
+  },
+  {
+    name: 'Unstoppable Domains',
+    suffix: '.crypto / .x / .nft / .wallet',
+    chain: 'Multi-chain (resolves to multiple)',
+    example: 'someone.crypto',
+    url: 'https://unstoppabledomains.com',
+  },
+  {
+    name: 'Lens Protocol',
+    suffix: '.lens',
+    chain: 'Polygon',
+    example: 'stani.lens',
+    url: 'https://lens.xyz',
+  },
+];
+
+// Editorial content for the Wallet 101 page. Stat numbers are intentionally
+// dated and sourced — verify before relying on them. Update annually.
+type WalletEntry = {
+  name: string;
+  slug: string;     // matches the SVG filename in /static/wallet-logos/<slug>.svg
+  kind: 'software' | 'hardware';
+  chain: string;
+  url: string;
+  pros: string[];
+  cons: string[];
+  stat: string;
+  statSource: string;
+  platform: 'laptop-first' | 'mobile-first' | 'both';
+};
+
+const WALLETS_101: WalletEntry[] = [
+  // Software wallets, ordered by stated user count (descending). Note that
+  // Trust Wallet's 70M is cumulative wallets created while MetaMask/Phantom
+  // are monthly active — not strictly apples-to-apples, but matches the
+  // numbers each project reports.
+  {
+    name: 'Trust Wallet',
+    slug: 'trust-wallet',
+    kind: 'software',
+    chain: 'Multi-chain (EVM, Solana, BTC, Tron, LTC, +60 more)',
+    url: 'https://trustwallet.com',
+    pros: [
+      'Broadest chain support of any consumer wallet',
+      'Mobile-first, very easy onboarding',
+      'Backed by Binance (resources, infra)',
+    ],
+    cons: [
+      'Backed by Binance (centralization concerns)',
+      'Closed source for the wallet client',
+      'Browser extension is less feature-rich than the mobile app',
+    ],
+    stat: '~70M+ wallets created (cumulative)',
+    statSource: 'Trust Wallet / Binance, 2024',
+    platform: 'mobile-first',
+  },
+  {
+    name: 'MetaMask',
+    slug: 'metamask',
+    kind: 'software',
+    chain: 'EVM',
+    url: 'https://metamask.io',
+    pros: [
+      'Universal — every dApp supports it',
+      'Browser extension + mobile app',
+      'Open source, long history (since 2016)',
+    ],
+    cons: [
+      'UX has gotten clunkier with each major release',
+      'Default RPC routes through Infura, which logs IP addresses',
+      'No native multi-chain switching as smooth as Rabby',
+    ],
+    stat: '~30M monthly active users',
+    statSource: 'ConsenSys, mid-2024',
+    platform: 'laptop-first',
+  },
+  {
+    name: 'Phantom',
+    slug: 'phantom',
+    kind: 'software',
+    chain: 'Solana + EVM + Bitcoin',
+    url: 'https://phantom.app',
+    pros: [
+      'Best-in-class Solana UX',
+      'Hardware wallet integration (Ledger)',
+      'Expanded to Ethereum and Bitcoin in 2023–2024',
+    ],
+    cons: [
+      'Closed source',
+      'EVM support is newer and less battle-tested than MetaMask/Rabby',
+      'Heavy native-token (SOL) ecosystem bias',
+    ],
+    stat: '~10M monthly active users',
+    statSource: 'Phantom announcements, 2024',
+    platform: 'both',
+  },
+  {
+    name: 'Coinbase Wallet',
+    slug: 'coinbase-wallet',
+    kind: 'software',
+    chain: 'EVM + Solana',
+    url: 'https://wallet.coinbase.com',
+    pros: [
+      'Built-in fiat on-ramp via Coinbase exchange',
+      'Backed by US-public-listed company (Nasdaq: COIN)',
+      'Easy to confuse with the Coinbase exchange — but this is a true self-custody wallet',
+    ],
+    cons: [
+      "Easy to confuse with the Coinbase exchange — beginners often don't understand the difference",
+      'Less feature-rich for DeFi power use than Rabby/MetaMask',
+      'Closed source',
+    ],
+    stat: '~10M+ wallets created',
+    statSource: 'Coinbase disclosures, 2024',
+    platform: 'both',
+  },
+  {
+    name: 'Rabby',
+    slug: 'rabby',
+    kind: 'software',
+    chain: 'EVM',
+    url: 'https://rabby.io',
+    pros: [
+      'Best-in-class transaction simulation (shows exactly what will happen before signing)',
+      'Auto-detects which chain a dApp is on; no manual switching',
+      'Open source, by the DeBank team',
+    ],
+    cons: [
+      'Smaller user base than MetaMask',
+      'Mobile app launched late and is less mature',
+      'Less "default" status — some dApps still expect MetaMask',
+    ],
+    stat: '~1–2M monthly active users (rough)',
+    statSource: 'self-reported, 2024',
+    platform: 'laptop-first',
+  },
+  {
+    name: 'Ledger',
+    slug: 'ledger',
+    kind: 'hardware',
+    chain: 'Multi-chain (EVM, BTC, SOL, +5,500 assets)',
+    url: 'https://ledger.com',
+    pros: [
+      'Most popular hardware wallet — broadest dApp + chain support',
+      'Pairs with Rabby/Phantom/MetaMask via plug-in',
+      'Nano S Plus is ~$80; Nano X (Bluetooth) ~$150',
+    ],
+    cons: [
+      '2020 customer-data leak still drives phishing attempts',
+      '2023 Ledger Recover firmware controversy (key-shard escrow service)',
+      'Closed-source firmware',
+    ],
+    stat: '~6M+ devices sold',
+    statSource: 'Ledger disclosures, 2024',
+    platform: 'both',
+  },
+  {
+    name: 'Trezor',
+    slug: 'trezor',
+    kind: 'hardware',
+    chain: 'Multi-chain (EVM, BTC, +1,800 assets)',
+    url: 'https://trezor.io',
+    pros: [
+      'Fully open-source firmware',
+      'Strong security reputation, no major incidents to date',
+      'Safe 3 ~$80; Model T (touchscreen) ~$220',
+    ],
+    cons: [
+      'Slightly fewer chains supported than Ledger',
+      'Smaller screen on the budget model',
+      'Companion app (Trezor Suite) is less polished than Ledger Live',
+    ],
+    stat: '~2–3M devices sold (estimate)',
+    statSource: 'industry estimates, 2024',
+    platform: 'laptop-first',
+  },
+];
 const restoredPage = (() => {
   try {
     const v = localStorage.getItem('currentPage');
@@ -506,6 +904,11 @@ const restoredPage = (() => {
 window.dashApp = () => ({
   // State
   page: restoredPage,
+  platformsOpen: ['platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds'].includes(restoredPage),
+  wallets101: WALLETS_101,
+  chainAddressFormats: CHAIN_ADDRESS_FORMATS,
+  namingServices: NAMING_SERVICES,
+  fundingMethods: FUNDING_METHODS,
   portfolios: [] as Portfolio[],
   activePortfolioId: null as number | null,
   portfolioDetail: null as any,
