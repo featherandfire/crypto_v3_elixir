@@ -2157,7 +2157,7 @@ animate();
               <div class="wallet101-card">
                 <div class="wallet101-card-head">
                   <div class="wallet101-logo-wrap">
-                    <img class="wallet101-logo" :src="`/static/wallet-logos/${w.slug}.svg`" :alt="`${w.name} logo`" loading="lazy" @error="$el.parentElement.classList.add('logo-missing')" />
+                    <img class="wallet101-logo" :src="`/wallet-logos/${w.slug}.svg`" :alt="`${w.name} logo`" loading="lazy" @error="$el.parentElement.classList.add('logo-missing')" />
                     <span class="wallet101-logo-fallback" x-text="w.name.charAt(0)"></span>
                   </div>
                   <div class="wallet101-card-head-text">
@@ -2206,7 +2206,7 @@ animate();
               <div class="wallet101-card">
                 <div class="wallet101-card-head">
                   <div class="wallet101-logo-wrap">
-                    <img class="wallet101-logo" :src="`/static/wallet-logos/${w.slug}.svg`" :alt="`${w.name} logo`" loading="lazy" @error="$el.parentElement.classList.add('logo-missing')" />
+                    <img class="wallet101-logo" :src="`/wallet-logos/${w.slug}.svg`" :alt="`${w.name} logo`" loading="lazy" @error="$el.parentElement.classList.add('logo-missing')" />
                     <span class="wallet101-logo-fallback" x-text="w.name.charAt(0)"></span>
                   </div>
                   <div class="wallet101-card-head-text">
@@ -2297,7 +2297,7 @@ animate();
               <div class="page-title-block">
                 <h2 class="page-title">
                   <span class="wallet101-logo-wrap" style="width:32px;height:32px;border-radius:6px">
-                    <img class="wallet101-logo" :src="`/static/wallet-logos/${w.slug}.svg`" :alt="`${w.name} logo`" @error="$el.parentElement.classList.add('logo-missing')" />
+                    <img class="wallet101-logo" :src="`/wallet-logos/${w.slug}.svg`" :alt="`${w.name} logo`" @error="$el.parentElement.classList.add('logo-missing')" />
                     <span class="wallet101-logo-fallback" x-text="w.name.charAt(0)"></span>
                   </span>
                   <span x-text="`Set up ${w.name}`"></span>
@@ -2333,7 +2333,7 @@ animate();
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
                 </button>
                 <div class="tutorial-image-wrap" @click="next()" :class="{'cursor-end': step === total}">
-                  <img class="tutorial-image" :src="`/static/wallet-tutorials/${w.slug}/step-${step}.png`" :alt="`${w.name} setup, step ${step}`" />
+                  <img class="tutorial-image" :src="`/wallet-tutorials/${w.slug}/step-${step}.png`" :alt="`${w.name} setup, step ${step}`" />
                 </div>
                 <button class="tutorial-arrow tutorial-arrow-right" @click="next()" :disabled="step === total" type="button" aria-label="Next step">
                   <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
