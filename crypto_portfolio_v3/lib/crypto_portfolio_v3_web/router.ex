@@ -21,6 +21,8 @@ defmodule CryptoPortfolioV3Web.Router do
     post "/auth/forgot-password", AuthController, :forgot_password
     post "/auth/reset-password", AuthController, :reset_password
 
+    post "/contact", ContactController, :submit
+
     get "/coins/top", CoinController, :top
     get "/coins/yearly-ranges", CoinController, :yearly_ranges
     get "/coins/supply", CoinController, :supply
@@ -45,6 +47,20 @@ defmodule CryptoPortfolioV3Web.Router do
       pipe_through :authenticated
 
       get "/auth/me", AuthController, :me
+
+      get "/alpaca/account", AlpacaController, :account
+      get "/alpaca/positions", AlpacaController, :positions
+      get "/alpaca/quote/:symbol", AlpacaController, :quote
+      get "/alpaca/bars/:symbol", AlpacaController, :bars
+      get "/alpaca/snapshots", AlpacaController, :snapshots
+      get "/alpaca/dividends", AlpacaController, :dividends
+      get "/alpaca/assets", AlpacaController, :assets
+      get "/edgar/risk", EdgarController, :risk
+      get "/alpaca/changes", AlpacaController, :changes
+      get "/alpaca/dividend-activities", AlpacaController, :dividend_activities
+      get "/alpaca/orders", AlpacaController, :list_orders
+      post "/alpaca/orders", AlpacaController, :create_order
+      delete "/alpaca/orders/:id", AlpacaController, :cancel_order
 
       get "/portfolios", PortfolioController, :index
       post "/portfolios", PortfolioController, :create

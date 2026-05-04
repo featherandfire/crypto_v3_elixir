@@ -8,6 +8,7 @@ defmodule CryptoPortfolioV3.Emails do
 
   @from_name "abcoins"
   @from_address "noreply@abcoins.xyz"
+  @admin_address Application.compile_env(:crypto_portfolio_v3, :admin_email, "noreply@abcoins.xyz")
 
   @doc """
   Email-verification code sent after registration. `code` is the plain
@@ -57,6 +58,34 @@ defmodule CryptoPortfolioV3.Emails do
     password is unchanged.
 
     — abcoins
+    """)
+  end
+
+  @doc """
+  Contact-form submission. Sends to the configured admin address with
+  the visitor's name/email/subject/message inline. `reply_to` is set to
+  the visitor so admins can reply directly from their inbox.
+  """
+  @spec contact_form_email(%{
+          name: binary(),
+          email: binary(),
+          subject: binary(),
+          message: binary()
+        }) :: Swoosh.Email.t()
+  def contact_form_email(%{name: name, email: email, subject: subj, message: msg}) do
+    new()
+    |> to(@admin_address)
+    |> from({@from_name, @from_address})
+    |> reply_to(email)
+    |> subject("[abcoins contact] " <> subj)
+    |> text_body("""
+    From: #{name} <#{email}>
+    Subject: #{subj}
+
+    #{msg}
+
+    —
+    Sent via the abcoins Contact Us form.
     """)
   end
 end

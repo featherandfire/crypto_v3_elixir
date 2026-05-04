@@ -13,6 +13,7 @@ defmodule CryptoPortfolioV3.Application do
         CryptoPortfolioV3.Repo,
         {DNSCluster, query: Application.get_env(:crypto_portfolio_v3, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: CryptoPortfolioV3.PubSub},
+        {Cachex, name: :alpaca_cache},
         CryptoPortfolioV3.Market.PriceCache
       ] ++
         prefetchers() ++

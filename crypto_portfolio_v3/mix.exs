@@ -54,7 +54,8 @@ defmodule CryptoPortfolioV3.MixProject do
       {:req, "~> 0.5"},
       {:dotenvy, "~> 1.1"},
       {:swoosh, "~> 1.17"},
-      {:gen_smtp, "~> 1.2"}
+      {:gen_smtp, "~> 1.2"},
+      {:cachex, "~> 4.0"}
     ]
   end
 

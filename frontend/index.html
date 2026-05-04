@@ -620,32 +620,24 @@ animate();
   </div>
 
   <nav class="sidebar-nav">
-    <div class="nav-item" :class="{active: page==='portfolios'}" @click="page='portfolios'">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-      Portfolios
+    <div class="nav-item nav-item-parent" :class="{active: ['portfolios','resources','marketplace','wallet','wallet-address','fund-account','pick-a-coin','buy-a-coin','transaction-hash','exchange-funds','platforms'].includes(page), expanded: cryptoOpen}" @click="page='portfolios'; cryptoOpen = true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>
+      <span class="nav-item-label">Crypto</span>
+      <svg class="nav-chevron" :class="{open: cryptoOpen}" @click.stop="cryptoOpen = !cryptoOpen" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
     </div>
-    <div class="nav-item" :class="{active: page==='market'}" @click="page='market'">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
-      Market
-    </div>
-    <div class="nav-item" :class="{active: page==='resources'}" @click="page='resources'">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      Resources
-    </div>
-    <div class="nav-item" :class="{active: page==='lookup'}" @click="page='lookup'">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      Hash Lookup
-    </div>
-    <div class="nav-item" :class="{active: page==='marketplace'}" @click="page='marketplace'">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-      Marketplace
-    </div>
-    <div class="nav-item nav-item-parent" :class="{active: page==='platforms', expanded: platformsOpen}" @click="page='platforms'; platformsOpen = true">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M2 10h20"/><path d="M6 14h4"/></svg>
-      <span class="nav-item-label">Platforms</span>
-      <svg class="nav-chevron" :class="{open: platformsOpen}" @click.stop="platformsOpen = !platformsOpen" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <div class="nav-children" x-show="platformsOpen">
+    <div class="nav-children" x-show="cryptoOpen">
+      <div class="nav-item nav-item-child" :class="{active: page==='portfolios'}" @click="page='portfolios'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Portfolios
+      </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='resources'}" @click="page='resources'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Resources
+      </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='marketplace'}" @click="page='marketplace'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Marketplace
+      </div>
       <div class="nav-item nav-item-child" :class="{active: page==='wallet'}" @click="page='wallet'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2"/><path d="M3 11h3c.8 0 1.6.3 2.1.9l1.1.9c1.6 1.6 4.1 1.6 5.7 0l1.1-.9c.5-.5 1.3-.9 2.1-.9H21"/></svg>
         Wallet
@@ -673,6 +665,36 @@ animate();
       <div class="nav-item nav-item-child" :class="{active: page==='exchange-funds'}" @click="page='exchange-funds'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
         Exchange funds
+      </div>
+    </div>
+    <div class="nav-item nav-item-parent" :class="{active: page==='credit-cards', expanded: creditCardsOpen}" @click="page='credit-cards'; creditCardsOpen = true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
+      <span class="nav-item-label">Credit Cards</span>
+      <svg class="nav-chevron" :class="{open: creditCardsOpen}" @click.stop="creditCardsOpen = !creditCardsOpen" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="nav-children" x-show="creditCardsOpen">
+      <div class="nav-item nav-item-child" :class="{active: page==='credit-cards'}" @click="page='credit-cards'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
+        Overview
+      </div>
+    </div>
+    <div class="nav-item nav-item-parent" :class="{active: ['brokerage','holdings','contact-us'].includes(page), expanded: traditionalOpen}" @click="page='brokerage'; traditionalOpen = true">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/><path d="M3 10h18"/></svg>
+      <span class="nav-item-label">Investments</span>
+      <svg class="nav-chevron" :class="{open: traditionalOpen}" @click.stop="traditionalOpen = !traditionalOpen" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="nav-children" x-show="traditionalOpen">
+      <div class="nav-item nav-item-child" :class="{active: page==='brokerage'}" @click="page='brokerage'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><polyline points="7 14 11 10 14 13 21 6"/></svg>
+        Brokerage
+      </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='holdings'}" @click="page='holdings'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+        Holdings
+      </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='contact-us'}" @click="page='contact-us'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        Contact Us
       </div>
     </div>
   </nav>
@@ -990,53 +1012,6 @@ animate();
   </div><!-- /portfolioDetail -->
 </div><!-- /dashboard -->
 
-        <div x-show="page==='market'">
-  <div class="search-bar">
-    <input class="form-input" type="search" placeholder="Filter coins…" x-model="coinSearch" />
-    <button class="btn btn-primary" @click="loadMarket()">Refresh</button>
-  </div>
-
-  <div class="load-center-row" x-show="loadingMarket">
-    <div class="spinner spinner-lg"></div>
-  </div>
-
-  <div class="card" x-show="!loadingMarket">
-    <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Coin</th>
-            <th>Price</th>
-            <th>24h Change</th>
-            <th>Market Cap</th>
-          </tr>
-        </thead>
-        <tbody>
-          <template x-for="(coin, i) in filteredCoins" :key="coin.id">
-            <tr class="cursor-pointer" @click="page='charts'; $nextTick(() => renderPriceChart(coin.coingecko_id))">
-              <td class="text-muted" x-text="i+1"></td>
-              <td>
-                <div class="coin-cell">
-                  <img class="coin-img" :src="coin.image_url" :alt="coin.name" x-show="coin.image_url" />
-                  <div>
-                    <div class="coin-name" x-text="coin.name"></div>
-                    <div class="coin-symbol" x-text="coin.symbol?.toUpperCase()"></div>
-                  </div>
-                </div>
-              </td>
-              <td x-text="fmtUSD(coin.current_price_usd)"></td>
-              <td>
-                <span class="badge" :class="(coin.price_change_24h ?? 0) >= 0 ? 'badge-green' : 'badge-red'" x-text="fmtPct(coin.price_change_24h)"></span>
-              </td>
-              <td x-text="coin.market_cap ? '$' + (coin.market_cap/1e9).toFixed(2) + 'B' : '—'"></td>
-            </tr>
-          </template>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div><!-- /market -->
 
         <div x-show="page==='resources'">
 
@@ -1395,290 +1370,6 @@ animate();
   </div>
 
 </div><!-- /resources -->
-
-        <div x-show="page==='lookup'">
-
-  <!-- Page title -->
-  <div class="page-title-block">
-    <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Blockchain Hash Lookup</h2>
-    <p class="page-subtitle">Paste any transaction hash, wallet address, or block hash to identify its chain and open the right explorer</p>
-  </div>
-
-  <!-- Two-column layout -->
-  <div class="lookup-layout">
-
-    <!-- ── Left: supported chains reference ── -->
-    <div class="lookup-left">
-      <div class="card chains-card">
-        <div class="chains-label">Supported Chains</div>
-        <table class="chains-table">
-          <thead>
-            <tr>
-              <th class="chains-th">Chain</th>
-              <th class="chains-th">Explorer</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#9945FF"></span>Solana</td>
-              <td class="chains-exp">solscan.io</td>
-            </tr>
-            <tr>
-              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#627EEA"></span>Ethereum</td>
-              <td class="chains-exp">etherscan.io</td>
-            </tr>
-            <tr>
-              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#F7931A"></span>Bitcoin</td>
-              <td class="chains-exp">mempool.space</td>
-            </tr>
-            <tr>
-              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#F3BA2F"></span>BNB Chain</td>
-              <td class="chains-exp">bscscan.com</td>
-            </tr>
-            <tr>
-              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#8247E5"></span>Polygon</td>
-              <td class="chains-exp">polygonscan.com</td>
-            </tr>
-            <tr>
-              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#0052FF"></span>Base</td>
-              <td class="chains-exp">basescan.org</td>
-            </tr>
-            <tr>
-              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#28A0F0"></span>Arbitrum</td>
-              <td class="chains-exp">arbiscan.io</td>
-            </tr>
-            <tr>
-              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#FF0420"></span>Optimism</td>
-              <td class="chains-exp">optimistic.etherscan.io</td>
-            </tr>
-            <tr>
-              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#EF0027"></span>Tron</td>
-              <td class="chains-exp">tronscan.org</td>
-            </tr>
-            <tr>
-              <td class="chains-td-last"><span class="chain-dot chain-dot-sm" style="background:#BFBBBB"></span>Litecoin</td>
-              <td class="chains-exp-last">blockchair.com</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ── Right: search + results ── -->
-    <div class="lookup-right">
-
-      <!-- Search bar -->
-      <div class="lookup-search">
-        <input
-          class="form-input lookup-input"
-          type="text"
-          x-model="lookupQuery"
-          placeholder="0x…  or  1A1zP1…  or  Solana address…"
-          @keydown.enter.prevent="lookupHash()"
-          autocomplete="off"
-          spellcheck="false"
-        />
-        <button
-          class="btn btn-outline no-shrink"
-          type="button"
-          title="Paste from clipboard"
-          @click="navigator.clipboard.readText().then(t => { lookupQuery = t.trim(); }).catch(() => {})"
-        >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
-        </button>
-        <button
-          class="btn btn-primary no-shrink"
-          type="button"
-          @click="lookupHash()"
-          :disabled="lookupLoading || !lookupQuery.trim()"
-        >
-          <span x-show="lookupLoading" class="spinner spinner-sm"></span>
-          <span x-show="!lookupLoading">Look up</span>
-        </button>
-      </div>
-
-      <!-- Probing spinner -->
-      <div x-show="lookupLoading" class="load-center">
-        <div class="spinner spinner-lg"></div>
-        <p class="probing-text">Probing chains…</p>
-      </div>
-
-      <!-- Error -->
-      <div x-show="lookupError && !lookupLoading" class="lookup-error" x-text="lookupError"></div>
-
-      <!-- Results -->
-      <div x-show="lookupResult && !lookupLoading">
-        <div class="card">
-
-          <!-- Hash + type badge -->
-          <div class="hash-header">
-            <div class="hash-header-row">
-              <code class="hash-code" x-text="lookupResult?.hash"></code>
-              <span class="badge hash-type-badge" x-text="lookupResult?.type"></span>
-            </div>
-          </div>
-
-          <!-- No matches -->
-          <div x-show="lookupResult?.matches?.length === 0" class="empty-state-compact">
-            <p class="no-match-title">No matches found</p>
-            <p class="no-match-sub">Hash format not recognized, or transaction not found on any probed chain.</p>
-          </div>
-
-          <!-- Match rows -->
-          <div x-show="lookupResult?.matches?.length > 0">
-            <template x-for="m in (lookupResult?.matches ?? [])" :key="m.chain">
-              <div class="match-row">
-                <!-- Chain logo (cryptocurrency-icons CDN). Falls back to a
-                     colored dot in the chain's brand color if the icon
-                     fails to load. -->
-                <img
-                  class="match-logo"
-                  :src="chainLogoUrl(m.chain)"
-                  :alt="m.chain_name"
-                  x-show="chainLogoUrl(m.chain)"
-                  @error="$el.style.display='none'; $el.nextElementSibling.style.display='inline-block'" />
-                <div class="match-dot"
-                     :style="`display:${chainLogoUrl(m.chain) ? 'none' : 'inline-block'}; background:${m.color}`"></div>
-                <div class="match-info">
-                  <div class="match-chain-name" x-text="m.chain_name"></div>
-                  <a :href="m.explorer_link" target="_blank" rel="noopener noreferrer" class="match-explorer-link" x-text="m.explorer_link"></a>
-                </div>
-                <div class="match-value no-shrink" x-show="lookupValues[m.chain] != null">
-                  <div class="match-value-label">Value</div>
-                  <div class="match-value-amt" x-text="lookupValues[m.chain] != null ? fmtUSD(lookupValues[m.chain]) : ''"></div>
-                </div>
-                <span class="badge no-shrink" :class="lookupConfidenceClass(m.confidence)" x-text="lookupConfidenceLabel(m.confidence)"></span>
-                <a :href="m.explorer_link" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm no-shrink">Open ↗</a>
-              </div>
-            </template>
-          </div>
-
-          <!-- ── Transaction Summary ──────────────────────────────────── -->
-          <div x-show="lookupResult?.summary" class="tx-summary-section">
-            <div class="section-label">Transaction Summary</div>
-
-            <div class="tx-summary-rows">
-
-              <!-- Chain -->
-              <div class="summary-row">
-                <span class="summary-label">Chain</span>
-                <span class="inline-row-7">
-                  <span class="chain-dot chain-dot-md" :style="`background:${({solana:'#9945FF',eth:'#627EEA',ethereum:'#627EEA',bsc:'#F3BA2F',polygon:'#8247E5',arbitrum:'#28A0F0',optimism:'#FF0420',avalanche:'#E84142',base:'#0052FF',tron:'#EF0027',bitcoin:'#F7931A',litecoin:'#BFBBBB'})[lookupResult?.summary?.chain] || '#9945FF'}`"></span>
-                  <span class="fw-500" x-text="lookupResult?.summary?.chain_name || lookupResult?.summary?.chain"></span>
-                </span>
-              </div>
-
-              <!-- Status -->
-              <div class="summary-row">
-                <span class="summary-label">Status</span>
-                <span x-show="lookupResult?.summary?.status === 'success'" class="status-success">
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
-                  Success
-                </span>
-                <span x-show="lookupResult?.summary?.status === 'failed'" class="status-failed">
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z"/></svg>
-                  Failed
-                </span>
-              </div>
-
-              <!-- Time -->
-              <div x-show="lookupResult?.summary?.block_time" class="summary-row">
-                <span class="summary-label">Time</span>
-                <span x-text="lookupResult?.summary?.block_time ? new Date(lookupResult?.summary?.block_time * 1000).toLocaleString('en-US', {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}) : '—'"></span>
-              </div>
-
-              <!-- From -->
-              <div class="summary-row">
-                <span class="summary-label">From</span>
-                <code
-                  class="addr-code"
-                  :title="'click to copy'"
-                  @click="navigator.clipboard.writeText(lookupResult?.summary?.from_addr).then(() => Alpine.store('toast').show('Address copied')).catch(()=>{})"
-                  x-text="lookupResult?.summary?.from_addr"
-                ></code>
-              </div>
-
-              <!-- To -->
-              <div class="summary-row">
-                <span class="summary-label">To</span>
-                <code
-                  class="addr-code"
-                  :title="'click to copy'"
-                  @click="navigator.clipboard.writeText(lookupResult?.summary?.to_addr).then(() => Alpine.store('toast').show('Address copied')).catch(()=>{})"
-                  x-text="lookupResult?.summary?.to_addr"
-                ></code>
-                <span x-show="lookupResult?.summary?.to_addr === lookupResult?.summary?.from_addr" class="self-badge">(self)</span>
-              </div>
-
-              <!-- Value -->
-              <div x-show="lookupResult?.summary?.value" class="summary-row">
-                <span class="summary-label">Value</span>
-                <span class="mono-value" x-text="lookupResult?.summary?.value"></span>
-              </div>
-
-              <!-- Fee (unified: `fee` for EVM/Tron/UTXO, `fee_sol` for Solana legacy) -->
-              <div x-show="lookupResult?.summary?.fee || lookupResult?.summary?.fee_sol" :class="lookupResult?.summary?.router ? 'summary-row' : 'summary-row-last'">
-                <span class="summary-label">Fee</span>
-                <span class="text-muted" x-text="lookupResult?.summary?.fee || lookupResult?.summary?.fee_sol"></span>
-              </div>
-
-              <!-- Router (optional) -->
-              <div x-show="lookupResult?.summary?.router" :class="lookupResult?.summary?.fee_display ? 'summary-row' : 'summary-row-last'">
-                <span class="summary-label">Router</span>
-                <span class="inline-row">
-                  <span class="chain-dot chain-dot-sm" style="background:var(--accent)"></span>
-                  <span x-text="lookupResult?.summary?.router"></span>
-                </span>
-              </div>
-
-              <!-- Platform fee (Solana-only legacy) -->
-              <div x-show="lookupResult?.summary?.fee_display" class="summary-row-last">
-                <span class="summary-label">Platform fee</span>
-                <span class="text-red" x-text="lookupResult?.summary?.fee_display"></span>
-              </div>
-
-            </div>
-
-            <!-- Transfer flows (EVM/Tron/UTXO) -->
-            <div x-show="lookupResult?.summary?.transfers?.length > 0" style="margin-top:14px">
-              <div class="section-label">Transfers (<span x-text="lookupResult?.summary?.transfers?.length"></span>)</div>
-              <div style="overflow-x:auto; margin-top:6px">
-                <table class="chains-table" style="font-size:11.5px; line-height:1.3; width:100%">
-                  <thead><tr>
-                    <th class="chains-th">From</th>
-                    <th class="chains-th">To</th>
-                    <th class="chains-th" style="text-align:right">Amount</th>
-                    <th class="chains-th">Token</th>
-                  </tr></thead>
-                  <tbody>
-                    <template x-for="(t, i) in (lookupResult?.summary?.transfers ?? [])" :key="i">
-                      <tr>
-                        <td class="chains-td"><code style="font-size:10px" x-text="t.from_short || '—'"></code></td>
-                        <td class="chains-td"><code style="font-size:10px" x-text="t.to_short || '—'"></code></td>
-                        <td class="chains-td" style="text-align:right"><span class="mono-value" x-text="t.amount"></span></td>
-                        <td class="chains-td" x-text="t.symbol"></td>
-                      </tr>
-                    </template>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- Initial empty state -->
-      <div x-show="!lookupResult && !lookupLoading && !lookupError" class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-12"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <p class="lookup-empty-title">Identify any blockchain hash</p>
-        <p class="lookup-empty-sub">Supports Ethereum, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Base, Bitcoin, Solana, Tron, and Litecoin</p>
-      </div>
-
-    </div><!-- /right column -->
-  </div><!-- /two-column layout -->
-
-</div><!-- /lookup -->
 
         <div x-show="page==='marketplace'" x-init="$watch('page', p => p === 'marketplace' && loadMarketplace())">
 
@@ -2131,9 +1822,14 @@ animate();
 </div><!-- /platforms -->
 
         <div x-show="page==='wallet'">
-          <div class="page-title-block">
-            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2"/><path d="M3 11h3c.8 0 1.6.3 2.1.9l1.1.9c1.6 1.6 4.1 1.6 5.7 0l1.1-.9c.5-.5 1.3-.9 2.1-.9H21"/></svg>Pick a Wallet</h2>
-            <p class="page-subtitle">A short, opinionated guide to the wallets new users actually consider — with real tradeoffs and rough popularity stats.</p>
+          <div class="page-header-row">
+            <div class="page-title-block">
+              <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2"/><path d="M3 11h3c.8 0 1.6.3 2.1.9l1.1.9c1.6 1.6 4.1 1.6 5.7 0l1.1-.9c.5-.5 1.3-.9 2.1-.9H21"/></svg>Pick a Wallet</h2>
+              <p class="page-subtitle">A short, opinionated guide to the wallets new users actually consider — with real tradeoffs and rough popularity stats.</p>
+            </div>
+            <button type="button" class="page-back-btn icon-only" @click="page='platforms'" title="Back to Platforms" aria-label="Back to Platforms">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            </button>
           </div>
 
           <div class="wallet101-intro card">
@@ -2353,6 +2049,1655 @@ animate();
             </div>
           </template>
         </div><!-- /wallet-tutorial -->
+
+        <div x-show="page==='market-extra'">
+          <div
+            x-data="{
+              step: 1,
+              total: 9,
+              fullName: '', dob: '', phone: '', email: '',
+              street: '', city: '', state: '', zip: '',
+              occupation: '', employer: '', income: '', netWorth: '', source: '',
+              ssn: '', taxCountry: 'United States', isUSPerson: true,
+              experience: '', objective: '', risk: '', horizon: '', manageStyle: '', cryptoInterest: '',
+              agreedCustomer: false, agreedRisk: false, agreedElectronic: false,
+              docCustomer: false, docRisk: false, docElectronic: false,
+              depositAmount: '',
+              accountNumber: 'B2B-' + Math.floor(100000000 + Math.random() * 900000000),
+              next() { this.step = Math.min(this.total, this.step + 1); },
+              prev() { this.step = Math.max(1, this.step - 1); },
+              jump(n) { this.step = Math.max(1, Math.min(this.total, n)); },
+              reset() { this.step = 1; },
+              formatSSN(v) {
+                const d = (v || '').replace(/\D/g, '').slice(0, 9);
+                if (d.length <= 3) return d;
+                if (d.length <= 5) return d.slice(0, 3) + '-' + d.slice(3);
+                return d.slice(0, 3) + '-' + d.slice(3, 5) + '-' + d.slice(5);
+              }
+            }"
+          >
+            <div class="page-header-row">
+              <div class="page-title-block">
+                <h2 class="page-title">
+                  <svg class="page-title-icon" viewBox="0 0 24 24" style="stroke:#ffd700; filter:drop-shadow(0 0 5px rgba(255,215,0,0.6))"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg>
+                  Broke to Brokerage
+                </h2>
+                <p class="page-subtitle">Where your money works hard for you while you work hard for your money.</p>
+              </div>
+              <button type="button" class="page-back-btn icon-only" @click="page='market'" title="Back to Market" aria-label="Back to Market">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+              </button>
+            </div>
+
+            <!-- Product hero — what Broke to Brokerage actually is. -->
+            <div class="b2b-hero card">
+              <p>
+                A credit card that sends part of your payment to your brokerage account — not the principal balance, but the interest that accrues. Every dollar of interest that would normally go to the bank instead lands in your portfolio, buying real shares.
+              </p>
+              <p style="margin-top:10px">
+                This is a debt tool designed for you and your future. Not the bank, not their purse — your tools, your choice, your dividends to disperse.
+              </p>
+            </div>
+
+            <!-- DEMO banner — present on every step, intentionally hard to miss -->
+            <div class="demo-banner">
+              ★ Demo only — nothing you type is saved or sent anywhere ★
+            </div>
+
+            <!-- Progress strip -->
+            <div class="tutorial-progress">
+              <div class="tutorial-progress-text">
+                Step <strong x-text="step"></strong> of <span x-text="total"></span>
+              </div>
+              <div class="tutorial-dots">
+                <template x-for="n in total" :key="n">
+                  <button class="tutorial-dot" :class="{active: n === step, done: n < step}" @click="jump(n)" :title="`Jump to step ${n}`" type="button"></button>
+                </template>
+              </div>
+            </div>
+
+            <!-- Step panels -->
+            <div class="b2b-panel card">
+
+              <!-- 1. Welcome -->
+              <div x-show="step === 1">
+                <div class="b2b-step-label">Step 1 — Welcome</div>
+                <h3 class="b2b-heading">Open a Broke to Brokerage account.</h3>
+                <p class="b2b-body">
+                  In the next 9 steps you'll provide identity, financial, and tax information; agree to standard customer disclosures; verify your identity; link a bank; and fund the account. The whole flow normally takes 5–10 minutes.
+                </p>
+                <p class="b2b-body" style="margin-top:10px">
+                  This is a demo — every screen is interactive but no information is collected, stored, or transmitted.
+                </p>
+              </div>
+
+              <!-- 2. Personal info + address -->
+              <div x-show="step === 2">
+                <div class="b2b-step-label">Step 2 — Personal information</div>
+                <h3 class="b2b-heading">Tell us who you are.</h3>
+                <p class="b2b-body" style="margin-bottom:14px">Identity, contact, and a verified residential address. PO boxes don't qualify — brokerages are required to keep a real address on file.</p>
+                <div class="b2b-form-grid">
+                  <div class="form-group"><label class="form-label">Full legal name</label><input class="form-input" type="text" x-model="fullName" placeholder="Jane Smith" /></div>
+                  <div class="form-group"><label class="form-label">Date of birth</label><input class="form-input" type="text" x-model="dob" placeholder="MM / DD / YYYY" /></div>
+                  <div class="form-group"><label class="form-label">Phone</label><input class="form-input" type="text" x-model="phone" placeholder="+1 (555) 555-1234" /></div>
+                  <div class="form-group"><label class="form-label">Email</label><input class="form-input" type="email" x-model="email" placeholder="you@example.com" /></div>
+                  <div class="form-group"><label class="form-label">Street</label><input class="form-input" type="text" x-model="street" placeholder="123 Main St" /></div>
+                  <div class="form-group"><label class="form-label">City</label><input class="form-input" type="text" x-model="city" placeholder="San Francisco" /></div>
+                  <div class="form-group"><label class="form-label">State</label><input class="form-input" type="text" x-model="state" placeholder="CA" /></div>
+                  <div class="form-group"><label class="form-label">ZIP / postal code</label><input class="form-input" type="text" x-model="zip" placeholder="94110" /></div>
+                </div>
+              </div>
+
+              <!-- 3. Employment + financials -->
+              <div x-show="step === 3">
+                <div class="b2b-step-label">Step 3 — Employment & finances</div>
+                <h3 class="b2b-heading">Tell us about your work and money.</h3>
+                <p class="b2b-body" style="margin-bottom:14px">These questions are <strong>required by US federal regulation</strong> — not optional, and not used for marketing. Anti-money-laundering rules (FinCEN's Customer Due Diligence Rule) require knowing your source of funds; FINRA's customer-suitability rule (2111) requires employment, income, and net-worth data. A real broker can't open the account without them.</p>
+                <div class="b2b-form-grid">
+                  <div class="form-group"><label class="form-label">Employment status</label>
+                    <select class="form-input" x-model="occupation"><option value="">— select —</option><option>Employed</option><option>Self-employed</option><option>Retired</option><option>Student</option><option>Not employed</option></select>
+                  </div>
+                  <div class="form-group"><label class="form-label">Employer (if applicable)</label><input class="form-input" type="text" x-model="employer" placeholder="Acme Corp" /></div>
+                  <div class="form-group"><label class="form-label">Annual income</label>
+                    <select class="form-input" x-model="income"><option value="">— select —</option><option>Under $25,000</option><option>$25,000–$50,000</option><option>$50,000–$100,000</option><option>$100,000–$250,000</option><option>$250,000+</option></select>
+                  </div>
+                  <div class="form-group"><label class="form-label">Net worth (excl. home)</label>
+                    <select class="form-input" x-model="netWorth"><option value="">— select —</option><option>Under $50,000</option><option>$50,000–$250,000</option><option>$250,000–$1M</option><option>$1M+</option></select>
+                  </div>
+                  <div class="form-group"><label class="form-label">Source of funds</label>
+                    <select class="form-input" x-model="source"><option value="">— select —</option><option>Salary / wages</option><option>Business income</option><option>Inheritance</option><option>Investment income</option><option>Sale of property</option><option>Other</option></select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 4. Tax + citizenship -->
+              <div x-show="step === 4">
+                <div class="b2b-step-label">Step 4 — Tax & citizenship</div>
+                <h3 class="b2b-heading">Tax identity.</h3>
+                <p class="b2b-body" style="margin-bottom:14px">Required for IRS reporting (US persons → W-9; non-US → W-8BEN). The SSN field below is illustrative — leave anything in it.</p>
+                <div class="b2b-form-grid">
+                  <div class="form-group"><label class="form-label">SSN <span style="color:var(--muted); font-weight:400">(demo)</span></label><input class="form-input" type="text" x-model="ssn" @input="ssn = formatSSN(ssn)" inputmode="numeric" maxlength="11" placeholder="XXX-XX-XXXX" /></div>
+                  <div class="form-group"><label class="form-label">Country of tax residence</label><input class="form-input" type="text" x-model="taxCountry" /></div>
+                  <div class="form-group" style="grid-column: span 2"><label style="display:flex; align-items:center; gap:8px; font-size:13px; color:var(--text); cursor:pointer"><input type="checkbox" x-model="isUSPerson" style="width:18px; height:18px; accent-color:var(--accent)" />I am a US person for tax purposes</label></div>
+                </div>
+              </div>
+
+              <!-- 5. Investment profile -->
+              <div x-show="step === 5">
+                <div class="b2b-step-label">Step 5 — Investment profile</div>
+                <h3 class="b2b-heading">Your investing experience and goals.</h3>
+                <p class="b2b-body" style="margin-bottom:14px">Used to determine which products are suitable. Conservative profiles can't get approved for margin or options without bumping up.</p>
+                <div class="b2b-form-grid">
+                  <div class="form-group"><label class="form-label">Investing experience</label>
+                    <select class="form-input" x-model="experience"><option value="">— select —</option><option>None</option><option>Limited (under 2 years)</option><option>Good (2–5 years)</option><option>Extensive (5+ years)</option></select>
+                  </div>
+                  <div class="form-group"><label class="form-label">Primary objective</label>
+                    <select class="form-input" x-model="objective"><option value="">— select —</option><option>Capital preservation</option><option>Income</option><option>Growth</option><option>Speculation</option></select>
+                  </div>
+                  <div class="form-group"><label class="form-label">Risk tolerance</label>
+                    <select class="form-input" x-model="risk"><option value="">— select —</option><option>Low</option><option>Moderate</option><option>High</option><option>Speculative</option></select>
+                  </div>
+                  <div class="form-group"><label class="form-label">Time horizon</label>
+                    <select class="form-input" x-model="horizon"><option value="">— select —</option><option>Under 1 year</option><option>1–3 years</option><option>3–10 years</option><option>10+ years</option></select>
+                  </div>
+                  <div class="form-group"><label class="form-label">How do you want to manage your investments?</label>
+                    <select class="form-input" x-model="manageStyle">
+                      <option value="">— select —</option>
+                      <option>Self-directed</option>
+                      <option>Talk to a human advisor</option>
+                      <option>Autopilot — set rules and run</option>
+                    </select>
+                  </div>
+                  <div class="form-group"><label class="form-label">Crypto investing &amp; trading</label>
+                    <select class="form-input" x-model="cryptoInterest">
+                      <option value="">— select —</option>
+                      <option>Not interested in crypto</option>
+                      <option>Interested — I'll manage it myself</option>
+                      <option>Interested — I want to speak with an advisor</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 6. Disclosures + agreements -->
+              <div x-show="step === 6">
+                <div class="b2b-step-label">Step 6 — Disclosures & agreements</div>
+                <h3 class="b2b-heading">Read and agree.</h3>
+                <p class="b2b-body" style="margin-bottom:14px">A real broker shows the full text of each agreement here. For this demo, the titles alone capture the shape: a customer agreement, a risk disclosure, and consent to electronic delivery.</p>
+                <div class="b2b-checks">
+                  <div class="b2b-agreement">
+                    <div class="b2b-check-row" :class="{open: docCustomer}">
+                      <label class="b2b-check"><input type="checkbox" x-model="agreedCustomer" />
+                        <button type="button" class="b2b-doc-chevron inline" @click.stop.prevent="docCustomer = !docCustomer" :title="docCustomer ? 'Hide document' : 'View document'" aria-label="Toggle document">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="docCustomer ? 'transform:rotate(180deg)' : ''"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div><strong>Customer agreement.</strong> The contract that governs the relationship between you and the broker — fees, dispute resolution, account terms.</div>
+                      </label>
+                    </div>
+                    <div class="b2b-doc-panel" x-show="docCustomer">
+                      <p>Your time is important and so is ours. So to save our sanities we will quickly outline the terms and conditions so you can navigate quickly to inform you about our services.</p>
+                    </div>
+                  </div>
+
+                  <div class="b2b-agreement">
+                    <div class="b2b-check-row" :class="{open: docRisk}">
+                      <label class="b2b-check"><input type="checkbox" x-model="agreedRisk" />
+                        <button type="button" class="b2b-doc-chevron inline" @click.stop.prevent="docRisk = !docRisk" :title="docRisk ? 'Hide document' : 'View document'" aria-label="Toggle document">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="docRisk ? 'transform:rotate(180deg)' : ''"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div><strong>Risk disclosure.</strong> An acknowledgment that markets fluctuate and that you can lose money — including all of it.</div>
+                      </label>
+                    </div>
+                    <div class="b2b-doc-panel" x-show="docRisk">
+                      <em>Documentation slot — attach the risk-disclosure PDF here.</em>
+                    </div>
+                  </div>
+
+                  <div class="b2b-agreement">
+                    <div class="b2b-check-row" :class="{open: docElectronic}">
+                      <label class="b2b-check"><input type="checkbox" x-model="agreedElectronic" />
+                        <button type="button" class="b2b-doc-chevron inline" @click.stop.prevent="docElectronic = !docElectronic" :title="docElectronic ? 'Hide document' : 'View document'" aria-label="Toggle document">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="docElectronic ? 'transform:rotate(180deg)' : ''"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div><strong>Electronic delivery consent.</strong> Lets the broker send statements, confirmations, and tax forms electronically instead of by mail.</div>
+                      </label>
+                    </div>
+                    <div class="b2b-doc-panel" x-show="docElectronic">
+                      <em>Documentation slot — attach the e-delivery consent text here.</em>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 7. Identity verification -->
+              <div x-show="step === 7">
+                <div class="b2b-step-label">Step 7 — Identity verification</div>
+                <h3 class="b2b-heading">Prove you're you.</h3>
+                <p class="b2b-body" style="margin-bottom:14px">Real flows hand off to a vendor like Persona, Plaid, or Onfido — you'd snap a photo of your ID and a selfie. This demo shows the slots without uploading anything.</p>
+                <div class="b2b-id-grid">
+                  <div class="b2b-id-slot">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><line x1="3" y1="10" x2="21" y2="10"/><circle cx="8" cy="14.5" r="1.5"/><line x1="12" y1="14" x2="18" y2="14"/><line x1="12" y1="16.5" x2="16" y2="16.5"/></svg>
+                    <div class="b2b-id-label">Front of government-issued ID</div>
+                    <div class="b2b-id-hint">PNG or JPG · up to 10 MB</div>
+                  </div>
+                  <div class="b2b-id-slot">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="4"/><path d="M4 21v-1a8 8 0 0 1 16 0v1"/></svg>
+                    <div class="b2b-id-label">Selfie / liveness check</div>
+                    <div class="b2b-id-hint">Look at the camera, follow the prompts</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 8. Banking link -->
+              <div x-show="step === 8">
+                <div class="b2b-step-label">Step 8 — Link a funding source</div>
+                <h3 class="b2b-heading">Connect your bank.</h3>
+                <p class="b2b-body" style="margin-bottom:14px">Real flows use Plaid or a similar service to verify the bank account belongs to you. Picking any tile below advances the demo.</p>
+                <div class="b2b-bank-grid">
+                  <button type="button" class="b2b-bank-tile" @click="next()">Bank A</button>
+                  <button type="button" class="b2b-bank-tile" @click="next()">Bank B</button>
+                  <button type="button" class="b2b-bank-tile" @click="next()">Bank C</button>
+                  <button type="button" class="b2b-bank-tile" @click="next()">Bank D</button>
+                  <button type="button" class="b2b-bank-tile" @click="next()">Bank E</button>
+                  <button type="button" class="b2b-bank-tile" @click="next()">Bank F</button>
+                </div>
+                <p class="b2b-body" style="margin-top:14px; font-size:12px; color:var(--muted)">Or link manually with routing + account number.</p>
+              </div>
+
+              <!-- 9. Initial deposit + confirmation -->
+              <div x-show="step === 9">
+                <div class="b2b-step-label">Step 9 — Fund &amp; finish</div>
+                <h3 class="b2b-heading">Make your first deposit.</h3>
+                <div class="b2b-form-grid" style="grid-template-columns: 1fr; max-width:240px">
+                  <div class="form-group"><label class="form-label">Initial deposit (USD)</label><input class="form-input" type="text" x-model="depositAmount" placeholder="100.00" /></div>
+                </div>
+
+                <div class="b2b-success card" style="margin-top:24px">
+                  <div class="b2b-success-icon">✓</div>
+                  <h3 class="b2b-heading" style="margin:0">Welcome to Broke to Brokerage.</h3>
+                  <p class="b2b-body" style="margin-top:6px">Your demo account is open.</p>
+                  <div class="b2b-success-meta">
+                    <span class="addr-format-label">Account number</span>
+                    <code x-text="accountNumber"></code>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom nav -->
+            <div class="tutorial-nav">
+              <button class="btn btn-outline" @click="prev()" :disabled="step === 1" type="button">&larr; Back</button>
+              <span class="tutorial-keyboard-hint" x-show="step < total">Step <span x-text="step"></span> of <span x-text="total"></span></span>
+              <span class="tutorial-keyboard-hint" x-show="step === total">Finished</span>
+              <button class="btn btn-primary" @click="next()" :disabled="step === total" type="button" x-show="step < total">Next &rarr;</button>
+              <button class="btn btn-outline" @click="reset()" type="button" x-show="step === total">Start over</button>
+            </div>
+          </div>
+        </div><!-- /market-extra -->
+
+        <div x-show="page==='brokerage'">
+          <div class="page-header-row">
+            <div class="page-title-block">
+              <h2 class="page-title">
+                <svg class="page-title-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><polyline points="7 14 11 10 14 13 21 6"/></svg>
+                Brokerage
+                <span class="brokerage-paper-tag">Paper</span>
+              </h2>
+              <p class="page-subtitle">Live snapshot of your Alpaca paper-trading account. Polls every 30 seconds.</p>
+              <div class="brokerage-hero-stack">
+                <div class="brokerage-hero-track">
+                  <template x-for="sym in brokerageHeroStack" :key="'hero-a-' + sym">
+                    <div class="coin-stack-wrap" style="cursor:pointer" @click="pickScreenerSymbol(sym)">
+                      <img class="coin-stack-icon"
+                           :src="logoUrlFor(sym, 96)"
+                           :alt="sym"
+                           @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
+                      <div class="coin-stack-icon coin-stack-fallback"
+                           style="display:none"
+                           x-text="sym.slice(0, 4)"></div>
+                      <span class="coin-stack-tip" x-text="sym"></span>
+                    </div>
+                  </template>
+                  <!-- Duplicate set required for seamless infinite-loop CSS
+                       marquee — without it the scroll resets visibly. -->
+                  <template x-for="sym in brokerageHeroStack" :key="'hero-b-' + sym">
+                    <div class="coin-stack-wrap" style="cursor:pointer" @click="pickScreenerSymbol(sym)" aria-hidden="true">
+                      <img class="coin-stack-icon"
+                           :src="logoUrlFor(sym, 96)"
+                           :alt="sym"
+                           @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
+                      <div class="coin-stack-icon coin-stack-fallback"
+                           style="display:none"
+                           x-text="sym.slice(0, 4)"></div>
+                      <span class="coin-stack-tip" x-text="sym"></span>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="page-back-btn icon-only" @click="loadBrokerage()" title="Refresh" aria-label="Refresh" :disabled="loadingBrokerage">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="loadingBrokerage ? 'animation: spin 1s linear infinite' : ''"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            </button>
+          </div>
+
+          <div x-show="brokerageError" class="card" style="border-color: rgba(255,51,102,0.4); padding: 14px 18px; color: #ff8a8a; margin-bottom: 18px">
+            <p style="margin: 0" x-text="brokerageError"></p>
+          </div>
+
+          <div x-show="loadingBrokerage && !alpacaAccount" class="load-center-row">
+            <div class="spinner spinner-lg"></div>
+          </div>
+
+          <div x-show="alpacaAccount" class="brokerage-stats">
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Total Amount Deposited</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(depositedForActivePortfolio())"></div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Cash</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(cashForActivePortfolio())"></div>
+              <div class="brokerage-stat-pct" x-show="holdingsTotals().costBasis > 0" x-text="fmtUSD(holdingsTotals().costBasis) + ' invested'"></div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Investments Value</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(holdingsTotals().marketValue)"></div>
+              <div class="brokerage-stat-pct" :class="holdingsTotals().pl >= 0 ? 'pos' : 'neg'" x-show="holdingsTotals().costBasis > 0" x-text="(holdingsTotals().pl >= 0 ? '+' : '') + (holdingsTotals().pl / holdingsTotals().costBasis * 100).toFixed(2) + '%'"></div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Day P&amp;L</div>
+              <template x-if="alpacaAccount">
+                <div class="brokerage-stat-value" :class="(parseFloat(alpacaAccount.equity) - parseFloat(alpacaAccount.last_equity)) >= 0 ? 'pos' : 'neg'">
+                  <span x-text="(parseFloat(alpacaAccount.equity) - parseFloat(alpacaAccount.last_equity) >= 0 ? '+' : '') + fmtUSD(parseFloat(alpacaAccount.equity) - parseFloat(alpacaAccount.last_equity))"></span>
+                  <span class="brokerage-stat-pct" x-text="' · ' + ((parseFloat(alpacaAccount.equity) / parseFloat(alpacaAccount.last_equity) - 1) * 100).toFixed(2) + '%'" x-show="parseFloat(alpacaAccount.last_equity) > 0"></span>
+                </div>
+              </template>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Rewards Deposited</div>
+              <div class="brokerage-stat-value pos" x-text="fmtUSD(rewardsForActivePortfolio())"></div>
+              <div class="brokerage-stat-pct">from credit card</div>
+            </div>
+          </div>
+
+          <div x-show="alpacaAccount" class="wishlist-btn-row">
+            <button type="button" class="btn btn-outline btn-sm wishlist-btn" @click="wishListOpen = true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
+              Wish List
+              <span x-show="wishList.length" class="wishlist-count" x-text="wishList.length"></span>
+            </button>
+          </div>
+
+          <div x-show="alpacaAccount" class="brokerage-meta">
+            <span>Account <code x-text="alpacaAccount?.account_number"></code></span>
+            <span>Status <code x-text="alpacaAccount?.status"></code></span>
+            <button type="button" class="btn btn-sm btn-outline brokerage-add-funds" @click="addFundsOpen = true">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Add Funds
+            </button>
+            <span x-show="alpacaAccount?.pattern_day_trader" style="color:#ff8a8a">PDT flagged</span>
+          </div>
+
+          <!-- Add Funds modal — payment API integration is a TODO. -->
+          <div class="modal-backdrop" x-show="addFundsOpen" @click.self="addFundsOpen = false" x-cloak>
+            <div class="modal">
+              <button class="modal-close" @click="addFundsOpen = false" type="button">&times;</button>
+              <div class="modal-title">Add Funds</div>
+              <p style="margin:0 0 14px; color: var(--muted); font-size: 13px">
+                Funds always land in <strong style="color:var(--text)">Main Account</strong>. Move money to other portfolios via Transfer once they're created.
+              </p>
+              <div class="form-group">
+                <label class="form-label">Amount (USD)</label>
+                <input class="form-input" type="number" min="0" step="0.01" x-model="addFundsAmount" placeholder="0.00" @keydown.enter="submitAddFunds()" />
+              </div>
+              <p style="margin: 8px 0 0; color: var(--muted); font-size: 12px; font-style: italic">
+                Payment provider not yet connected — funds are tracked locally for now.
+              </p>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-outline" @click="addFundsOpen = false">Cancel</button>
+                <button type="button" class="btn btn-primary" :disabled="!parseFloat(addFundsAmount) || parseFloat(addFundsAmount) <= 0" @click="submitAddFunds()">Add Funds</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="card brokerage-order-card" style="margin-top:24px">
+            <div class="brokerage-order-grid">
+            <div class="brokerage-order-col">
+              <div class="brokerage-screener-head">
+                <strong>Make a Purchase</strong>
+                <span class="screener-subtitle-inline">Fill out the form to place an order.</span>
+              </div>
+            <form @submit.prevent="orderError = null; orderConfirmOpen = true" class="brokerage-order-form">
+              <div class="form-group">
+                <label class="form-label">Portfolio</label>
+                <select class="form-input" @change="setActiveBrokeragePortfolio($event.target.value)">
+                  <template x-for="p in brokeragePortfolios" :key="p.id">
+                    <option :value="p.id" :selected="activeBrokeragePortfolioId === p.id" x-text="`${p.name} — ${fmtUSD(portfolioCash[p.id] || 0)} available`"></option>
+                  </template>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">
+                  Symbol
+                  <template x-if="orderForm.symbol && delistingRiskFor(orderForm.symbol.toUpperCase()) && delistingFilingUrl(orderForm.symbol.toUpperCase())">
+                    <a class="holdings-delist-badge" :class="'delist-' + delistingRiskSeverity(orderForm.symbol.toUpperCase())" :href="delistingFilingUrl(orderForm.symbol.toUpperCase())" target="_blank" rel="noopener noreferrer" :title="delistingRiskReason(orderForm.symbol.toUpperCase())" x-text="delistingRiskFor(orderForm.symbol.toUpperCase())"></a>
+                  </template>
+                  <template x-if="orderForm.symbol && delistingRiskFor(orderForm.symbol.toUpperCase()) && !delistingFilingUrl(orderForm.symbol.toUpperCase())">
+                    <span class="holdings-delist-badge" :class="'delist-' + delistingRiskSeverity(orderForm.symbol.toUpperCase())" :title="delistingRiskReason(orderForm.symbol.toUpperCase())" x-text="delistingRiskFor(orderForm.symbol.toUpperCase())"></span>
+                  </template>
+                </label>
+                <input class="form-input" type="text" x-model="orderForm.symbol" @input="loadAlpacaQuote(orderForm.symbol)" placeholder="AAPL" autocomplete="off" style="text-transform:uppercase" />
+                <div class="brokerage-quote-hint" x-show="alpacaQuote && alpacaQuote.quote">
+                  <span x-text="`${alpacaQuote?.symbol} `"></span>
+                  bid <code x-text="alpacaQuote?.quote?.bp"></code>
+                  · ask <code x-text="alpacaQuote?.quote?.ap"></code>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input class="form-input" type="number" step="0.0001" min="0" x-model="orderForm.qty" placeholder="1" required />
+              </div>
+              <div class="form-group" x-show="orderForm.type==='limit'">
+                <label class="form-label">Limit price</label>
+                <input class="form-input" type="number" step="0.01" min="0" x-model="orderForm.limit_price" placeholder="0.00" :required="orderForm.type==='limit'" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Type</label>
+                <select class="form-input" x-model="orderForm.type">
+                  <option value="limit">Limit</option>
+                  <option value="market">Market</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Time in force</label>
+                <select class="form-input" x-model="orderForm.time_in_force">
+                  <option value="gtc">GTC — good till canceled</option>
+                  <option value="day">Day — cancels at close</option>
+                  <option value="ioc">IOC — immediate or cancel</option>
+                  <option value="fok">FOK — fill or kill</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Side</label>
+                <div class="brokerage-side-toggle">
+                  <button type="button" @click="orderForm.side='buy'" :class="{active: orderForm.side==='buy'}" class="brokerage-side-buy">Buy</button>
+                  <button type="button" @click="orderForm.side='sell'" :class="{active: orderForm.side==='sell'}" class="brokerage-side-sell">Sell</button>
+                </div>
+              </div>
+              <div class="brokerage-order-submit">
+                <button type="submit" class="btn btn-primary brokerage-review-submit" :disabled="!orderForm.symbol || !orderForm.qty || (orderForm.type==='limit' && !orderForm.limit_price)">
+                  Review &amp; submit
+                </button>
+              </div>
+            </form>
+            </div><!-- /brokerage-order-col -->
+
+            <div class="brokerage-screener-col">
+              <div class="brokerage-screener-head">
+                <strong x-text="screenerView === 'etfs' ? 'ETFs' : 'Stock Screener'"></strong>
+                <span class="screener-subtitle-inline" x-show="!loadingScreenerQuotes" x-text="screenerView === 'etfs' ? 'Purchase ETFs / click a row to fill the Symbol field. Prices are live.' : 'Purchase individual stocks / click a row to fill the Symbol field. Prices are live.'"></span>
+                <span class="screener-subtitle-inline" x-show="loadingScreenerQuotes">Loading live prices…</span>
+                <span class="screener-count-badge"><span x-text="visibleScreenerCount()"></span> shown</span>
+              </div>
+              <div class="screener-view-toggle">
+                <button type="button" class="screener-view-tab" :class="{active: screenerView === 'stocks'}" @click="screenerView = 'stocks'">Stocks</button>
+                <button type="button" class="screener-view-tab" :class="{active: screenerView === 'etfs'}" @click="screenerView = 'etfs'">ETFs</button>
+              </div>
+              <div class="etf-explainer" x-show="screenerView === 'etfs'">
+                <strong>What's an ETF?</strong> An <em>Exchange-Traded Fund</em> is a pre-made basket of stocks (or bonds, commodities, or crypto) that trades on the stock market just like a single share. Buying one share of <strong>SPY</strong>, for example, gives you exposure to all 500 companies in the S&amp;P 500 — instant diversification without buying each one yourself. ETFs are professionally managed, charge a small annual fee (the <em>expense ratio</em>), and many pay out dividends/distributions. Use the tabs below to browse by theme — broad index, sector, dividend income, bonds, international, commodities, crypto, or thematic strategies.
+                <details class="etf-fee-details">
+                  <summary>Will I be charged a yearly fee?</summary>
+                  <div class="etf-fee-body">
+                    <p>Every ETF charges an annual <strong>expense ratio</strong>, but it's invisible. You don't get a bill, and Alpaca doesn't deduct anything visible from your account. The fund manager (BlackRock, Vanguard, Schwab, etc.) skims it directly off the fund's assets every day, so the ETF's price already reflects the fee. You just see slightly lower returns over time.</p>
+                    <p class="etf-fee-table-title">Rough cost on $1,000 invested for one year:</p>
+                    <table class="etf-fee-table">
+                      <thead>
+                        <tr><th>Fee</th><th>Cost / year on $1,000</th></tr>
+                      </thead>
+                      <tbody>
+                        <tr><td>0.03% (VOO, IVV, BND)</td><td>$0.30</td></tr>
+                        <tr><td>0.09% (SPY, SCHD)</td><td>$0.90</td></tr>
+                        <tr><td>0.20% (QQQ)</td><td>$2.00</td></tr>
+                        <tr><td>0.35% (JEPI, JEPQ)</td><td>$3.50</td></tr>
+                        <tr><td>0.75% (ARKK, thematic)</td><td>$7.50</td></tr>
+                        <tr><td>1.50% (GBTC)</td><td>$15.00</td></tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </details>
+              </div>
+              <div class="screener-legend">
+                <span class="screener-legend-arrows">
+                  <span class="screener-yield-arrow pos"><svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor"><path d="M5 0 L10 8 L0 8 Z"/></svg></span>
+                  <span class="screener-yield-arrow neg"><svg width="9" height="9" viewBox="0 0 10 10" fill="currentColor" style="transform:rotate(180deg)"><path d="M5 0 L10 8 L0 8 Z"/></svg></span>
+                </span>
+                outperforming / underperforming comparable peers up to the last 4 yrs.
+              </div>
+              <div class="screener-tabs">
+                <template x-for="cat in stockScreener.filter(c => screenerView === 'etfs' ? c.view === 'etfs' : c.view !== 'etfs')" :key="cat.id">
+                  <button type="button" class="screener-tab" :class="{active: screenerCategory === cat.id}" @click="screenerCategory = cat.id; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''" x-text="cat.label"></button>
+                </template>
+                <button type="button" class="screener-tab" x-show="screenerView === 'stocks'" :class="{active: screenerCategory === 'filters'}" @click="screenerCategory = 'filters'; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''">Filters</button>
+              </div>
+              <div class="screener-list">
+                <template x-for="cat in stockScreener" :key="cat.id">
+                  <div x-show="screenerCategory === cat.id">
+                    <!-- Per-category ETF description. -->
+                    <div class="etf-cat-description" x-show="screenerView === 'etfs' && cat.description" x-text="cat.description"></div>
+                    <!-- Dividend payers explainer — text shifts with the active top-tier sub-filter. -->
+                    <div class="etf-cat-description" x-show="cat.id === 'dividend' && dividendTier === ''">
+                      <strong>What's a dividend payer?</strong> A company that returns part of its profit to shareholders as cash, typically every quarter. Buying shares of a steady dividend payer means a check shows up in your account on a regular schedule — no need to sell the stock. Dividend stocks tend to be mature, profitable businesses (mega-cap consumer brands, banks, utilities) where management has decided that returning cash is more useful than reinvesting it. Use the <em>Top tier</em> chips to filter to the most reliable dividend track records.
+                    </div>
+                    <div class="etf-cat-description" x-show="cat.id === 'dividend' && dividendTier === 'kings'">
+                      <strong>Dividend Kings — 50+ consecutive years of dividend increases.</strong> The most exclusive tier in dividend investing — only ~50 US-listed companies have raised their dividend every year for half a century or more. To stay on the list, a company must increase the per-share payout through every recession, every market crash, and every CEO transition since the 1970s or earlier. The longest active streak (<strong>AWR</strong>, American States Water) is over 70 years. A King's record signals extreme management discipline and very stable cash flow — but it's a backward-looking signal, not a guarantee. <strong>3M lost its King status in 2024</strong> after the Solventum spinoff broke a 65-year run, so even Kings can fall.
+                    </div>
+                    <div class="etf-cat-description" x-show="cat.id === 'dividend' && dividendTier === 'aristocrats'">
+                      <strong>S&amp;P 500 Dividend Aristocrats — 25 to 49 years of consecutive dividend increases.</strong> Companies that have raised their dividend every year for at least 25 years but haven't yet hit the 50-year King threshold. To qualify they must (1) be in the S&amp;P 500, (2) have a 25+ year increase streak, and (3) meet liquidity and market-cap minimums. The most-watched dividend index — ETFs like <strong>NOBL</strong> and <strong>REGL</strong> track it. This filter intentionally excludes the Kings (use the Kings chip for those) so you see modern-classic streak builders: <strong>MCD</strong> (~49y, the next King), <strong>MDT, RTX, NEE, MKC, CAT, ECL</strong>. Yields are typically modest (1.5%–4%), but the consistency of the growth compounds powerfully. The combined Aristocrats index has historically beaten the broader S&amp;P 500 with lower drawdowns.
+                    </div>
+                    <!-- Top-tier sub-chips for the Dividend payers tab. -->
+                    <div x-show="cat.id === 'dividend'" class="screener-filter-subchips" style="margin-bottom:8px">
+                      <span class="screener-filter-sublabel">Top tier:</span>
+                      <button type="button" class="screener-filter-subchip" :class="{active: dividendTier === 'kings'}" @click="dividendTier = dividendTier === 'kings' ? '' : 'kings'" title="Dividend Kings — 50+ consecutive years of dividend increases">Kings (50+ yrs)</button>
+                      <button type="button" class="screener-filter-subchip" :class="{active: dividendTier === 'aristocrats'}" @click="dividendTier = dividendTier === 'aristocrats' ? '' : 'aristocrats'" title="S&amp;P 500 Dividend Aristocrats only — 25 to 49 years of consecutive increases (Kings are filtered separately by their own chip)">Aristocrats (25–49 yrs)</button>
+                    </div>
+                    <!-- Sort-by-yield sub-chip for the Dividend payers tab. -->
+                    <div x-show="cat.id === 'dividend'" class="screener-filter-subchips" style="margin-bottom:10px">
+                      <span class="screener-filter-sublabel">Sort:</span>
+                      <button type="button" class="screener-filter-subchip" :class="{active: dividendSort === ''}" @click="dividendSort = ''" title="Cheapest share price first">Cheapest</button>
+                      <button type="button" class="screener-filter-subchip" :class="{active: dividendSort === 'yield'}" @click="dividendSort = 'yield'" title="Highest dividend yield first">Yield (high → low)</button>
+                    </div>
+                    <!-- Share-price sub-chips for Under $20 + dividend. -->
+                    <div x-show="cat.id === 'low-price-dividend'" class="screener-filter-subchips" style="margin-bottom:8px">
+                      <span class="screener-filter-sublabel">Share Price:</span>
+                      <button type="button" class="screener-filter-subchip" :class="{active: lowSharePrice === '1to5'}" @click="lowSharePrice = lowSharePrice === '1to5' ? '' : '1to5'">$1 – $5</button>
+                      <button type="button" class="screener-filter-subchip" :class="{active: lowSharePrice === '5to10'}" @click="lowSharePrice = lowSharePrice === '5to10' ? '' : '5to10'">$5 – $10</button>
+                      <button type="button" class="screener-filter-subchip" :class="{active: lowSharePrice === '10to15'}" @click="lowSharePrice = lowSharePrice === '10to15' ? '' : '10to15'">$10 – $15</button>
+                    </div>
+                    <!-- Dividend-amount sub-chips for Under $20 + dividend. -->
+                    <div x-show="cat.id === 'low-price-dividend'" class="screener-filter-subchips" style="margin-bottom:8px">
+                      <span class="screener-filter-sublabel">Dividend amount:</span>
+                      <button type="button" class="screener-filter-subchip" :class="{active: lowPriceRange === 'under1'}" @click="lowPriceRange = lowPriceRange === 'under1' ? '' : 'under1'">Under $1</button>
+                      <button type="button" class="screener-filter-subchip" :class="{active: lowPriceRange === '1to5'}" @click="lowPriceRange = lowPriceRange === '1to5' ? '' : '1to5'">$1 – $5</button>
+                      <button type="button" class="screener-filter-subchip" :class="{active: lowPriceRange === '5to10'}" @click="lowPriceRange = lowPriceRange === '5to10' ? '' : '5to10'">$5 – $10</button>
+                    </div>
+                    <!-- Dividend-yield sub-chips for Under $20 + dividend. -->
+                    <div x-show="cat.id === 'low-price-dividend'" class="screener-filter-subchips" style="margin-bottom:10px">
+                      <span class="screener-filter-sublabel">Dividend yield:</span>
+                      <button type="button" class="screener-filter-subchip" :class="{active: lowDivYield === '1to10'}" @click="lowDivYield = lowDivYield === '1to10' ? '' : '1to10'">1 – 10%</button>
+                      <button type="button" class="screener-filter-subchip" :class="{active: lowDivYield === '10to20'}" @click="lowDivYield = lowDivYield === '10to20' ? '' : '10to20'">10.1 – 20%</button>
+                      <button type="button" class="screener-filter-subchip" :class="{active: lowDivYield === '20to30'}" @click="lowDivYield = lowDivYield === '20to30' ? '' : '20to30'">20.1 – 30%</button>
+                      <button type="button" class="screener-filter-subchip" :class="{active: lowDivYield === '30plus'}" @click="lowDivYield = lowDivYield === '30plus' ? '' : '30plus'">30.1%+</button>
+                    </div>
+                    <p x-show="cat.id === 'low-price-dividend' && filterScreenerStocks(cat).length === 0 && !loadingScreenerQuotes && !loadingScreenerDividends" style="font-size:12.5px; color:var(--muted); padding: 14px 4px">
+                      No candidates currently under $20 with a dividend payout. Prices and dividends update on each visit.
+                    </p>
+                    <template x-for="stock in filterScreenerStocks(cat)" :key="stock.symbol">
+                      <div class="screener-row-wrap">
+                        <div class="screener-row-bar">
+                          <button type="button" class="screener-row" @click="pickScreenerSymbol(stock.symbol)">
+                            <div class="screener-row-head">
+                              <img class="ticker-logo" x-show="logoUrlFor(stock.symbol)" :src="logoUrlFor(stock.symbol)" :alt="stock.symbol" loading="lazy" @error="$el.style.display='none'" />
+                              <strong class="screener-symbol" x-text="stock.symbol"></strong>
+                              <span class="screener-name" x-text="stock.name"></span>
+                              <span class="screener-price-block" x-show="screenerQuotes[stock.symbol]?.price != null">
+                                <span class="screener-price" x-text="'$' + Number(screenerQuotes[stock.symbol]?.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                                <span class="screener-change-line">
+                                  <span class="screener-change" :class="screenerQuotes[stock.symbol]?.change_pct >= 0 ? 'pos' : 'neg'" x-show="screenerQuotes[stock.symbol]?.change_pct != null" x-text="(screenerQuotes[stock.symbol]?.change_pct >= 0 ? '+' : '') + Number(screenerQuotes[stock.symbol]?.change_pct).toFixed(2) + '%'"></span>
+                                  <span class="screener-yield-arrow" x-show="performanceVsBenchmark(stock.symbol)" :class="performanceVsBenchmark(stock.symbol) === 'up' ? 'pos' : 'neg'" :title="performanceTooltip(stock.symbol)">
+                                    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :style="performanceVsBenchmark(stock.symbol) === 'down' ? 'transform:rotate(180deg)' : ''"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                                  </span>
+                                </span>
+                              </span>
+                            </div>
+                            <span class="screener-note" x-text="stock.note"></span>
+                            <span class="screener-dividend" x-show="(cat.id==='dividend' || cat.id==='low-price-dividend' || screenerView === 'etfs') && screenerDividends[stock.symbol]?.annual_rate > 0">
+                              <span class="screener-dividend-label">Annual dividend</span>
+                              <span class="screener-dividend-value" x-text="'$' + Number(screenerDividends[stock.symbol]?.annual_rate).toFixed(2) + '/share'"></span>
+                              <span class="screener-dividend-yield" x-show="screenerQuotes[stock.symbol]?.price > 0" x-text="' · ' + ((screenerDividends[stock.symbol]?.annual_rate / screenerQuotes[stock.symbol]?.price) * 100).toFixed(2) + '% yield'"></span>
+                              <span class="holdings-delist-badge" x-show="delistingRiskFor(stock.symbol)" :class="'delist-' + delistingRiskSeverity(stock.symbol)" :title="delistingRiskReason(stock.symbol)" x-text="delistingRiskFor(stock.symbol)"></span>
+                            </span>
+                            <span class="screener-badges" x-show="screenerView === 'etfs' && (dividendFrequency(stock.symbol) || holdingsCountFor(stock.symbol) || riskTierFor(stock.symbol))">
+                              <span class="screener-badge-group" x-show="dividendFrequency(stock.symbol)">
+                                <span class="screener-badge-label">Payout</span>
+                                <span class="screener-badge freq" x-text="dividendFrequency(stock.symbol)"></span>
+                              </span>
+                              <span class="screener-badge holdings" x-show="holdingsCountFor(stock.symbol)" x-text="holdingsCountFor(stock.symbol)"></span>
+                              <span class="screener-badge risk screener-risk-corner" x-show="riskTierFor(stock.symbol)" :class="'risk-' + (riskTierFor(stock.symbol) || '').toLowerCase()" x-text="riskTierFor(stock.symbol)"></span>
+                            </span>
+                          </button>
+                          <button type="button" class="screener-chart-toggle" @click="toggleScreenerChart(stock.symbol)" :title="expandedScreenerRow === stock.symbol ? 'Hide chart' : 'Show 1-year chart'" aria-label="Toggle chart">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="expandedScreenerRow === stock.symbol ? 'transform:rotate(180deg)' : ''"><polyline points="6 9 12 15 18 9"/></svg>
+                          </button>
+                          <button type="button"
+                                  class="screener-wishlist-star"
+                                  :class="{ active: isInWishList(stock.symbol) }"
+                                  @click.stop="toggleWishList(stock.symbol)"
+                                  :title="isInWishList(stock.symbol) ? 'Remove from wish list' : 'Add to wish list'">
+                            <svg width="15" height="15" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" :fill="isInWishList(stock.symbol) ? '#facc15' : 'none'"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
+                          </button>
+                        </div>
+                        <div class="screener-chart-panel" x-show="expandedScreenerRow === stock.symbol">
+                          <div class="screener-chart-header">
+                            <span x-text="`${stock.symbol} — last 48 months`"></span>
+                            <span class="screener-chart-loading" x-show="screenerBars[stock.symbol]?.loading">Loading…</span>
+                            <span class="screener-chart-error" x-show="screenerBars[stock.symbol]?.error" x-text="screenerBars[stock.symbol]?.error"></span>
+                          </div>
+                          <div class="screener-chart-canvas-wrap">
+                            <canvas :data-screener-chart="stock.symbol"></canvas>
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                </template>
+
+                <!-- Filters tab — search across all categories by note/name/ticker. -->
+                <div x-show="screenerCategory === 'filters'">
+                  <div class="screener-filter-chips">
+                    <template x-for="chip in filterChipOrder" :key="chip">
+                      <button type="button" class="screener-filter-chip" :class="{active: filterSearchText.toLowerCase() === chip.toLowerCase()}" @click="filterSearchText = filterSearchText.toLowerCase() === chip.toLowerCase() ? '' : chip; filterSubText = ''" x-text="chip"></button>
+                    </template>
+                  </div>
+                  <!-- Tier-2: sub-chips when the active primary chip has any. -->
+                  <div class="screener-filter-subchips"
+                       x-show="filterSubChips[filterSearchText.toLowerCase()]?.length">
+                    <template x-for="sub in filterSubChips[filterSearchText.toLowerCase()] || []" :key="sub">
+                      <button type="button" class="screener-filter-subchip"
+                              :class="{active: filterSubText.toLowerCase() === sub.toLowerCase()}"
+                              @click="filterSubText = filterSubText.toLowerCase() === sub.toLowerCase() ? '' : sub"
+                              x-text="sub"></button>
+                    </template>
+                  </div>
+                  <input
+                    class="form-input screener-filter-input"
+                    type="text"
+                    x-model="filterSearchText"
+                    placeholder="Or type any term, name, or ticker…"
+                    autocomplete="off"
+                    x-show="!(filterSubChips[filterSearchText.toLowerCase()]?.length)"
+                  />
+                  <div class="screener-filter-info" x-show="filterInfoText()" x-text="filterInfoText()"></div>
+                  <p class="screener-filter-empty" x-show="filteredScreenerCandidates().length === 0">
+                    No candidates match.
+                  </p>
+                  <template x-for="stock in filteredScreenerCandidates()" :key="`filter-${stock.symbol}`">
+                    <div class="screener-row-wrap">
+                      <div class="screener-row-bar">
+                        <button type="button" class="screener-row" @click="pickScreenerSymbol(stock.symbol)">
+                          <div class="screener-row-head">
+                            <img class="ticker-logo" x-show="logoUrlFor(stock.symbol)" :src="logoUrlFor(stock.symbol)" :alt="stock.symbol" loading="lazy" @error="$el.style.display='none'" />
+                            <strong class="screener-symbol" x-text="stock.symbol"></strong>
+                            <span class="holdings-delist-badge" x-show="delistingRiskFor(stock.symbol)" :class="'delist-' + delistingRiskSeverity(stock.symbol)" :title="delistingRiskReason(stock.symbol)" x-text="delistingRiskFor(stock.symbol)"></span>
+                            <span class="screener-name" x-text="stock.name"></span>
+                            <span class="screener-price-block" x-show="screenerQuotes[stock.symbol]?.price != null">
+                              <span class="screener-price" x-text="'$' + Number(screenerQuotes[stock.symbol]?.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                              <span class="screener-change-line">
+                                <span class="screener-change" :class="screenerQuotes[stock.symbol]?.change_pct >= 0 ? 'pos' : 'neg'" x-show="screenerQuotes[stock.symbol]?.change_pct != null" x-text="(screenerQuotes[stock.symbol]?.change_pct >= 0 ? '+' : '') + Number(screenerQuotes[stock.symbol]?.change_pct).toFixed(2) + '%'"></span>
+                                <span class="screener-yield-arrow" x-show="performanceVsBenchmark(stock.symbol)" :class="performanceVsBenchmark(stock.symbol) === 'up' ? 'pos' : 'neg'" :title="performanceTooltip(stock.symbol)">
+                                  <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :style="performanceVsBenchmark(stock.symbol) === 'down' ? 'transform:rotate(180deg)' : ''"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                                </span>
+                              </span>
+                            </span>
+                          </div>
+                          <span class="screener-note" x-text="stock.note"></span>
+                          <span class="screener-dividend" x-show="screenerDividends[stock.symbol]?.annual_rate > 0">
+                            <span class="screener-dividend-label">Annual dividend</span>
+                            <span class="screener-dividend-value" x-text="'$' + Number(screenerDividends[stock.symbol]?.annual_rate).toFixed(2) + '/share'"></span>
+                            <span class="screener-dividend-yield" x-show="screenerQuotes[stock.symbol]?.price > 0" x-text="' · ' + ((screenerDividends[stock.symbol]?.annual_rate / screenerQuotes[stock.symbol]?.price) * 100).toFixed(2) + '% yield'"></span>
+                          </span>
+                        </button>
+                        <button type="button" class="screener-chart-toggle" @click="toggleScreenerChart(stock.symbol)" :title="expandedScreenerRow === stock.symbol ? 'Hide chart' : 'Show chart'" aria-label="Toggle chart">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="expandedScreenerRow === stock.symbol ? 'transform:rotate(180deg)' : ''"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <button type="button"
+                                class="screener-wishlist-star"
+                                :class="{ active: isInWishList(stock.symbol) }"
+                                @click.stop="toggleWishList(stock.symbol)"
+                                :title="isInWishList(stock.symbol) ? 'Remove from wish list' : 'Add to wish list'">
+                          <svg width="15" height="15" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" :fill="isInWishList(stock.symbol) ? '#facc15' : 'none'"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
+                        </button>
+                      </div>
+                      <div class="screener-chart-panel" x-show="expandedScreenerRow === stock.symbol">
+                        <div class="screener-chart-header">
+                          <span x-text="`${stock.symbol} — last 48 months`"></span>
+                          <span class="screener-chart-loading" x-show="screenerBars[stock.symbol]?.loading">Loading…</span>
+                          <span class="screener-chart-error" x-show="screenerBars[stock.symbol]?.error" x-text="screenerBars[stock.symbol]?.error"></span>
+                        </div>
+                        <div class="screener-chart-canvas-wrap">
+                          <canvas :data-screener-chart="stock.symbol"></canvas>
+                        </div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </div>
+            </div><!-- /brokerage-order-grid -->
+          </div>
+
+          <!-- Two-step confirm modal -->
+          <div class="modal-backdrop" x-show="orderConfirmOpen" @click.self="orderConfirmOpen=false; orderError = null" x-cloak>
+            <div class="modal">
+              <button class="modal-close" @click="orderConfirmOpen=false; orderError = null" type="button">&times;</button>
+              <div class="modal-title">Confirm order</div>
+              <div class="brokerage-confirm">
+                <div class="brokerage-confirm-row"><span>Portfolio</span><strong x-text="brokeragePortfolios.find(p => p.id === activeBrokeragePortfolioId)?.name || activeBrokeragePortfolioId"></strong></div>
+                <div class="brokerage-confirm-row"><span>Side</span><strong :class="orderForm.side==='buy' ? 'pos' : 'neg'" x-text="orderForm.side.toUpperCase()"></strong></div>
+                <div class="brokerage-confirm-row">
+                  <span>Symbol</span>
+                  <strong>
+                    <span x-text="orderForm.symbol.toUpperCase()"></span>
+                    <span class="holdings-delist-badge" x-show="delistingRiskFor(orderForm.symbol.toUpperCase())" :class="'delist-' + delistingRiskSeverity(orderForm.symbol.toUpperCase())" :title="delistingRiskReason(orderForm.symbol.toUpperCase())" x-text="delistingRiskFor(orderForm.symbol.toUpperCase())"></span>
+                  </strong>
+                </div>
+                <div class="brokerage-confirm-row"><span>Quantity</span><strong x-text="orderForm.qty"></strong></div>
+                <div class="brokerage-confirm-row" x-show="orderForm.type==='limit'"><span>Limit price</span><strong x-text="'$' + orderForm.limit_price"></strong></div>
+                <div class="brokerage-confirm-row"><span>Type</span><strong x-text="orderForm.type.toUpperCase()"></strong></div>
+                <div class="brokerage-confirm-row"><span>Time in force</span><strong x-text="orderForm.time_in_force.toUpperCase()"></strong></div>
+              </div>
+              <p x-show="orderError" class="form-error" x-text="orderError"></p>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-outline" @click="orderConfirmOpen=false; orderError = null" :disabled="orderSubmitting">Cancel</button>
+                <button type="button" class="btn btn-primary" @click="submitAlpacaOrder()" :disabled="orderSubmitting">
+                  <span x-show="!orderSubmitting" x-text="`Place ${orderForm.side} order`"></span>
+                  <span x-show="orderSubmitting">Submitting…</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <h3 class="wallet101-section-heading" style="margin-top:24px">Recent orders</h3>
+          <div class="screener-tabs" style="margin-bottom:10px">
+            <button type="button" class="screener-tab" :class="{active: recentOrdersTab === 'active'}" @click="recentOrdersTab = 'active'">
+              Active <span style="opacity:0.6" x-text="`(${alpacaOrders.filter(o => ['new','accepted','pending_new','partially_filled','pending_cancel','pending_replace','replaced','held'].includes(o.status)).length})`"></span>
+            </button>
+            <button type="button" class="screener-tab" :class="{active: recentOrdersTab === 'filled'}" @click="recentOrdersTab = 'filled'">
+              Filled <span style="opacity:0.6" x-text="`(${alpacaOrders.filter(o => o.status === 'filled' || o.status === 'partially_filled').length})`"></span>
+            </button>
+            <button type="button" class="screener-tab" :class="{active: recentOrdersTab === 'expired'}" @click="recentOrdersTab = 'expired'">
+              Expired <span style="opacity:0.6" x-text="`(${alpacaOrders.filter(o => ['expired','canceled','rejected'].includes(o.status)).length})`"></span>
+            </button>
+          </div>
+          <div x-show="alpacaOrders.length === 0 && !loadingBrokerage" class="card" style="padding: 22px; text-align: center; color: var(--muted)">
+            No orders yet.
+          </div>
+          <div x-show="alpacaOrders.length && recentOrdersFiltered().length === 0" class="card" style="padding: 18px; text-align: center; color: var(--muted)">
+            No <span x-text="recentOrdersTab"></span> orders.
+          </div>
+          <div x-show="recentOrdersFiltered().length" class="card" style="padding: 0; overflow: hidden">
+            <div class="table-wrap">
+              <table class="brokerage-positions-table">
+<thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>Portfolio</th>
+                    <th>Side</th>
+                    <th title="Buy orders sit on the bid side of the order book; sell orders sit on the ask side.">Book</th>
+                    <th class="num">Qty</th>
+                    <th>Type</th>
+                    <th class="num">Limit</th>
+                    <th>Status</th>
+                    <th>Submitted</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="o in recentOrdersFiltered()" :key="o.id">
+                    <tr>
+                      <td><strong x-text="o.symbol"></strong></td>
+                      <td>
+                        <template x-if="brokeragePortfolios.find(p => p.id === positionPortfolioMap[o.symbol])">
+                          <span class="portfolio-row-tag" :style="`color: ${brokeragePortfolios.find(p => p.id === positionPortfolioMap[o.symbol])?.color}; border-color: ${brokeragePortfolios.find(p => p.id === positionPortfolioMap[o.symbol])?.color}`" x-text="brokeragePortfolios.find(p => p.id === positionPortfolioMap[o.symbol])?.name"></span>
+                        </template>
+                        <span x-show="!brokeragePortfolios.find(p => p.id === positionPortfolioMap[o.symbol])" class="text-muted">—</span>
+                      </td>
+                      <td :class="o.side==='buy' ? 'pos' : 'neg'" x-text="o.side"></td>
+                      <td x-text="o.side==='buy' ? 'Bid' : 'Ask'" :title="o.side==='buy' ? 'Buy → resting on the bid side of the order book' : 'Sell → resting on the ask side of the order book'"></td>
+                      <td class="num" x-text="o.qty"></td>
+                      <td x-text="o.type"></td>
+                      <td class="num" x-text="o.limit_price ? '$' + o.limit_price : '—'"></td>
+                      <td x-text="o.status"></td>
+                      <td x-text="o.submitted_at ? new Date(o.submitted_at).toLocaleString() : ''"></td>
+                      <td>
+                        <button x-show="['new','accepted','partially_filled','pending_new'].includes(o.status)" type="button" class="btn btn-outline btn-sm" @click="cancelAlpacaOrder(o.id)">Cancel</button>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div><!-- /brokerage -->
+
+        <div x-show="page==='holdings'">
+          <div class="page-title-block">
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>Holdings</h2>
+            <p class="page-subtitle">My Portfolios</p>
+            <div class="coin-stack" x-show="filteredAlpacaPositions().length">
+              <template x-for="p in filteredAlpacaPositions()" :key="p.symbol">
+                <div class="coin-stack-wrap" style="cursor:default">
+                  <img class="coin-stack-icon"
+                       x-show="logoUrlFor(p.symbol)"
+                       :src="logoUrlFor(p.symbol, 96)"
+                       :alt="p.symbol"
+                       @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
+                  <div class="coin-stack-icon coin-stack-fallback"
+                       :style="logoUrlFor(p.symbol) ? 'display:none' : 'display:flex'"
+                       x-text="p.symbol.slice(0, 4)"></div>
+                  <span class="coin-stack-tip" x-text="p.symbol + ' · ' + p.qty + (Number(p.qty) === 1 ? ' share' : ' shares')"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div x-show="brokerageError" class="card" style="border-color: rgba(255,51,102,0.4); padding: 14px 18px; color: #ff8a8a; margin-bottom: 18px">
+            <p style="margin: 0" x-text="brokerageError"></p>
+          </div>
+
+          <div class="portfolio-strip">
+            <span class="portfolio-strip-label">Portfolio:</span>
+            <button type="button" class="portfolio-chip"
+                    :class="{ active: activeBrokeragePortfolioId === 'all' }"
+                    style="--chip-color: #5c5280"
+                    @click="setActiveBrokeragePortfolio('all')">
+              <span class="portfolio-chip-dot" style="background: #5c5280"></span>
+              All
+            </button>
+            <template x-for="p in brokeragePortfolios" :key="p.id">
+              <button type="button" class="portfolio-chip"
+                      :class="{ active: activeBrokeragePortfolioId === p.id }"
+                      :style="`--chip-color: ${p.color}`"
+                      @click="setActiveBrokeragePortfolio(p.id)">
+                <span class="portfolio-chip-dot" :style="`background: ${p.color}`"></span>
+                <span x-text="p.name"></span>
+                <button type="button" class="portfolio-chip-x" x-show="brokeragePortfolios.length > 1"
+                        @click.stop="deleteBrokeragePortfolio(p.id)" title="Delete portfolio">×</button>
+              </button>
+            </template>
+            <button type="button" class="portfolio-chip portfolio-chip-add" @click="newBrokeragePortfolioOpen = true">+ New Portfolio</button>
+            <button type="button" class="portfolio-chip portfolio-chip-add"
+                    x-show="activeBrokeragePortfolioId !== 'main' && activeBrokeragePortfolioId !== 'all'"
+                    @click="transferModalOpen = true">↔ Transfer from Main</button>
+          </div>
+
+          <!-- Transfer modal — moves cash from Main → active portfolio. -->
+          <div class="modal-backdrop" x-show="transferModalOpen" @click.self="transferModalOpen = false" x-cloak>
+            <div class="modal">
+              <button class="modal-close" @click="transferModalOpen = false" type="button">&times;</button>
+              <div class="modal-title">Transfer from Main</div>
+              <p style="margin:0 0 14px; color: var(--muted); font-size: 13px">
+                Move cash from <strong style="color:var(--text)">Main Account</strong> (<span x-text="fmtUSD(portfolioCash.main || 0)"></span> available)
+                into <strong style="color:var(--text)" x-text="brokeragePortfolios.find(p => p.id === activeBrokeragePortfolioId)?.name || ''"></strong>.
+              </p>
+              <div class="form-group">
+                <label class="form-label">Amount (USD)</label>
+                <input class="form-input" type="number" min="0" step="0.01" x-model="transferAmount" placeholder="0.00" @keydown.enter="submitTransfer()" />
+              </div>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-outline" @click="transferModalOpen = false">Cancel</button>
+                <button type="button" class="btn btn-primary"
+                        :disabled="!parseFloat(transferAmount) || parseFloat(transferAmount) <= 0 || parseFloat(transferAmount) > (portfolioCash.main || 0)"
+                        @click="submitTransfer()">Transfer</button>
+              </div>
+            </div>
+          </div>
+
+
+          <!-- New-portfolio modal -->
+          <div class="modal-backdrop" x-show="newBrokeragePortfolioOpen" @click.self="newBrokeragePortfolioOpen = false" x-cloak>
+            <div class="modal">
+              <button class="modal-close" @click="newBrokeragePortfolioOpen = false" type="button">&times;</button>
+              <div class="modal-title">New Portfolio</div>
+              <p style="margin:0 0 14px; color: var(--muted); font-size: 13px">
+                Group your stock holdings — e.g. <em>Retirement</em>, <em>Travel Fund</em>, <em>Long-term Growth</em>.
+              </p>
+              <div class="form-group">
+                <label class="form-label">Name</label>
+                <input class="form-input" type="text" x-model="newBrokeragePortfolioName" placeholder="Travel Fund" maxlength="40" @keydown.enter="createBrokeragePortfolio()" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Color</label>
+                <div class="portfolio-color-row">
+                  <template x-for="c in ['#b44dff','#5dd49a','#4dc4ff','#ffb84d','#ff5e9c','#c084fc','#ffe066','#ff79c6','#22d3ee','#fb923c']" :key="c">
+                    <button type="button" class="portfolio-color-swatch"
+                            :class="{ active: newBrokeragePortfolioColor === c }"
+                            :style="`background: ${c}`"
+                            @click="newBrokeragePortfolioColor = c"></button>
+                  </template>
+                </div>
+              </div>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-outline" @click="newBrokeragePortfolioOpen = false">Cancel</button>
+                <button type="button" class="btn btn-primary" @click="createBrokeragePortfolio()" :disabled="!newBrokeragePortfolioName.trim()">Create</button>
+              </div>
+            </div>
+          </div>
+
+          <div x-show="alpacaPositions.length" class="brokerage-stats">
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Cash</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(cashForActivePortfolio())"></div>
+              <div class="brokerage-stat-pct">available to invest</div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Portfolio Value</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(holdingsTotals().marketValue)"></div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Total P&amp;L</div>
+              <div class="brokerage-stat-value" :class="holdingsTotals().pl >= 0 ? 'pos' : 'neg'">
+                <span x-text="(holdingsTotals().pl >= 0 ? '+' : '') + fmtUSD(holdingsTotals().pl)"></span>
+                <span class="brokerage-stat-pct" x-show="holdingsTotals().costBasis > 0" x-text="' · ' + (holdingsTotals().pl / holdingsTotals().costBasis * 100).toFixed(2) + '%'"></span>
+              </div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Day's Change</div>
+              <div class="brokerage-stat-value" :class="holdingsTotals().dayPl >= 0 ? 'pos' : 'neg'">
+                <span x-text="(holdingsTotals().dayPl >= 0 ? '+' : '') + fmtUSD(holdingsTotals().dayPl)"></span>
+                <span class="brokerage-stat-pct" x-show="holdingsTotals().marketValue > 0" x-text="' · ' + (holdingsTotals().dayPl / (holdingsTotals().marketValue - holdingsTotals().dayPl) * 100).toFixed(2) + '%'"></span>
+              </div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Positions</div>
+              <div class="brokerage-stat-value" x-text="alpacaPositions.length"></div>
+              <div class="brokerage-stat-pct" x-show="holdingsTotals().topWeight > 0" x-text="`${holdingsTotals().topSymbol} ${holdingsTotals().topWeight.toFixed(0)}% top`"></div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Yearly Dividend Income</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(holdingsTotals().yearlyDividendIncome)"></div>
+              <div class="brokerage-stat-pct" x-show="holdingsTotals().dividendYield > 0" x-text="' · ' + holdingsTotals().dividendYield.toFixed(2) + '% portfolio yield'"></div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Yearly Dividend Payout</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(holdingsTotals().totalPaid)"></div>
+              <div class="brokerage-stat-pct">received in last 12 months</div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Rewards Deposited</div>
+              <div class="brokerage-stat-value pos" x-text="fmtUSD(rewardsForActivePortfolio())"></div>
+              <div class="brokerage-stat-pct">from credit card</div>
+            </div>
+          </div>
+
+          <div x-show="alpacaPositions.length" class="wishlist-btn-row">
+            <button type="button" class="btn btn-outline btn-sm wishlist-btn" @click="wishListOpen = true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
+              Wish List
+              <span x-show="wishList.length" class="wishlist-count" x-text="wishList.length"></span>
+            </button>
+          </div>
+
+          <div x-show="alpacaPositions.length" class="holdings-palette-toggle">
+            <button type="button" class="holdings-palette-tab" :class="{active: holdingsPaletteMode === 'logo'}" @click="holdingsPaletteMode = 'logo'" title="Slice color sampled from each holding's logo; slice size = market value">Logo Palette</button>
+            <button type="button" class="holdings-palette-tab" :class="{active: holdingsPaletteMode === 'chip'}" @click="holdingsPaletteMode = 'chip'" title="Slices bucketed by screener industry chip; chip-color palette">Color Palette</button>
+          </div>
+
+          <div x-show="alpacaPositions.length" class="holdings-charts-grid">
+            <div class="card holdings-chart-card">
+              <h3 class="holdings-chart-title">Filter by Stock Percentage</h3>
+              <p class="holdings-chart-subtitle">Each position is bucketed by its primary screener chip. Symbols outside the screener fall into "Other."</p>
+              <div class="holdings-chart-wrap">
+                <canvas data-holdings-chart></canvas>
+              </div>
+            </div>
+            <div class="card holdings-chart-card">
+              <h3 class="holdings-chart-title">Filter by Dividend Income</h3>
+              <p class="holdings-chart-subtitle">Of your projected yearly dividend income, the share coming from each bucket. Non-payers excluded.</p>
+              <div class="holdings-chart-wrap">
+                <canvas data-holdings-dividend-chart></canvas>
+              </div>
+            </div>
+            <div class="card holdings-chart-card">
+              <h3 class="holdings-chart-title">Allocation by Share Price</h3>
+              <p class="holdings-chart-subtitle">How your capital is distributed across price tiers — penny stocks vs. mid-range vs. high-priced names.</p>
+              <div class="holdings-chart-wrap">
+                <canvas data-holdings-price-chart></canvas>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; align-items:center; gap:14px; margin-top:24px">
+            <h3 class="wallet101-section-heading" style="margin:0">Stocks</h3>
+            <button type="button" class="btn btn-outline btn-sm" @click="page='brokerage'">
+              Show all stocks
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:3px"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+          <div x-show="alpacaAccount && alpacaPositions.length === 0" class="card" style="padding: 22px; text-align: center; color: var(--muted)">
+            No open positions yet.
+          </div>
+          <div x-show="alpacaPositions.length" class="card" style="padding: 0; overflow: hidden">
+            <div class="table-wrap">
+              <table class="brokerage-positions-table">
+                <thead>
+                  <tr>
+                    <th>
+                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('symbol')" :title="holdingsSortBy !== 'symbol' ? 'Sort A→Z' : holdingsSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
+                        Symbol
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'symbol' }" :style="holdingsSortBy === 'symbol' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('name')" :title="holdingsSortBy !== 'name' ? 'Sort A→Z' : holdingsSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
+                        Business Name
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'name' }" :style="holdingsSortBy === 'name' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th>Portfolio</th>
+                    <th>
+                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('industry')" :title="holdingsSortBy !== 'industry' ? 'Sort A→Z' : holdingsSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
+                        Industry
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'industry' }" :style="holdingsSortBy === 'industry' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('side')" :title="holdingsSortBy !== 'side' ? 'Sort A→Z' : holdingsSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
+                        Side
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'side' }" :style="holdingsSortBy === 'side' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th class="num">
+                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('qty')" :title="holdingsSortBy !== 'qty' ? 'Sort low → high' : holdingsSortDir === 'asc' ? 'Sort high → low' : 'Clear sort'">
+                        Qty
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'qty' }" :style="holdingsSortBy === 'qty' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th class="num">
+                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('avg')" :title="holdingsSortBy !== 'avg' ? 'Sort low → high' : holdingsSortDir === 'asc' ? 'Sort high → low' : 'Clear sort'">
+                        Avg entry
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'avg' }" :style="holdingsSortBy === 'avg' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th class="num">
+                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('current')" :title="holdingsSortBy !== 'current' ? 'Sort low → high' : holdingsSortDir === 'asc' ? 'Sort high → low' : 'Clear sort'">
+                        Current
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'current' }" :style="holdingsSortBy === 'current' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th class="num">
+                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('mv')" :title="holdingsSortBy !== 'mv' ? 'Sort low → high' : holdingsSortDir === 'asc' ? 'Sort high → low' : 'Clear sort'">
+                        Market value
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'mv' }" :style="holdingsSortBy === 'mv' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th class="num">
+                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('div')" :title="holdingsSortBy !== 'div' ? 'Sort low → high' : holdingsSortDir === 'asc' ? 'Sort high → low' : 'Clear sort'">
+                        Yr Div Amt
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'div' }" :style="holdingsSortBy === 'div' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th class="num">
+                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('pl')" :title="holdingsSortBy !== 'pl' ? 'Sort losses → gains' : holdingsSortDir === 'asc' ? 'Sort gains → losses' : 'Clear sort'">
+                        Unrealized P&amp;L
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'pl' }" :style="holdingsSortBy === 'pl' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="p in sortedHoldings()" :key="p.symbol">
+                    <tr>
+                      <td>
+                        <img class="ticker-logo" x-show="logoUrlFor(p.symbol)" :src="logoUrlFor(p.symbol)" :alt="p.symbol" loading="lazy" @error="$el.style.display='none'" />
+                        <strong x-text="p.symbol"></strong>
+                        <template x-if="delistingRiskFor(p.symbol) && delistingFilingUrl(p.symbol)">
+                          <a class="holdings-delist-badge" :class="'delist-' + delistingRiskSeverity(p.symbol)" :href="delistingFilingUrl(p.symbol)" target="_blank" rel="noopener noreferrer" :title="delistingRiskReason(p.symbol)" x-text="delistingRiskFor(p.symbol)"></a>
+                        </template>
+                        <template x-if="delistingRiskFor(p.symbol) && !delistingFilingUrl(p.symbol)">
+                          <span class="holdings-delist-badge" :class="'delist-' + delistingRiskSeverity(p.symbol)" :title="delistingRiskReason(p.symbol)" x-text="delistingRiskFor(p.symbol)"></span>
+                        </template>
+                      </td>
+                      <td x-text="nameForPosition(p.symbol).toUpperCase()"></td>
+                      <td>
+                        <button type="button" class="btn btn-outline btn-sm" @click="openAllocationEdit(p.symbol)" title="Edit per-portfolio allocation">
+                          <span x-text="(() => {
+                            const m = positionAllocation[p.symbol] || {};
+                            const entries = Object.entries(m).filter(([_, q]) => q > 0);
+                            // Active portfolio chip narrows the display to that
+                            // portfolio's allocation only — no cross-portfolio leak.
+                            if (activeBrokeragePortfolioId !== 'all') {
+                              const qty = m[activeBrokeragePortfolioId];
+                              const name = brokeragePortfolios.find(bp => bp.id === activeBrokeragePortfolioId)?.name || activeBrokeragePortfolioId;
+                              return qty > 0 ? `${name}: ${qty}` : 'Unallocated';
+                            }
+                            // 'All' chip shows the full allocation breakdown.
+                            const names = entries.map(([id, q]) => `${brokeragePortfolios.find(bp => bp.id === id)?.name || id}: ${q}`);
+                            return names.length ? names.join(', ') : 'Unallocated';
+                          })()"></span>
+                        </button>
+                      </td>
+                      <td>
+                        <span class="holdings-industry-tag" :style="`color: ${chipColors[chipForPosition(p.symbol)] || chipColors.Other}; border-color: ${chipColors[chipForPosition(p.symbol)] || chipColors.Other}`" x-text="chipForPosition(p.symbol)"></span>
+                      </td>
+                      <td x-text="p.side"></td>
+                      <td class="num" x-text="p.qty"></td>
+                      <td class="num" x-text="fmtUSD(parseFloat(p.avg_entry_price))"></td>
+                      <td class="num" x-text="fmtUSD(parseFloat(p.current_price))"></td>
+                      <td class="num" x-text="fmtUSD(parseFloat(p.market_value))"></td>
+                      <td class="num" :class="(screenerDividends[p.symbol]?.annual_rate || 0) > 0 ? 'pos' : 'text-muted'"
+                          x-text="(screenerDividends[p.symbol]?.annual_rate || 0) > 0 ? fmtUSD((parseFloat(p.qty) || 0) * screenerDividends[p.symbol].annual_rate) : '—'"></td>
+                      <td class="num" :class="parseFloat(p.unrealized_pl) >= 0 ? 'pos' : 'neg'">
+                        <span x-text="(parseFloat(p.unrealized_pl) >= 0 ? '+' : '') + fmtUSD(parseFloat(p.unrealized_pl))"></span>
+                        <span class="brokerage-stat-pct" x-text="' · ' + (parseFloat(p.unrealized_plpc) * 100).toFixed(2) + '%'"></span>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Allocation Editor Modal -->
+          <div class="modal-backdrop" x-show="allocationEditOpen" @click.self="allocationEditOpen = false" x-cloak>
+            <div class="modal">
+              <button class="modal-close" @click="allocationEditOpen = false" type="button">&times;</button>
+              <div class="modal-title">Edit Allocation: <span x-text="allocationEditSymbol"></span></div>
+              <p class="text-muted" style="margin-bottom: 12px">
+                Total shares held:
+                <strong x-text="(alpacaPositions.find(p => p.symbol === allocationEditSymbol)?.qty) || '0'"></strong>
+              </p>
+              <p class="text-muted" style="margin-bottom: 16px; font-size: 13px">
+                Distribute these shares across your portfolios. The sum should match the total above.
+              </p>
+              <template x-for="bp in brokeragePortfolios" :key="bp.id">
+                <div class="form-group">
+                  <label class="form-label" x-text="bp.name"></label>
+                  <input class="form-input" type="number" min="0" step="0.0001"
+                         x-model="allocationEditValues[bp.id]" />
+                </div>
+              </template>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-outline" @click="allocationEditOpen = false">Cancel</button>
+                <button type="button" class="btn btn-primary" @click="saveAllocationEdit()">Save</button>
+              </div>
+            </div>
+          </div>
+        </div><!-- /holdings -->
+
+        <div x-show="page==='contact-us'">
+          <div class="page-title-block">
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Contact Us</h2>
+            <p class="page-subtitle">Have a question, bug report, or feature request? Send us a note.</p>
+          </div>
+
+          <div class="card" style="max-width: 640px; padding: 22px 24px">
+            <div x-show="contactSent" class="contact-success" x-cloak>
+              <p style="margin:0 0 6px; color: var(--green); font-weight: 600">Thanks — your message is on its way.</p>
+              <p style="margin:0 0 14px; color: var(--muted); font-size: 13px">We'll reply to the email you provided.</p>
+              <button type="button" class="btn btn-outline btn-sm" @click="contactSent = false">Send another</button>
+            </div>
+
+            <form x-show="!contactSent" @submit.prevent="submitContactForm()" autocomplete="off">
+              <div class="form-group">
+                <label class="form-label">Name</label>
+                <input class="form-input" type="text" x-model="contactForm.name" placeholder="Your name" required maxlength="100" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Email</label>
+                <input class="form-input" type="email" x-model="contactForm.email" placeholder="you@example.com" required maxlength="200" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Subject</label>
+                <input class="form-input" type="text" x-model="contactForm.subject" placeholder="What's this about?" required maxlength="200" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Message</label>
+                <textarea class="form-input" x-model="contactForm.message" rows="6" placeholder="Tell us what's on your mind…" required maxlength="5000" style="resize: vertical; min-height: 120px"></textarea>
+              </div>
+              <p x-show="contactError" class="form-error" x-text="contactError"></p>
+              <div style="display:flex; justify-content:flex-end; margin-top: 6px">
+                <button type="submit" class="btn btn-primary" :disabled="contactSubmitting">
+                  <span x-show="!contactSubmitting">Send message</span>
+                  <span x-show="contactSubmitting">Sending…</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div><!-- /contact-us -->
+
+        <div x-show="page==='credit-cards'">
+          <div class="page-title-block">
+            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>Credit Cards</h2>
+            <p class="page-subtitle">My Cards</p>
+          </div>
+
+          <div class="screener-tabs" style="margin-bottom: 18px">
+            <button type="button" class="screener-tab" :class="{active: creditCardTab === 'account'}" @click="creditCardTab = 'account'">Account</button>
+            <button type="button" class="screener-tab" :class="{active: creditCardTab === 'statements'}" @click="creditCardTab = 'statements'">Statements</button>
+            <button type="button" class="screener-tab" :class="{active: creditCardTab === 'claims'}" @click="creditCardTab = 'claims'">Claims</button>
+            <button type="button" class="screener-tab" :class="{active: creditCardTab === 'terms'}" @click="creditCardTab = 'terms'">Terms &amp; Conditions</button>
+            <button type="button" class="screener-tab" :class="{active: creditCardTab === 'tax-docs'}" @click="creditCardTab = 'tax-docs'">Tax Documents</button>
+          </div>
+
+          <div x-show="creditCardTab === 'account'">
+
+          <div class="brokerage-stats">
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Current Balance</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(creditCardAccount.current_balance)"></div>
+              <div class="brokerage-stat-pct">owed</div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Available Credit</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(creditCardAccount.credit_limit - creditCardAccount.current_balance)"></div>
+              <div class="brokerage-stat-pct" x-text="`of ${fmtUSD(creditCardAccount.credit_limit)} limit`"></div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Statement Balance</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(creditCardAccount.statement_balance)"></div>
+              <div class="brokerage-stat-pct" x-text="`min ${fmtUSD(creditCardAccount.minimum_payment)}`"></div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Next Payment Due</div>
+              <div class="brokerage-stat-value" x-text="new Date(creditCardAccount.next_payment_due).toLocaleDateString('en-US', { month:'short', day:'numeric' })"></div>
+              <div class="brokerage-stat-pct" x-text="(() => { const d = Math.ceil((new Date(creditCardAccount.next_payment_due) - new Date()) / 86400000); return d > 0 ? `in ${d} days` : d === 0 ? 'today' : `${-d} days overdue`; })()"></div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Rewards Earned</div>
+              <div class="brokerage-stat-value pos" x-text="fmtUSD(totalBrokerageContribution())"></div>
+              <div class="brokerage-stat-pct">transferred to brokerage</div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Credit Utilization</div>
+              <div class="brokerage-stat-value" :class="(creditCardAccount.current_balance / creditCardAccount.credit_limit) * 100 > 30 ? 'neg' : 'pos'" x-text="((creditCardAccount.current_balance / creditCardAccount.credit_limit) * 100).toFixed(1) + '%'"></div>
+              <div class="brokerage-stat-pct" x-text="`APR ${creditCardAccount.apr.toFixed(2)}%`"></div>
+            </div>
+          </div>
+
+          <div class="cc-card-section">
+            <svg class="cc-card-svg" width="150" height="94" viewBox="0 0 300 188" xmlns="http://www.w3.org/2000/svg" aria-label="Credit card visual">
+              <defs>
+                <linearGradient id="ccCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#0d0a1e"/>
+                  <stop offset="55%" stop-color="#3a1466"/>
+                  <stop offset="100%" stop-color="#b44dff"/>
+                </linearGradient>
+                <linearGradient id="ccChip" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stop-color="#f3d77a"/>
+                  <stop offset="100%" stop-color="#a87810"/>
+                </linearGradient>
+                <radialGradient id="ccGlow" cx="80%" cy="20%" r="55%">
+                  <stop offset="0%" stop-color="rgba(255,255,255,0.18)"/>
+                  <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+                </radialGradient>
+              </defs>
+              <rect width="300" height="188" rx="14" ry="14" fill="url(#ccCardBg)"/>
+              <rect width="300" height="188" rx="14" ry="14" fill="url(#ccGlow)"/>
+              <text x="22" y="32" fill="#ffffff" font-size="12" font-weight="700" letter-spacing="3">ABCOINS</text>
+              <text x="22" y="46" fill="rgba(255,255,255,0.55)" font-size="8" letter-spacing="1.5">BROKERAGE REWARDS</text>
+              <g transform="translate(22,66)">
+                <rect width="40" height="30" rx="5" fill="url(#ccChip)"/>
+                <path d="M8 0 v30 M16 0 v30 M24 0 v30 M32 0 v30 M0 8 h40 M0 15 h40 M0 22 h40" stroke="rgba(40,28,8,0.4)" stroke-width="0.6" fill="none"/>
+              </g>
+              <g transform="translate(75,72)" stroke="rgba(255,255,255,0.7)" stroke-width="1.4" fill="none" stroke-linecap="round">
+                <path d="M0 4 Q5 10 0 16"/>
+                <path d="M5 1 Q13 10 5 19"/>
+                <path d="M10 -2 Q21 10 10 22"/>
+              </g>
+              <text x="22" y="130" fill="#ffffff" font-family="JetBrains Mono, monospace" font-size="15" font-weight="500" letter-spacing="2.5"
+                    x-text="cardNumberVisible ? creditCardAccount.card_number : '•••• •••• •••• ' + creditCardAccount.card_number.slice(-4)"></text>
+              <text x="22" y="156" fill="rgba(255,255,255,0.55)" font-size="7" letter-spacing="1.2">CARDHOLDER</text>
+              <text x="22" y="170" fill="#ffffff" font-size="10" font-weight="500" letter-spacing="1.2">YOUR NAME</text>
+              <text x="180" y="156" fill="rgba(255,255,255,0.55)" font-size="7" letter-spacing="1.2">EXPIRES</text>
+              <text x="180" y="170" fill="#ffffff" font-size="10" font-family="JetBrains Mono, monospace" font-weight="500">12/29</text>
+              <g transform="translate(238,144)">
+                <circle cx="14" cy="14" r="14" fill="#b44dff" opacity="0.85"/>
+                <circle cx="28" cy="14" r="14" fill="#ff5e9c" opacity="0.85"/>
+              </g>
+            </svg>
+            <div class="cc-number-row" style="margin-bottom: 0">
+              <div class="cc-number-label">Card Number</div>
+              <code class="cc-number" x-text="cardNumberVisible ? creditCardAccount.card_number : '•••• •••• •••• ' + creditCardAccount.card_number.slice(-4)"></code>
+              <button type="button" class="btn btn-outline btn-sm" @click="cardNumberVisible = !cardNumberVisible" x-text="cardNumberVisible ? 'Hide' : 'Show'"></button>
+              <button type="button" class="btn btn-primary btn-sm" @click="paymentModalOpen = true; paymentAmount = String(creditCardAccount.statement_balance)">
+                Make a Payment
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" @click="page='brokerage'">
+                View Brokerage
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:3px"><polyline points="9 18 15 12 9 6"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Make a Payment modal — payment-provider hookup is a TODO. -->
+          <div class="modal-backdrop" x-show="paymentModalOpen" @click.self="paymentModalOpen = false" x-cloak>
+            <div class="modal">
+              <button class="modal-close" @click="paymentModalOpen = false" type="button">&times;</button>
+              <div class="modal-title">Make a Payment</div>
+              <p style="margin:0 0 14px; color: var(--muted); font-size: 13px">
+                Pay your <strong style="color:var(--text)" x-text="fmtUSD(creditCardAccount.statement_balance)"></strong> statement balance, the
+                <strong style="color:var(--text)" x-text="fmtUSD(creditCardAccount.minimum_payment)"></strong> minimum, or any custom amount.
+              </p>
+              <div style="display:flex; gap:6px; margin-bottom: 10px; flex-wrap: wrap">
+                <button type="button" class="btn btn-outline btn-sm" @click="paymentAmount = String(creditCardAccount.statement_balance)">Statement</button>
+                <button type="button" class="btn btn-outline btn-sm" @click="paymentAmount = String(creditCardAccount.current_balance)">Current Balance</button>
+                <button type="button" class="btn btn-outline btn-sm" @click="paymentAmount = String(creditCardAccount.minimum_payment)">Minimum</button>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Amount (USD)</label>
+                <input class="form-input" type="number" min="0" step="0.01" x-model="paymentAmount" placeholder="0.00" />
+              </div>
+              <p style="margin: 8px 0 0; color: var(--muted); font-size: 12px; font-style: italic">
+                Payment provider not yet connected — this is a placeholder. We'll wire ACH from the linked bank account here next.
+              </p>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-outline" @click="paymentModalOpen = false">Cancel</button>
+                <button type="button" class="btn btn-primary" disabled title="Payment integration coming soon">Pay Now</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="cc-account-grid">
+          <div class="cc-account-main">
+          <h3 class="wallet101-section-heading" style="margin-top:24px">Recent Transactions</h3>
+          <div class="card" style="padding: 0; overflow: hidden">
+            <div class="table-wrap">
+              <table class="brokerage-positions-table">
+                <thead>
+                  <tr>
+                    <th>
+                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('date')" :title="ccSortBy !== 'date' ? 'Sort oldest → newest' : ccSortDir === 'asc' ? 'Sort newest → oldest' : 'Clear sort'">
+                        Date
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'date' }" :style="ccSortBy === 'date' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('merchant')" :title="ccSortBy !== 'merchant' ? 'Sort A→Z' : ccSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
+                        Description
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'merchant' }" :style="ccSortBy === 'merchant' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('category')" :title="ccSortBy !== 'category' ? 'Sort A→Z' : ccSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
+                        Category
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'category' }" :style="ccSortBy === 'category' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th class="num">
+                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('amount')" :title="ccSortBy !== 'amount' ? 'Sort low → high' : ccSortDir === 'asc' ? 'Sort high → low' : 'Clear sort'">
+                        Amount
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'amount' }" :style="ccSortBy === 'amount' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th class="num" title="Interest that would normally accrue to the bank, redirected into your brokerage account.">
+                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('brokerage')" :title="ccSortBy !== 'brokerage' ? 'Sort low → high' : ccSortDir === 'asc' ? 'Sort high → low' : 'Clear sort'">
+                        → Brokerage
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'brokerage' }" :style="ccSortBy === 'brokerage' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                    <th>
+                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('status')" :title="ccSortBy !== 'status' ? 'Sort A→Z' : ccSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
+                        Status
+                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'status' }" :style="ccSortBy === 'status' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
+                      </button>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <template x-for="t in pagedCcTransactions()" :key="t.date + t.merchant + t.amount">
+                    <tr>
+                      <td x-text="new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })"></td>
+                      <td>
+                        <strong x-text="(t.merchant + ' ' + (t.location || '')).toUpperCase().trim()"></strong>
+                        <span class="cc-txn-id" x-text="' #' + t.txn_id"></span>
+                      </td>
+                      <td x-text="t.category"></td>
+                      <td class="num" :class="t.amount < 0 ? 'pos' : ''" x-text="t.amount < 0 ? '+' + fmtUSD(Math.abs(t.amount)) : fmtUSD(t.amount)"></td>
+                      <td class="num" :class="t.amount > 0 ? 'pos' : 'text-muted'" x-text="t.amount > 0 ? fmtUSD(brokerageContribution(t)) : '—'"></td>
+                      <td>
+                        <span class="badge" :class="t.status === 'pending' ? 'badge-yellow' : 'badge-green'" x-text="t.status === 'pending' ? 'Pending' : 'Posted'"></span>
+                      </td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="cc-pagination">
+            <span class="cc-pagination-info">
+              <span x-text="(ccPage - 1) * ccPageSize + 1"></span>–<span x-text="Math.min(ccPage * ccPageSize, creditCardTransactions.length)"></span>
+              of <span x-text="creditCardTransactions.length"></span>
+            </span>
+            <button type="button" class="btn btn-outline btn-sm" @click="ccPage = Math.max(1, ccPage - 1)" :disabled="ccPage === 1">‹ Prev</button>
+            <span class="cc-pagination-page">Page <span x-text="ccPage"></span> / <span x-text="ccPageCount()"></span></span>
+            <button type="button" class="btn btn-outline btn-sm" @click="ccPage = Math.min(ccPageCount(), ccPage + 1)" :disabled="ccPage >= ccPageCount()">Next ›</button>
+          </div>
+          </div><!-- /cc-account-main -->
+          <div class="cc-account-side">
+            <h3 class="wallet101-section-heading" style="margin-top:24px">Spend by Category</h3>
+            <div class="card holdings-chart-card">
+              <p class="holdings-chart-subtitle" style="margin-top:0">% of total transactions in each category over the last 60 days.</p>
+              <div class="holdings-chart-wrap">
+                <canvas data-cc-category-chart x-init="$nextTick(() => renderCreditCardCategoryChart())"></canvas>
+              </div>
+            </div>
+
+            <h3 class="wallet101-section-heading" style="margin-top:18px">Where Payments Went</h3>
+            <div class="card holdings-chart-card">
+              <p class="holdings-chart-subtitle" style="margin-top:0">YTD breakdown of payments — balance paid down vs. interest paid vs. interest redirected into your brokerage.</p>
+              <div class="holdings-chart-wrap">
+                <canvas data-cc-payments-chart x-init="$nextTick(() => renderCreditCardPaymentsChart())"></canvas>
+              </div>
+            </div>
+          </div>
+          </div><!-- /cc-account-grid -->
+
+          </div><!-- /account tab -->
+
+          <div x-show="creditCardTab === 'statements'">
+            <h3 class="wallet101-section-heading">Monthly Statements</h3>
+            <div class="card" style="padding: 0; overflow: hidden">
+              <div class="table-wrap">
+                <table class="brokerage-positions-table">
+                  <thead>
+                    <tr>
+                      <th>Period</th>
+                      <th>Closing Date</th>
+                      <th class="num">Statement Balance</th>
+                      <th class="num">Minimum Due</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>April 2026</strong></td>
+                      <td>May 5, 2026</td>
+                      <td class="num">$1,284.55</td>
+                      <td class="num">$35.00</td>
+                      <td><span class="badge badge-yellow">Current</span></td>
+                      <td><button class="btn btn-outline btn-sm" disabled title="Available after closing">Download PDF</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>March 2026</strong></td>
+                      <td>Apr 5, 2026</td>
+                      <td class="num">$2,103.42</td>
+                      <td class="num">$45.00</td>
+                      <td><span class="badge badge-green">Paid</span></td>
+                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>February 2026</strong></td>
+                      <td>Mar 5, 2026</td>
+                      <td class="num">$1,847.91</td>
+                      <td class="num">$40.00</td>
+                      <td><span class="badge badge-green">Paid</span></td>
+                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>January 2026</strong></td>
+                      <td>Feb 5, 2026</td>
+                      <td class="num">$967.18</td>
+                      <td class="num">$35.00</td>
+                      <td><span class="badge badge-green">Paid</span></td>
+                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>December 2025</strong></td>
+                      <td>Jan 5, 2026</td>
+                      <td class="num">$2,412.55</td>
+                      <td class="num">$50.00</td>
+                      <td><span class="badge badge-green">Paid</span></td>
+                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>November 2025</strong></td>
+                      <td>Dec 5, 2025</td>
+                      <td class="num">$1,562.34</td>
+                      <td class="num">$35.00</td>
+                      <td><span class="badge badge-green">Paid</span></td>
+                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div><!-- /statements tab -->
+
+          <div x-show="creditCardTab === 'claims'">
+            <div style="display:flex; align-items:center; gap:14px; margin-top:0; margin-bottom: 14px">
+              <h3 class="wallet101-section-heading" style="margin:0">Claims &amp; Disputes</h3>
+              <button type="button" class="btn btn-primary btn-sm">+ File a Claim</button>
+            </div>
+            <div class="card" style="padding: 0; overflow: hidden">
+              <div class="table-wrap">
+                <table class="brokerage-positions-table">
+                  <thead>
+                    <tr>
+                      <th>Filed</th>
+                      <th>Reason</th>
+                      <th>Merchant</th>
+                      <th class="num">Amount</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Apr 18, 2026</td>
+                      <td>Unrecognized charge</td>
+                      <td><strong>NETFLIX.COM</strong> <span class="cc-txn-id">#2413131J01963BHC4</span></td>
+                      <td class="num">$22.99</td>
+                      <td><span class="badge badge-yellow">Under Review</span></td>
+                      <td><button class="btn btn-outline btn-sm">View</button></td>
+                    </tr>
+                    <tr>
+                      <td>Mar 28, 2026</td>
+                      <td>Duplicate charge</td>
+                      <td><strong>NIKE</strong> <span class="cc-txn-id">#2413152G12074QWE1</span></td>
+                      <td class="num">$134.99</td>
+                      <td><span class="badge badge-green">Resolved — Refunded</span></td>
+                      <td><button class="btn btn-outline btn-sm">View</button></td>
+                    </tr>
+                    <tr>
+                      <td>Mar 14, 2026</td>
+                      <td>Service not received</td>
+                      <td><strong>ADOBE CREATIVE CLOUD</strong> <span class="cc-txn-id">#2413161R01963HGF8</span></td>
+                      <td class="num">$54.99</td>
+                      <td><span class="badge badge-red">Denied</span></td>
+                      <td><button class="btn btn-outline btn-sm">View</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <p style="margin-top:14px; color: var(--muted); font-size: 12px">
+              Disputes filed within 60 days of the statement on which a charge appears. Most claims resolve in 30–90 days.
+            </p>
+          </div><!-- /claims tab -->
+
+          <div x-show="creditCardTab === 'terms'">
+            <h3 class="wallet101-section-heading">Cardholder Agreement</h3>
+            <div class="card" style="padding: 22px 26px; max-width: 760px; line-height: 1.6; color: var(--text)">
+              <p style="margin: 0 0 14px"><strong>Annual Percentage Rate (APR).</strong> The variable APR for purchases is 21.99%. The APR for cash advances is 26.99% and applies from the transaction date with no grace period. Penalty APR up to 29.99% may apply if a payment is more than 60 days past due.</p>
+              <p style="margin: 0 0 14px"><strong>Brokerage Rewards.</strong> Interest that would otherwise accrue to the issuer on carried balances is redirected to your linked brokerage account at the end of each statement cycle. Cash advance interest does not qualify for the brokerage rebate. Rewards are deposited as cash and are subject to clawback for charged-off accounts.</p>
+              <p style="margin: 0 0 14px"><strong>Fees.</strong> No annual fee. Cash advance fee: 5% of each advance, $10 minimum. Foreign transaction fee: 0%. Late payment fee: up to $40. Returned payment fee: up to $40.</p>
+              <p style="margin: 0 0 14px"><strong>Minimum Payment.</strong> The greater of $35 or 2% of the new balance, plus any past-due amount and amounts over your credit limit.</p>
+              <p style="margin: 0 0 14px"><strong>Grace Period.</strong> 25 days from the statement closing date for new purchases when the previous balance is paid in full.</p>
+              <p style="margin: 0 0 14px"><strong>Disputes.</strong> You have 60 days from the statement on which a charge appears to dispute a transaction. Contact customer support via the Contact Us form.</p>
+              <p style="margin: 0; color: var(--muted); font-size: 12px; font-style: italic">This is placeholder content. The full agreement will be provided upon account approval.</p>
+            </div>
+
+            <h3 class="wallet101-section-heading" style="margin-top:24px">Brokerage Agreement</h3>
+            <div class="card" style="padding: 22px 26px; max-width: 760px; line-height: 1.6; color: var(--text)">
+              <p style="margin: 0 0 14px"><strong>Linked Brokerage Account.</strong> Brokerage rewards require an active linked taxable brokerage account in your name. Joint, custodial, IRA, or 401(k) accounts are not eligible. You may change the linked account at any time; deposits will route to the account on file as of the statement closing date.</p>
+              <p style="margin: 0 0 14px"><strong>Deposit Timing.</strong> Redirected interest is calculated at the end of each statement cycle and deposited as cash into the linked brokerage account within 3 business days. Funds are immediately available for trading.</p>
+              <p style="margin: 0 0 14px"><strong>Investment Direction.</strong> All investment decisions are yours. We do not provide investment advice, manage your account, or auto-invest deposited funds. Deposits arrive as cash; you choose what to buy.</p>
+              <p style="margin: 0 0 14px"><strong>Tax Reporting.</strong> Brokerage deposits are treated as a rebate on your card balance and are not taxable income. Any subsequent investment gains, dividends, or interest earned in the brokerage account are reported on the brokerage's 1099 forms in the normal way.</p>
+              <p style="margin: 0 0 14px"><strong>Eligibility &amp; Clawback.</strong> If your card account is charged off, closed for cause, or has any payment more than 90 days past due, undeposited rewards are forfeited and prior deposits may be subject to clawback for the trailing 12 months.</p>
+              <p style="margin: 0 0 14px"><strong>Termination.</strong> Either party may terminate the brokerage rewards arrangement at any time. Earned but undeposited rewards through the termination date will be paid out within 30 days.</p>
+              <p style="margin: 0 0 14px"><strong>No Securities Affiliation.</strong> Brokerage services are provided by your independently-chosen broker. We are not a registered broker-dealer and do not custody your investments.</p>
+              <p style="margin: 0; color: var(--muted); font-size: 12px; font-style: italic">This is placeholder content. The full agreement will be provided upon enrollment in the brokerage rewards program.</p>
+            </div>
+          </div><!-- /terms tab -->
+
+          <div x-show="creditCardTab === 'tax-docs'">
+            <h3 class="wallet101-section-heading">Tax Documents</h3>
+            <div class="card" style="padding: 0; overflow: hidden">
+              <div class="table-wrap">
+                <table class="brokerage-positions-table">
+                  <thead>
+                    <tr>
+                      <th>Tax Year</th>
+                      <th>Form</th>
+                      <th>Description</th>
+                      <th>Issued</th>
+                      <th>Status</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><strong>2025</strong></td>
+                      <td>1099-MISC</td>
+                      <td>Brokerage rewards (rebates over $600)</td>
+                      <td>Jan 31, 2026</td>
+                      <td><span class="badge badge-green">Available</span></td>
+                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>2025</strong></td>
+                      <td>Year-End Summary</td>
+                      <td>Interest paid, fees, and rewards (informational)</td>
+                      <td>Jan 31, 2026</td>
+                      <td><span class="badge badge-green">Available</span></td>
+                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>2024</strong></td>
+                      <td>1099-MISC</td>
+                      <td>Brokerage rewards (rebates over $600)</td>
+                      <td>Jan 31, 2025</td>
+                      <td><span class="badge badge-green">Available</span></td>
+                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>2024</strong></td>
+                      <td>Year-End Summary</td>
+                      <td>Interest paid, fees, and rewards (informational)</td>
+                      <td>Jan 31, 2025</td>
+                      <td><span class="badge badge-green">Available</span></td>
+                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
+                    </tr>
+                    <tr>
+                      <td><strong>2026</strong></td>
+                      <td>1099-MISC</td>
+                      <td>Pending year-end</td>
+                      <td>—</td>
+                      <td><span class="badge badge-yellow">Available Jan 31, 2027</span></td>
+                      <td><button class="btn btn-outline btn-sm" disabled title="Available after year-end">Download PDF</button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <p style="margin-top:14px; color: var(--muted); font-size: 12px; line-height: 1.5">
+              Brokerage rewards are reported as a rebate on card spend and are generally not taxable income, but a 1099-MISC is issued when annual rewards exceed the IRS reporting threshold ($600). Investment gains in the linked brokerage account are reported separately on the broker's 1099-B / 1099-DIV / 1099-INT forms. Consult a tax professional for advice specific to your situation.
+            </p>
+          </div><!-- /tax-docs tab -->
+
+        </div><!-- /credit-cards -->
 
         <div x-show="page==='wallet-address'">
           <div class="page-title-block">
@@ -2677,8 +4022,283 @@ animate();
         <div x-show="page==='transaction-hash'">
           <div class="page-title-block">
             <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/></svg>Transaction hash</h2>
-            <p class="page-subtitle">Coming soon.</p>
+            <p class="page-subtitle">Paste any transaction hash, wallet address, or block hash to identify its chain and open the right explorer.</p>
           </div>
+
+  <!-- Two-column layout -->
+  <div class="lookup-layout">
+
+    <!-- ── Left: supported chains reference ── -->
+    <div class="lookup-left">
+      <div class="card chains-card">
+        <div class="chains-label">Supported Chains</div>
+        <table class="chains-table">
+          <thead>
+            <tr>
+              <th class="chains-th">Chain</th>
+              <th class="chains-th">Explorer</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#9945FF"></span>Solana</td>
+              <td class="chains-exp">solscan.io</td>
+            </tr>
+            <tr>
+              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#627EEA"></span>Ethereum</td>
+              <td class="chains-exp">etherscan.io</td>
+            </tr>
+            <tr>
+              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#F7931A"></span>Bitcoin</td>
+              <td class="chains-exp">mempool.space</td>
+            </tr>
+            <tr>
+              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#F3BA2F"></span>BNB Chain</td>
+              <td class="chains-exp">bscscan.com</td>
+            </tr>
+            <tr>
+              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#8247E5"></span>Polygon</td>
+              <td class="chains-exp">polygonscan.com</td>
+            </tr>
+            <tr>
+              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#0052FF"></span>Base</td>
+              <td class="chains-exp">basescan.org</td>
+            </tr>
+            <tr>
+              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#28A0F0"></span>Arbitrum</td>
+              <td class="chains-exp">arbiscan.io</td>
+            </tr>
+            <tr>
+              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#FF0420"></span>Optimism</td>
+              <td class="chains-exp">optimistic.etherscan.io</td>
+            </tr>
+            <tr>
+              <td class="chains-td"><span class="chain-dot chain-dot-sm" style="background:#EF0027"></span>Tron</td>
+              <td class="chains-exp">tronscan.org</td>
+            </tr>
+            <tr>
+              <td class="chains-td-last"><span class="chain-dot chain-dot-sm" style="background:#BFBBBB"></span>Litecoin</td>
+              <td class="chains-exp-last">blockchair.com</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── Right: search + results ── -->
+    <div class="lookup-right">
+
+      <!-- Search bar -->
+      <div class="lookup-search">
+        <input
+          class="form-input lookup-input"
+          type="text"
+          x-model="lookupQuery"
+          placeholder="0x…  or  1A1zP1…  or  Solana address…"
+          @keydown.enter.prevent="lookupHash()"
+          autocomplete="off"
+          spellcheck="false"
+        />
+        <button
+          class="btn btn-outline no-shrink"
+          type="button"
+          title="Paste from clipboard"
+          @click="navigator.clipboard.readText().then(t => { lookupQuery = t.trim(); }).catch(() => {})"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+        </button>
+        <button
+          class="btn btn-primary no-shrink"
+          type="button"
+          @click="lookupHash()"
+          :disabled="lookupLoading || !lookupQuery.trim()"
+        >
+          <span x-show="lookupLoading" class="spinner spinner-sm"></span>
+          <span x-show="!lookupLoading">Look up</span>
+        </button>
+      </div>
+
+      <!-- Probing spinner -->
+      <div x-show="lookupLoading" class="load-center">
+        <div class="spinner spinner-lg"></div>
+        <p class="probing-text">Probing chains…</p>
+      </div>
+
+      <!-- Error -->
+      <div x-show="lookupError && !lookupLoading" class="lookup-error" x-text="lookupError"></div>
+
+      <!-- Results -->
+      <div x-show="lookupResult && !lookupLoading">
+        <div class="card">
+
+          <!-- Hash + type badge -->
+          <div class="hash-header">
+            <div class="hash-header-row">
+              <code class="hash-code" x-text="lookupResult?.hash"></code>
+              <span class="badge hash-type-badge" x-text="lookupResult?.type"></span>
+            </div>
+          </div>
+
+          <!-- No matches -->
+          <div x-show="lookupResult?.matches?.length === 0" class="empty-state-compact">
+            <p class="no-match-title">No matches found</p>
+            <p class="no-match-sub">Hash format not recognized, or transaction not found on any probed chain.</p>
+          </div>
+
+          <!-- Match rows -->
+          <div x-show="lookupResult?.matches?.length > 0">
+            <template x-for="m in (lookupResult?.matches ?? [])" :key="m.chain">
+              <div class="match-row">
+                <!-- Chain logo (cryptocurrency-icons CDN). Falls back to a
+                     colored dot in the chain's brand color if the icon
+                     fails to load. -->
+                <img
+                  class="match-logo"
+                  :src="chainLogoUrl(m.chain)"
+                  :alt="m.chain_name"
+                  x-show="chainLogoUrl(m.chain)"
+                  @error="$el.style.display='none'; $el.nextElementSibling.style.display='inline-block'" />
+                <div class="match-dot"
+                     :style="`display:${chainLogoUrl(m.chain) ? 'none' : 'inline-block'}; background:${m.color}`"></div>
+                <div class="match-info">
+                  <div class="match-chain-name" x-text="m.chain_name"></div>
+                  <a :href="m.explorer_link" target="_blank" rel="noopener noreferrer" class="match-explorer-link" x-text="m.explorer_link"></a>
+                </div>
+                <div class="match-value no-shrink" x-show="lookupValues[m.chain] != null">
+                  <div class="match-value-label">Value</div>
+                  <div class="match-value-amt" x-text="lookupValues[m.chain] != null ? fmtUSD(lookupValues[m.chain]) : ''"></div>
+                </div>
+                <span class="badge no-shrink" :class="lookupConfidenceClass(m.confidence)" x-text="lookupConfidenceLabel(m.confidence)"></span>
+                <a :href="m.explorer_link" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm no-shrink">Open ↗</a>
+              </div>
+            </template>
+          </div>
+
+          <!-- ── Transaction Summary ──────────────────────────────────── -->
+          <div x-show="lookupResult?.summary" class="tx-summary-section">
+            <div class="section-label">Transaction Summary</div>
+
+            <div class="tx-summary-rows">
+
+              <!-- Chain -->
+              <div class="summary-row">
+                <span class="summary-label">Chain</span>
+                <span class="inline-row-7">
+                  <span class="chain-dot chain-dot-md" :style="`background:${({solana:'#9945FF',eth:'#627EEA',ethereum:'#627EEA',bsc:'#F3BA2F',polygon:'#8247E5',arbitrum:'#28A0F0',optimism:'#FF0420',avalanche:'#E84142',base:'#0052FF',tron:'#EF0027',bitcoin:'#F7931A',litecoin:'#BFBBBB'})[lookupResult?.summary?.chain] || '#9945FF'}`"></span>
+                  <span class="fw-500" x-text="lookupResult?.summary?.chain_name || lookupResult?.summary?.chain"></span>
+                </span>
+              </div>
+
+              <!-- Status -->
+              <div class="summary-row">
+                <span class="summary-label">Status</span>
+                <span x-show="lookupResult?.summary?.status === 'success'" class="status-success">
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 0 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z"/></svg>
+                  Success
+                </span>
+                <span x-show="lookupResult?.summary?.status === 'failed'" class="status-failed">
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="currentColor"><path d="M3.72 3.72a.75.75 0 0 1 1.06 0L8 6.94l3.22-3.22a.75.75 0 1 1 1.06 1.06L9.06 8l3.22 3.22a.75.75 0 1 1-1.06 1.06L8 9.06l-3.22 3.22a.75.75 0 0 1-1.06-1.06L6.94 8 3.72 4.78a.75.75 0 0 1 0-1.06z"/></svg>
+                  Failed
+                </span>
+              </div>
+
+              <!-- Time -->
+              <div x-show="lookupResult?.summary?.block_time" class="summary-row">
+                <span class="summary-label">Time</span>
+                <span x-text="lookupResult?.summary?.block_time ? new Date(lookupResult?.summary?.block_time * 1000).toLocaleString('en-US', {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit',hour12:true}) : '—'"></span>
+              </div>
+
+              <!-- From -->
+              <div class="summary-row">
+                <span class="summary-label">From</span>
+                <code
+                  class="addr-code"
+                  :title="'click to copy'"
+                  @click="navigator.clipboard.writeText(lookupResult?.summary?.from_addr).then(() => Alpine.store('toast').show('Address copied')).catch(()=>{})"
+                  x-text="lookupResult?.summary?.from_addr"
+                ></code>
+              </div>
+
+              <!-- To -->
+              <div class="summary-row">
+                <span class="summary-label">To</span>
+                <code
+                  class="addr-code"
+                  :title="'click to copy'"
+                  @click="navigator.clipboard.writeText(lookupResult?.summary?.to_addr).then(() => Alpine.store('toast').show('Address copied')).catch(()=>{})"
+                  x-text="lookupResult?.summary?.to_addr"
+                ></code>
+                <span x-show="lookupResult?.summary?.to_addr === lookupResult?.summary?.from_addr" class="self-badge">(self)</span>
+              </div>
+
+              <!-- Value -->
+              <div x-show="lookupResult?.summary?.value" class="summary-row">
+                <span class="summary-label">Value</span>
+                <span class="mono-value" x-text="lookupResult?.summary?.value"></span>
+              </div>
+
+              <!-- Fee (unified: `fee` for EVM/Tron/UTXO, `fee_sol` for Solana legacy) -->
+              <div x-show="lookupResult?.summary?.fee || lookupResult?.summary?.fee_sol" :class="lookupResult?.summary?.router ? 'summary-row' : 'summary-row-last'">
+                <span class="summary-label">Fee</span>
+                <span class="text-muted" x-text="lookupResult?.summary?.fee || lookupResult?.summary?.fee_sol"></span>
+              </div>
+
+              <!-- Router (optional) -->
+              <div x-show="lookupResult?.summary?.router" :class="lookupResult?.summary?.fee_display ? 'summary-row' : 'summary-row-last'">
+                <span class="summary-label">Router</span>
+                <span class="inline-row">
+                  <span class="chain-dot chain-dot-sm" style="background:var(--accent)"></span>
+                  <span x-text="lookupResult?.summary?.router"></span>
+                </span>
+              </div>
+
+              <!-- Platform fee (Solana-only legacy) -->
+              <div x-show="lookupResult?.summary?.fee_display" class="summary-row-last">
+                <span class="summary-label">Platform fee</span>
+                <span class="text-red" x-text="lookupResult?.summary?.fee_display"></span>
+              </div>
+
+            </div>
+
+            <!-- Transfer flows (EVM/Tron/UTXO) -->
+            <div x-show="lookupResult?.summary?.transfers?.length > 0" style="margin-top:14px">
+              <div class="section-label">Transfers (<span x-text="lookupResult?.summary?.transfers?.length"></span>)</div>
+              <div style="overflow-x:auto; margin-top:6px">
+                <table class="chains-table" style="font-size:11.5px; line-height:1.3; width:100%">
+                  <thead><tr>
+                    <th class="chains-th">From</th>
+                    <th class="chains-th">To</th>
+                    <th class="chains-th" style="text-align:right">Amount</th>
+                    <th class="chains-th">Token</th>
+                  </tr></thead>
+                  <tbody>
+                    <template x-for="(t, i) in (lookupResult?.summary?.transfers ?? [])" :key="i">
+                      <tr>
+                        <td class="chains-td"><code style="font-size:10px" x-text="t.from_short || '—'"></code></td>
+                        <td class="chains-td"><code style="font-size:10px" x-text="t.to_short || '—'"></code></td>
+                        <td class="chains-td" style="text-align:right"><span class="mono-value" x-text="t.amount"></span></td>
+                        <td class="chains-td" x-text="t.symbol"></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Initial empty state -->
+      <div x-show="!lookupResult && !lookupLoading && !lookupError" class="empty-state">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" class="mb-12"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <p class="lookup-empty-title">Identify any blockchain hash</p>
+        <p class="lookup-empty-sub">Supports Ethereum, BNB Chain, Polygon, Arbitrum, Optimism, Avalanche, Base, Bitcoin, Solana, Tron, and Litecoin</p>
+      </div>
+
+    </div><!-- /right column -->
+  </div><!-- /two-column layout -->
+
         </div><!-- /transaction-hash -->
 
         <div x-show="page==='exchange-funds'">
@@ -2693,26 +4313,100 @@ animate();
 
   </div>
 
-  <div class="ticker-strip" x-show="topCoins.length >= 5">
+  <div class="ticker-strip" x-show="tickerStocks.length >= 5">
     <div class="ticker-label">&#9632; 1Y</div>
     <div class="ticker-track">
       <div class="ticker-content">
         <!-- set 1 -->
-        <template x-for="c in topCoins.slice(0,25)" :key="'a-'+c.coingecko_id">
+        <template x-for="c in tickerStocks" :key="'a-'+c.symbol">
           <span class="ticker-item">
-            <span class="ticker-sym" x-text="c.symbol.toUpperCase()"></span>
-            <span class="ticker-price" x-text="(c.current_price_usd ?? 0) >= 1000 ? '$'+(c.current_price_usd).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '$'+(c.current_price_usd ?? 0).toFixed(4)"></span>
+            <img class="ticker-logo ticker-strip-logo" x-show="logoUrlFor(c.symbol)" :src="logoUrlFor(c.symbol)" :alt="c.symbol" loading="lazy" @error="$el.style.display='none'" />
+            <span class="ticker-sym" x-text="c.symbol"></span>
+            <span class="ticker-price" x-text="c.current_price_usd != null ? ((c.current_price_usd >= 1000) ? '$'+c.current_price_usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '$'+c.current_price_usd.toFixed(2)) : '—'"></span>
             <span :class="(c.price_change_1y ?? 0) >= 0 ? 'ticker-up' : 'ticker-down'" x-text="c.price_change_1y != null ? ((c.price_change_1y >= 0 ? '+' : '')+c.price_change_1y.toFixed(2)+'%') : '—'"></span>
           </span>
         </template>
         <!-- set 2 — duplicate for seamless loop -->
-        <template x-for="c in topCoins.slice(0,25)" :key="'b-'+c.coingecko_id">
+        <template x-for="c in tickerStocks" :key="'b-'+c.symbol">
           <span class="ticker-item">
-            <span class="ticker-sym" x-text="c.symbol.toUpperCase()"></span>
-            <span class="ticker-price" x-text="(c.current_price_usd ?? 0) >= 1000 ? '$'+(c.current_price_usd).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '$'+(c.current_price_usd ?? 0).toFixed(4)"></span>
+            <img class="ticker-logo ticker-strip-logo" x-show="logoUrlFor(c.symbol)" :src="logoUrlFor(c.symbol)" :alt="c.symbol" loading="lazy" @error="$el.style.display='none'" />
+            <span class="ticker-sym" x-text="c.symbol"></span>
+            <span class="ticker-price" x-text="c.current_price_usd != null ? ((c.current_price_usd >= 1000) ? '$'+c.current_price_usd.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}) : '$'+c.current_price_usd.toFixed(2)) : '—'"></span>
             <span :class="(c.price_change_1y ?? 0) >= 0 ? 'ticker-up' : 'ticker-down'" x-text="c.price_change_1y != null ? ((c.price_change_1y >= 0 ? '+' : '')+c.price_change_1y.toFixed(2)+'%') : '—'"></span>
           </span>
         </template>
+      </div>
+    </div>
+    <div class="logo-attribution">
+      Logos provided by <a href="https://logo.dev" target="_blank" rel="noopener noreferrer">Logo.dev</a>
+    </div>
+  </div>
+
+  <!-- Wish List modal — top level so it renders regardless of which page is active. -->
+  <div class="modal-backdrop" x-show="wishListOpen" @click.self="wishListOpen = false" x-cloak>
+    <div class="modal wishlist-modal">
+      <button class="modal-close" @click="wishListOpen = false" type="button">&times;</button>
+      <div class="modal-title">Wish List <span x-show="wishList.length" class="text-muted" style="font-size:13px; font-weight:500" x-text="'· ' + wishList.length + (wishList.length === 1 ? ' ticker' : ' tickers')"></span></div>
+      <p class="text-muted" style="margin-bottom: 14px; font-size: 12.5px">
+        Stocks you've starred from the screener, plus any you've added manually. Saved locally on this device.
+      </p>
+      <form @submit.prevent="addToWishList(wishListInput)" style="display:flex; gap:8px; margin-bottom: 14px">
+        <input class="form-input" type="text" x-model="wishListInput" placeholder="Add a ticker (e.g. AAPL)" autocomplete="off" style="flex:1; text-transform:uppercase" />
+        <button type="submit" class="btn btn-primary" :disabled="!wishListInput.trim()">Add</button>
+      </form>
+      <div x-show="!wishList.length" class="text-muted" style="padding: 18px 0; text-align:center; font-size: 13px">
+        Your wish list is empty. Click any star on the screener or add a ticker above.
+      </div>
+      <p x-show="wishList.length > 1" class="text-muted" style="font-size: 11.5px; margin: 0 0 8px; font-style: italic">
+        Drag rows to reorder priority — top of the list is bought first, bottom last.
+      </p>
+      <div x-show="wishList.length" class="wishlist-grid">
+        <template x-for="(sym, index) in wishList" :key="sym">
+          <div class="wishlist-row"
+               draggable="true"
+               :class="{ 'wishlist-dragging': wishListDragIndex === index }"
+               @dragstart="wishListDragIndex = index; $event.dataTransfer.effectAllowed = 'move'"
+               @dragover.prevent="$event.dataTransfer.dropEffect = 'move'"
+               @drop.prevent="moveWishListItem(wishListDragIndex, index)"
+               @dragend="wishListDragIndex = null">
+            <span class="wishlist-handle" title="Drag to reorder">⋮⋮</span>
+            <img class="ticker-logo" x-show="logoUrlFor(sym)" :src="logoUrlFor(sym, 64)" :alt="sym" loading="lazy" @error="$el.style.display='none'" />
+            <div class="wishlist-info">
+              <strong x-text="sym"></strong>
+              <span class="text-muted" style="font-size:11px" x-text="nameForPosition(sym)"></span>
+            </div>
+            <div class="wishlist-price">
+              <span class="wishlist-price-value"
+                    x-text="screenerQuotes[sym]?.price != null
+                      ? '$' + Number(screenerQuotes[sym]?.price).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                      : '—'"></span>
+              <span class="wishlist-price-change"
+                    x-show="screenerQuotes[sym]?.change_pct != null"
+                    :class="screenerQuotes[sym]?.change_pct >= 0 ? 'pos' : 'neg'"
+                    x-text="(screenerQuotes[sym]?.change_pct >= 0 ? '+' : '') + Number(screenerQuotes[sym]?.change_pct).toFixed(2) + '%'"></span>
+            </div>
+            <div class="wishlist-qty">
+              <label class="wishlist-qty-label">QTY</label>
+              <input type="number"
+                     class="form-input wishlist-qty-input"
+                     min="0"
+                     step="1"
+                     placeholder="0"
+                     :value="wishListQty[sym] || ''"
+                     @input="setWishListQty(sym, $event.target.value)"
+                     @click.stop
+                     @mousedown.stop />
+            </div>
+            <div class="wishlist-priority">
+              <span x-show="index === 0" class="wishlist-priority-tag first">BUY FIRST</span>
+              <span x-show="index === wishList.length - 1 && wishList.length > 1" class="wishlist-priority-tag last">BUY LAST</span>
+            </div>
+            <button type="button" class="wishlist-remove" @click="removeFromWishList(sym)" title="Remove" aria-label="Remove">&times;</button>
+          </div>
+        </template>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" @click="wishListOpen = false">Close</button>
       </div>
     </div>
   </div>

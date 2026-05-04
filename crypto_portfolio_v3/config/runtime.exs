@@ -73,6 +73,16 @@ config :crypto_portfolio_v3, :etherscan,
   timeout_ms: String.to_integer(System.get_env("ETHERSCAN_TIMEOUT_MS", "10000")),
   concurrency: String.to_integer(System.get_env("ETHERSCAN_CONCURRENCY", "5"))
 
+# Alpaca paper-trading API. Defaults to paper-api.alpaca.markets — flipping
+# to live trading requires explicitly setting ALPACA_TRADING_URL=https://api.alpaca.markets
+# AND providing live credentials. Don't do that without intent.
+config :crypto_portfolio_v3, :alpaca,
+  api_key: System.get_env("ALPACA_API_KEY"),
+  api_secret: System.get_env("ALPACA_API_SECRET"),
+  trading_url: System.get_env("ALPACA_TRADING_URL", "https://paper-api.alpaca.markets"),
+  data_url: System.get_env("ALPACA_DATA_URL", "https://data.alpaca.markets"),
+  timeout_ms: String.to_integer(System.get_env("ALPACA_TIMEOUT_MS", "10000"))
+
 config :crypto_portfolio_v3, :solana,
   rpc_url: System.get_env("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com"),
   timeout_ms: String.to_integer(System.get_env("SOLANA_TIMEOUT_MS", "12000")),
