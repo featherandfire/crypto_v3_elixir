@@ -4,11 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Crypto Portfolio Tracker</title>
-  <link rel="apple-touch-icon" sizes="180x180" href="./static/favicon/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="./static/favicon/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="./static/favicon/favicon-16x16.png">
-  <link rel="icon" href="./static/favicon/favicon.ico">
-  <link rel="manifest" href="./static/favicon/site.webmanifest">
+  <link rel="icon" type="image/svg+xml" href="./static/favicon/chain-icon.svg">
+  <link rel="apple-touch-icon" href="./static/favicon/chain-icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <script type="module" src="./static/js/app.ts"></script>
@@ -393,9 +390,179 @@ animate();
      AUTH SCREEN  (shown when not logged in)
 ═══════════════════════════════════════════════════════════ -->
 <div x-data="loginApp()" x-show="!$store.auth.isLoggedIn" x-cloak>
-  <div class="auth-wrap">
+
+  <!-- ═══════════════════════════════════════════════════════════
+       LANDING PAGE (shown before user clicks Sign in / Get Started)
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="landing" x-show="view === 'landing'">
+    <div class="landing-bg"></div>
+
+    <header class="landing-nav">
+      <div class="landing-brand">
+        <img src="/static/favicon/chain-icon.svg" alt="Broke 2 Brokerage" class="landing-brand-logo" />
+      </div>
+      <nav class="landing-nav-links">
+        <a href="#how-it-works">How it works</a>
+        <a href="#why">Why now</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="landing-nav-cta">
+        <button type="button" class="landing-link" @click="view='auth'; tab='login'">Sign in</button>
+        <button type="button" class="landing-btn primary" @click="view='auth'; tab='register'">Get Started</button>
+      </div>
+    </header>
+
+    <section class="landing-hero">
+      <img src="/static/favicon/b2b-logo.svg" alt="Broke 2 Brokerage" class="landing-hero-brand" />
+      <h1 class="landing-hero-title">
+        The credit card<br>
+        that turns spending<br>
+        <em>into investing.</em>
+      </h1>
+      <p class="landing-hero-sub">
+        Earn rewards that don't expire — they get invested directly into your own brokerage account.
+        Every swipe builds wealth instead of points.
+      </p>
+      <p class="landing-hero-tagline">We're built to build you, not bill you.</p>
+      <div class="landing-hero-cta">
+        <button type="button" class="landing-btn primary large" @click="view='auth'; tab='register'">Get Started — Free</button>
+        <button type="button" class="landing-btn ghost large" @click="view='auth'; tab='login'">I already have an account</button>
+      </div>
+      <div class="landing-hero-meta">
+        <span>No annual fee</span>
+        <span class="landing-hero-meta-dot">·</span>
+        <span>Education built-in</span>
+        <span class="landing-hero-meta-dot">·</span>
+        <span>FDIC-insured cash, SIPC-insured investments</span>
+      </div>
+    </section>
+
+    <section class="landing-chain">
+      <div class="landing-chain-eyebrow">Building the connection</div>
+      <img src="/static/favicon/b2b-chain.svg" alt="Chain links connecting credit and investing" class="landing-chain-img" />
+    </section>
+
+    <section class="landing-pillars">
+      <div class="landing-pillar">
+        <div class="landing-pillar-num">01</div>
+        <h3>Spend like normal</h3>
+        <p>Use your card the way you already use credit cards. Groceries, gas, rent, the whole life. We handle the rest.</p>
+      </div>
+      <div class="landing-pillar">
+        <div class="landing-pillar-num">02</div>
+        <h3>Rewards become investments</h3>
+        <p>A percentage of every purchase is automatically deposited into your linked brokerage account — invested in stocks, ETFs, or held as cash.</p>
+      </div>
+      <div class="landing-pillar">
+        <div class="landing-pillar-num">03</div>
+        <h3>Learn while you earn</h3>
+        <p>The app explains what you're holding, why it matters, and how to think about it — embedded into the moments you actually decide.</p>
+      </div>
+    </section>
+
+    <section class="landing-stats" id="why">
+      <div class="landing-stats-headline">
+        <h2>The system is broken. We're rewiring it.</h2>
+        <p>Half of Americans don't invest — and the financial industry has spent fifty years confirming that's how it should be. We disagree.</p>
+      </div>
+      <div class="landing-stats-grid">
+        <div class="landing-stat">
+          <div class="landing-stat-value">48%</div>
+          <div class="landing-stat-label">of U.S. adults don't hold investment assets <span class="landing-stat-source">(Janus Henderson, 2024)</span></div>
+        </div>
+        <div class="landing-stat">
+          <div class="landing-stat-value">$9,600</div>
+          <div class="landing-stat-label">avg credit-card balance for Gen X — peak debt cohort <span class="landing-stat-source">(Experian, 2025)</span></div>
+        </div>
+        <div class="landing-stat">
+          <div class="landing-stat-value">85–90%</div>
+          <div class="landing-stat-label">of card-industry net revenue comes from revolvers <span class="landing-stat-source">(McKinsey, 2022)</span></div>
+        </div>
+        <div class="landing-stat">
+          <div class="landing-stat-value">3–4%</div>
+          <div class="landing-stat-label">annual growth in younger-generation balances — driven by rent, groceries, BNPL</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-mechanism" id="how-it-works">
+      <h2>How it works</h2>
+      <p class="landing-mechanism-sub">Three steps from swipe to portfolio</p>
+      <div class="landing-flow">
+        <div class="landing-flow-box landing-flow-customer">
+          <div class="landing-flow-amount">01</div>
+          <div class="landing-flow-label">Use your credit card</div>
+        </div>
+        <div class="landing-flow-arrow">→</div>
+        <div class="landing-flow-box landing-flow-fees">
+          <div class="landing-flow-amount">02</div>
+          <div class="landing-flow-label">We deposit funds into your brokerage account</div>
+        </div>
+        <div class="landing-flow-arrow">→</div>
+        <div class="landing-flow-box landing-flow-company">
+          <div class="landing-flow-amount">03</div>
+          <div class="landing-flow-label">Invest your funds, we educate you on what you need to know</div>
+        </div>
+      </div>
+      <p class="landing-mechanism-foot">
+        That's the alignment: <strong>your gain is the goal.</strong> We do well when you do well.
+      </p>
+    </section>
+
+    <section class="landing-faq" id="faq">
+      <h2>Common questions</h2>
+      <div class="landing-faq-grid">
+        <div class="landing-faq-item">
+          <h3>Is this a brokerage or a credit card?</h3>
+          <p>Both. use the credit card as normal; We create your brokerage account and automatically add rewards for spending; We </p>
+        </div>
+        <div class="landing-faq-item">
+          <h3>What if I carry a balance?</h3>
+          <p>We don't make money pushing you into debt. The card has a competitive APR and a clear paydown plan; if you carry a balance, we still want you investing — even small amounts compound.</p>
+        </div>
+        <div class="landing-faq-item">
+          <h3>Are my investments insured?</h3>
+          <p>Cash held with our brokerage partner is FDIC-insured up to $250K. Investments are SIPC-protected up to $500K. Market risk on the investments themselves is real — we'll teach you about it as you go.</p>
+        </div>
+        <div class="landing-faq-item">
+          <h3>Who's this for?</h3>
+          <p>Anyone who's been told investing isn't for them. First-time investors, people rebuilding credit, families who want their money working in two places at once.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="landing-cta-final">
+      <h2>Build wealth without changing how you spend.</h2>
+      <button type="button" class="landing-btn primary large" @click="view='auth'; tab='register'">Get Started — Free</button>
+      <p class="landing-cta-sub">Takes about 2 minutes. No credit pull until you actually apply for the card.</p>
+    </section>
+
+    <footer class="landing-footer">
+      <div class="landing-footer-brand">
+        <img src="/static/favicon/b2b.svg" width="22" height="22" alt="" />
+        <span>Broke 2 Brokerage</span>
+      </div>
+      <div class="landing-footer-links">
+        <button type="button" class="landing-link" @click="view='auth'; tab='login'">Sign in</button>
+        <button type="button" class="landing-link" @click="view='auth'; tab='register'">Get Started</button>
+      </div>
+      <div class="landing-footer-fine">
+        © Feather &amp; Fire. Brokerage services provided through our brokerage partner. Card issued by our sponsor bank.
+        Investing involves risk including loss of principal. Past performance is not indicative of future results.
+      </div>
+    </footer>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════
+       AUTH SCREEN — sign in / register / forgot
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="auth-wrap" x-show="view === 'auth'">
+    <button type="button" class="landing-back-btn" @click="view='landing'; error=''" title="Back to landing">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back
+    </button>
     <div class="auth-card">
-      <div class="auth-logo"><img src="/static/favicon/favicon-32x32.png" width="28" height="28" alt="" style="vertical-align:middle;margin-right:6px;filter:drop-shadow(0 0 6px rgba(180,77,255,0.9)) drop-shadow(0 0 14px rgba(180,77,255,0.5))">Crypto Portfolio Tracker</div>
+      <div class="auth-logo"><img src="/static/favicon/b2b-logo.svg" alt="Broke 2 Brokerage" class="auth-logo-img"></div>
 
       <!-- ── Forgot-password: request step ─────────────────────────────── -->
       <div x-show="forgotStep === 'request'">
@@ -551,7 +718,7 @@ animate();
 
       <!-- ── Login / Register ──────────────────────────────────────────── -->
       <div x-show="!verifyStep && !forgotStep">
-        <p class="auth-subtitle">Track your crypto portfolio in real-time</p>
+        <p class="auth-subtitle">Track your future in real-time</p>
 
         <div class="page-tabs mb-20">
           <div class="page-tab" :class="{active: tab==='login'}" @click="tab='login';error=''">Sign in</div>
@@ -561,7 +728,7 @@ animate();
         <form @submit.prevent="submit">
           <div class="form-group">
             <label class="form-label">Username</label>
-            <input class="form-input" type="text" x-model="username" placeholder="satoshi" required autocomplete="username" />
+            <input class="form-input" type="text" x-model="username" placeholder="username" required autocomplete="username" />
           </div>
 
           <div class="form-group" x-show="tab==='register'">
@@ -615,8 +782,7 @@ animate();
 
     <aside class="sidebar">
   <div class="sidebar-logo">
-    <img src="/static/favicon/favicon-32x32.png" width="22" height="22" alt="Crypto Portfolio Tracker" />
-    Crypto Portfolio Tracker
+    <img src="/static/favicon/b2b-logo.svg" alt="Broke 2 Brokerage" class="sidebar-logo-img" />
   </div>
 
   <nav class="sidebar-nav">
@@ -667,17 +833,6 @@ animate();
         Exchange funds
       </div>
     </div>
-    <div class="nav-item nav-item-parent" :class="{active: page==='credit-cards', expanded: creditCardsOpen}" @click="page='credit-cards'; creditCardsOpen = true">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
-      <span class="nav-item-label">Credit Cards</span>
-      <svg class="nav-chevron" :class="{open: creditCardsOpen}" @click.stop="creditCardsOpen = !creditCardsOpen" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
-    </div>
-    <div class="nav-children" x-show="creditCardsOpen">
-      <div class="nav-item nav-item-child" :class="{active: page==='credit-cards'}" @click="page='credit-cards'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8"/><path d="M8 12h8"/></svg>
-        Overview
-      </div>
-    </div>
     <div class="nav-item nav-item-parent" :class="{active: ['brokerage','holdings','contact-us'].includes(page), expanded: traditionalOpen}" @click="page='brokerage'; traditionalOpen = true">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/><path d="M3 10h18"/></svg>
       <span class="nav-item-label">Investments</span>
@@ -697,6 +852,7 @@ animate();
         Contact Us
       </div>
     </div>
+
   </nav>
 
   <div class="sidebar-footer">
@@ -2532,15 +2688,16 @@ animate();
             </div><!-- /brokerage-order-col -->
 
             <div class="brokerage-screener-col">
+              <div class="screener-search">
+                <svg class="screener-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="search" class="screener-search-input" placeholder="Search a ticker or company (e.g. AAPL, Vanguard)" x-model="screenerSearch" />
+                <button type="button" class="screener-search-clear" x-show="screenerSearch" @click="screenerSearch = ''" aria-label="Clear search">×</button>
+              </div>
               <div class="brokerage-screener-head">
                 <strong x-text="screenerView === 'etfs' ? 'ETFs' : 'Stock Screener'"></strong>
                 <span class="screener-subtitle-inline" x-show="!loadingScreenerQuotes" x-text="screenerView === 'etfs' ? 'Purchase ETFs / click a row to fill the Symbol field. Prices are live.' : 'Purchase individual stocks / click a row to fill the Symbol field. Prices are live.'"></span>
                 <span class="screener-subtitle-inline" x-show="loadingScreenerQuotes">Loading live prices…</span>
                 <span class="screener-count-badge"><span x-text="visibleScreenerCount()"></span> shown</span>
-              </div>
-              <div class="screener-view-toggle">
-                <button type="button" class="screener-view-tab" :class="{active: screenerView === 'stocks'}" @click="screenerView = 'stocks'">Stocks</button>
-                <button type="button" class="screener-view-tab" :class="{active: screenerView === 'etfs'}" @click="screenerView = 'etfs'">ETFs</button>
               </div>
               <div class="etf-explainer" x-show="screenerView === 'etfs'">
                 <strong>What's an ETF?</strong> An <em>Exchange-Traded Fund</em> is a pre-made basket of stocks (or bonds, commodities, or crypto) that trades on the stock market just like a single share. Buying one share of <strong>SPY</strong>, for example, gives you exposure to all 500 companies in the S&amp;P 500 — instant diversification without buying each one yourself. ETFs are professionally managed, charge a small annual fee (the <em>expense ratio</em>), and many pay out dividends/distributions. Use the tabs below to browse by theme — broad index, sector, dividend income, bonds, international, commodities, crypto, or thematic strategies.
@@ -2573,12 +2730,56 @@ animate();
                 outperforming / underperforming comparable peers up to the last 4 yrs.
               </div>
               <div class="screener-tabs">
-                <template x-for="cat in stockScreener.filter(c => screenerView === 'etfs' ? c.view === 'etfs' : c.view !== 'etfs')" :key="cat.id">
-                  <button type="button" class="screener-tab" :class="{active: screenerCategory === cat.id}" @click="screenerCategory = cat.id; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''" x-text="cat.label"></button>
-                </template>
-                <button type="button" class="screener-tab" x-show="screenerView === 'stocks'" :class="{active: screenerCategory === 'filters'}" @click="screenerCategory = 'filters'; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''">Filters</button>
+                <div class="screener-tabs-row">
+                  <button type="button" class="screener-tab screener-tab-start" :class="{active: screenerCategory === 'start-here'}" @click="screenerCategory = 'start-here'; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''">Start Here!</button>
+                </div>
+                <div class="screener-tabs-row">
+                  <button type="button" class="screener-tab screener-tab-view" :class="{active: screenerView === 'etfs' && screenerCategory !== 'start-here'}" @click="screenerView = 'etfs'; screenerCategory = 'index-etfs'; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''">ETFs</button>
+                  <template x-for="cat in stockScreener.filter(c => c.view === 'etfs')" :key="cat.id">
+                    <button type="button" class="screener-tab" :class="{active: screenerCategory === cat.id}" @click="screenerView = 'etfs'; screenerCategory = cat.id; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''" x-text="cat.label"></button>
+                  </template>
+                </div>
+                <div class="screener-tabs-row">
+                  <button type="button" class="screener-tab screener-tab-view" :class="{active: screenerView === 'stocks' && screenerCategory !== 'start-here' && screenerCategory !== 'filters'}" @click="screenerView = 'stocks'; screenerCategory = 'mag-7'; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''">Stocks</button>
+                  <template x-for="cat in stockScreener.filter(c => c.view !== 'etfs')" :key="cat.id">
+                    <button type="button" class="screener-tab" :class="{active: screenerCategory === cat.id}" @click="screenerView = 'stocks'; screenerCategory = cat.id; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''" x-text="cat.label"></button>
+                  </template>
+                  <button type="button" class="screener-tab" :class="{active: screenerCategory === 'filters'}" @click="screenerView = 'stocks'; screenerCategory = 'filters'; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''">Filters</button>
+                </div>
               </div>
               <div class="screener-list">
+                <div x-show="screenerCategory === 'start-here'" class="screener-start-panel">
+                  <h3 class="screener-start-title">New to the markets? Start here.</h3>
+                  <p class="screener-start-intro">A quick orientation to what each tab means and how to pick your first position with confidence.</p>
+                  <div class="screener-start-grid">
+                    <div class="screener-start-card">
+                      <div class="screener-start-step">01</div>
+                      <div class="screener-start-card-title">Build a Portfolio</div>
+                      <div class="screener-start-card-title">Stocks or ETFs?</div>
+                      <div class="screener-start-card-title">Both</div>
+                       <div class="screener-start-card-title">If a stock is an easter egg then an ETF is an easter basket. You want a solid mix of both.</div>
+                      <p>An <strong>ETF</strong> bundles many stocks into one ticker — buy <em>SPY</em> and you own a sliver of the 500 biggest US companies. A <strong>stock</strong> is a single company. ETFs are the standard starting point for first-time investors because one purchase gets you instant diversification.</p>
+                    </div>
+                    <div class="screener-start-card">
+                      <div class="screener-start-step">02</div>
+                      <div class="screener-start-card-title">Read the badges</div>
+                      <p><span class="screener-start-pill gold">▲</span> green up-arrow = outperforming peers. <span class="screener-start-pill purple">▼</span> red down-arrow = underperforming. Risk tier badges (Conservative · Medium · Aggressive) show how volatile a fund has historically been.</p>
+                    </div>
+                    <div class="screener-start-card">
+                      <div class="screener-start-step">03</div>
+                      <div class="screener-start-card-title">Build a wishlist before you buy</div>
+                      <p>Tap the <strong>★</strong> on any card to add it to your wishlist. Open the wishlist to see Buy First / Buy Last priorities and set quantities. Nothing is purchased until you confirm — the wishlist is a planning tool.</p>
+                    </div>
+                    <div class="screener-start-card">
+                      <div class="screener-start-step">04</div>
+                      <div class="screener-start-card-title">Use Filters to narrow the field</div>
+                      <p>The Filters tab lets you screen by share price (good for first-timers with smaller deposits), dividend frequency, and risk tier. Start narrow, find a few names you understand, then expand.</p>
+                    </div>
+                  </div>
+                  <div class="screener-start-foot">
+                    Rule of thumb for your first deposit: <strong>one broad index ETF</strong> (Index tab) + <strong>one dividend ETF</strong> (Dividend tab) covers ~80% of what most starter portfolios hold.
+                  </div>
+                </div>
                 <template x-for="cat in stockScreener" :key="cat.id">
                   <div x-show="screenerCategory === cat.id">
                     <!-- Per-category ETF description. -->
@@ -3254,450 +3455,6 @@ animate();
             </form>
           </div>
         </div><!-- /contact-us -->
-
-        <div x-show="page==='credit-cards'">
-          <div class="page-title-block">
-            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>Credit Cards</h2>
-            <p class="page-subtitle">My Cards</p>
-          </div>
-
-          <div class="screener-tabs" style="margin-bottom: 18px">
-            <button type="button" class="screener-tab" :class="{active: creditCardTab === 'account'}" @click="creditCardTab = 'account'">Account</button>
-            <button type="button" class="screener-tab" :class="{active: creditCardTab === 'statements'}" @click="creditCardTab = 'statements'">Statements</button>
-            <button type="button" class="screener-tab" :class="{active: creditCardTab === 'claims'}" @click="creditCardTab = 'claims'">Claims</button>
-            <button type="button" class="screener-tab" :class="{active: creditCardTab === 'terms'}" @click="creditCardTab = 'terms'">Terms &amp; Conditions</button>
-            <button type="button" class="screener-tab" :class="{active: creditCardTab === 'tax-docs'}" @click="creditCardTab = 'tax-docs'">Tax Documents</button>
-          </div>
-
-          <div x-show="creditCardTab === 'account'">
-
-          <div class="brokerage-stats">
-            <div class="brokerage-stat">
-              <div class="brokerage-stat-label">Current Balance</div>
-              <div class="brokerage-stat-value" x-text="fmtUSD(creditCardAccount.current_balance)"></div>
-              <div class="brokerage-stat-pct">owed</div>
-            </div>
-            <div class="brokerage-stat">
-              <div class="brokerage-stat-label">Available Credit</div>
-              <div class="brokerage-stat-value" x-text="fmtUSD(creditCardAccount.credit_limit - creditCardAccount.current_balance)"></div>
-              <div class="brokerage-stat-pct" x-text="`of ${fmtUSD(creditCardAccount.credit_limit)} limit`"></div>
-            </div>
-            <div class="brokerage-stat">
-              <div class="brokerage-stat-label">Statement Balance</div>
-              <div class="brokerage-stat-value" x-text="fmtUSD(creditCardAccount.statement_balance)"></div>
-              <div class="brokerage-stat-pct" x-text="`min ${fmtUSD(creditCardAccount.minimum_payment)}`"></div>
-            </div>
-            <div class="brokerage-stat">
-              <div class="brokerage-stat-label">Next Payment Due</div>
-              <div class="brokerage-stat-value" x-text="new Date(creditCardAccount.next_payment_due).toLocaleDateString('en-US', { month:'short', day:'numeric' })"></div>
-              <div class="brokerage-stat-pct" x-text="(() => { const d = Math.ceil((new Date(creditCardAccount.next_payment_due) - new Date()) / 86400000); return d > 0 ? `in ${d} days` : d === 0 ? 'today' : `${-d} days overdue`; })()"></div>
-            </div>
-            <div class="brokerage-stat">
-              <div class="brokerage-stat-label">Rewards Earned</div>
-              <div class="brokerage-stat-value pos" x-text="fmtUSD(totalBrokerageContribution())"></div>
-              <div class="brokerage-stat-pct">transferred to brokerage</div>
-            </div>
-            <div class="brokerage-stat">
-              <div class="brokerage-stat-label">Credit Utilization</div>
-              <div class="brokerage-stat-value" :class="(creditCardAccount.current_balance / creditCardAccount.credit_limit) * 100 > 30 ? 'neg' : 'pos'" x-text="((creditCardAccount.current_balance / creditCardAccount.credit_limit) * 100).toFixed(1) + '%'"></div>
-              <div class="brokerage-stat-pct" x-text="`APR ${creditCardAccount.apr.toFixed(2)}%`"></div>
-            </div>
-          </div>
-
-          <div class="cc-card-section">
-            <svg class="cc-card-svg" width="150" height="94" viewBox="0 0 300 188" xmlns="http://www.w3.org/2000/svg" aria-label="Credit card visual">
-              <defs>
-                <linearGradient id="ccCardBg" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#0d0a1e"/>
-                  <stop offset="55%" stop-color="#3a1466"/>
-                  <stop offset="100%" stop-color="#b44dff"/>
-                </linearGradient>
-                <linearGradient id="ccChip" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" stop-color="#f3d77a"/>
-                  <stop offset="100%" stop-color="#a87810"/>
-                </linearGradient>
-                <radialGradient id="ccGlow" cx="80%" cy="20%" r="55%">
-                  <stop offset="0%" stop-color="rgba(255,255,255,0.18)"/>
-                  <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
-                </radialGradient>
-              </defs>
-              <rect width="300" height="188" rx="14" ry="14" fill="url(#ccCardBg)"/>
-              <rect width="300" height="188" rx="14" ry="14" fill="url(#ccGlow)"/>
-              <text x="22" y="32" fill="#ffffff" font-size="12" font-weight="700" letter-spacing="3">ABCOINS</text>
-              <text x="22" y="46" fill="rgba(255,255,255,0.55)" font-size="8" letter-spacing="1.5">BROKERAGE REWARDS</text>
-              <g transform="translate(22,66)">
-                <rect width="40" height="30" rx="5" fill="url(#ccChip)"/>
-                <path d="M8 0 v30 M16 0 v30 M24 0 v30 M32 0 v30 M0 8 h40 M0 15 h40 M0 22 h40" stroke="rgba(40,28,8,0.4)" stroke-width="0.6" fill="none"/>
-              </g>
-              <g transform="translate(75,72)" stroke="rgba(255,255,255,0.7)" stroke-width="1.4" fill="none" stroke-linecap="round">
-                <path d="M0 4 Q5 10 0 16"/>
-                <path d="M5 1 Q13 10 5 19"/>
-                <path d="M10 -2 Q21 10 10 22"/>
-              </g>
-              <text x="22" y="130" fill="#ffffff" font-family="JetBrains Mono, monospace" font-size="15" font-weight="500" letter-spacing="2.5"
-                    x-text="cardNumberVisible ? creditCardAccount.card_number : '•••• •••• •••• ' + creditCardAccount.card_number.slice(-4)"></text>
-              <text x="22" y="156" fill="rgba(255,255,255,0.55)" font-size="7" letter-spacing="1.2">CARDHOLDER</text>
-              <text x="22" y="170" fill="#ffffff" font-size="10" font-weight="500" letter-spacing="1.2">YOUR NAME</text>
-              <text x="180" y="156" fill="rgba(255,255,255,0.55)" font-size="7" letter-spacing="1.2">EXPIRES</text>
-              <text x="180" y="170" fill="#ffffff" font-size="10" font-family="JetBrains Mono, monospace" font-weight="500">12/29</text>
-              <g transform="translate(238,144)">
-                <circle cx="14" cy="14" r="14" fill="#b44dff" opacity="0.85"/>
-                <circle cx="28" cy="14" r="14" fill="#ff5e9c" opacity="0.85"/>
-              </g>
-            </svg>
-            <div class="cc-number-row" style="margin-bottom: 0">
-              <div class="cc-number-label">Card Number</div>
-              <code class="cc-number" x-text="cardNumberVisible ? creditCardAccount.card_number : '•••• •••• •••• ' + creditCardAccount.card_number.slice(-4)"></code>
-              <button type="button" class="btn btn-outline btn-sm" @click="cardNumberVisible = !cardNumberVisible" x-text="cardNumberVisible ? 'Hide' : 'Show'"></button>
-              <button type="button" class="btn btn-primary btn-sm" @click="paymentModalOpen = true; paymentAmount = String(creditCardAccount.statement_balance)">
-                Make a Payment
-              </button>
-              <button type="button" class="btn btn-outline btn-sm" @click="page='brokerage'">
-                View Brokerage
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:3px"><polyline points="9 18 15 12 9 6"/></svg>
-              </button>
-            </div>
-          </div>
-
-          <!-- Make a Payment modal — payment-provider hookup is a TODO. -->
-          <div class="modal-backdrop" x-show="paymentModalOpen" @click.self="paymentModalOpen = false" x-cloak>
-            <div class="modal">
-              <button class="modal-close" @click="paymentModalOpen = false" type="button">&times;</button>
-              <div class="modal-title">Make a Payment</div>
-              <p style="margin:0 0 14px; color: var(--muted); font-size: 13px">
-                Pay your <strong style="color:var(--text)" x-text="fmtUSD(creditCardAccount.statement_balance)"></strong> statement balance, the
-                <strong style="color:var(--text)" x-text="fmtUSD(creditCardAccount.minimum_payment)"></strong> minimum, or any custom amount.
-              </p>
-              <div style="display:flex; gap:6px; margin-bottom: 10px; flex-wrap: wrap">
-                <button type="button" class="btn btn-outline btn-sm" @click="paymentAmount = String(creditCardAccount.statement_balance)">Statement</button>
-                <button type="button" class="btn btn-outline btn-sm" @click="paymentAmount = String(creditCardAccount.current_balance)">Current Balance</button>
-                <button type="button" class="btn btn-outline btn-sm" @click="paymentAmount = String(creditCardAccount.minimum_payment)">Minimum</button>
-              </div>
-              <div class="form-group">
-                <label class="form-label">Amount (USD)</label>
-                <input class="form-input" type="number" min="0" step="0.01" x-model="paymentAmount" placeholder="0.00" />
-              </div>
-              <p style="margin: 8px 0 0; color: var(--muted); font-size: 12px; font-style: italic">
-                Payment provider not yet connected — this is a placeholder. We'll wire ACH from the linked bank account here next.
-              </p>
-              <div class="modal-actions">
-                <button type="button" class="btn btn-outline" @click="paymentModalOpen = false">Cancel</button>
-                <button type="button" class="btn btn-primary" disabled title="Payment integration coming soon">Pay Now</button>
-              </div>
-            </div>
-          </div>
-
-          <div class="cc-account-grid">
-          <div class="cc-account-main">
-          <h3 class="wallet101-section-heading" style="margin-top:24px">Recent Transactions</h3>
-          <div class="card" style="padding: 0; overflow: hidden">
-            <div class="table-wrap">
-              <table class="brokerage-positions-table">
-                <thead>
-                  <tr>
-                    <th>
-                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('date')" :title="ccSortBy !== 'date' ? 'Sort oldest → newest' : ccSortDir === 'asc' ? 'Sort newest → oldest' : 'Clear sort'">
-                        Date
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'date' }" :style="ccSortBy === 'date' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
-                      </button>
-                    </th>
-                    <th>
-                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('merchant')" :title="ccSortBy !== 'merchant' ? 'Sort A→Z' : ccSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
-                        Description
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'merchant' }" :style="ccSortBy === 'merchant' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
-                      </button>
-                    </th>
-                    <th>
-                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('category')" :title="ccSortBy !== 'category' ? 'Sort A→Z' : ccSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
-                        Category
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'category' }" :style="ccSortBy === 'category' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
-                      </button>
-                    </th>
-                    <th class="num">
-                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('amount')" :title="ccSortBy !== 'amount' ? 'Sort low → high' : ccSortDir === 'asc' ? 'Sort high → low' : 'Clear sort'">
-                        Amount
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'amount' }" :style="ccSortBy === 'amount' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
-                      </button>
-                    </th>
-                    <th class="num" title="Interest that would normally accrue to the bank, redirected into your brokerage account.">
-                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('brokerage')" :title="ccSortBy !== 'brokerage' ? 'Sort low → high' : ccSortDir === 'asc' ? 'Sort high → low' : 'Clear sort'">
-                        → Brokerage
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'brokerage' }" :style="ccSortBy === 'brokerage' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
-                      </button>
-                    </th>
-                    <th>
-                      <button type="button" class="holdings-sort-btn" @click="cycleCcSort('status')" :title="ccSortBy !== 'status' ? 'Sort A→Z' : ccSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
-                        Status
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: ccSortBy === 'status' }" :style="ccSortBy === 'status' && ccSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
-                      </button>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <template x-for="t in pagedCcTransactions()" :key="t.date + t.merchant + t.amount">
-                    <tr>
-                      <td x-text="new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })"></td>
-                      <td>
-                        <strong x-text="(t.merchant + ' ' + (t.location || '')).toUpperCase().trim()"></strong>
-                        <span class="cc-txn-id" x-text="' #' + t.txn_id"></span>
-                      </td>
-                      <td x-text="t.category"></td>
-                      <td class="num" :class="t.amount < 0 ? 'pos' : ''" x-text="t.amount < 0 ? '+' + fmtUSD(Math.abs(t.amount)) : fmtUSD(t.amount)"></td>
-                      <td class="num" :class="t.amount > 0 ? 'pos' : 'text-muted'" x-text="t.amount > 0 ? fmtUSD(brokerageContribution(t)) : '—'"></td>
-                      <td>
-                        <span class="badge" :class="t.status === 'pending' ? 'badge-yellow' : 'badge-green'" x-text="t.status === 'pending' ? 'Pending' : 'Posted'"></span>
-                      </td>
-                    </tr>
-                  </template>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <div class="cc-pagination">
-            <span class="cc-pagination-info">
-              <span x-text="(ccPage - 1) * ccPageSize + 1"></span>–<span x-text="Math.min(ccPage * ccPageSize, creditCardTransactions.length)"></span>
-              of <span x-text="creditCardTransactions.length"></span>
-            </span>
-            <button type="button" class="btn btn-outline btn-sm" @click="ccPage = Math.max(1, ccPage - 1)" :disabled="ccPage === 1">‹ Prev</button>
-            <span class="cc-pagination-page">Page <span x-text="ccPage"></span> / <span x-text="ccPageCount()"></span></span>
-            <button type="button" class="btn btn-outline btn-sm" @click="ccPage = Math.min(ccPageCount(), ccPage + 1)" :disabled="ccPage >= ccPageCount()">Next ›</button>
-          </div>
-          </div><!-- /cc-account-main -->
-          <div class="cc-account-side">
-            <h3 class="wallet101-section-heading" style="margin-top:24px">Spend by Category</h3>
-            <div class="card holdings-chart-card">
-              <p class="holdings-chart-subtitle" style="margin-top:0">% of total transactions in each category over the last 60 days.</p>
-              <div class="holdings-chart-wrap">
-                <canvas data-cc-category-chart x-init="$nextTick(() => renderCreditCardCategoryChart())"></canvas>
-              </div>
-            </div>
-
-            <h3 class="wallet101-section-heading" style="margin-top:18px">Where Payments Went</h3>
-            <div class="card holdings-chart-card">
-              <p class="holdings-chart-subtitle" style="margin-top:0">YTD breakdown of payments — balance paid down vs. interest paid vs. interest redirected into your brokerage.</p>
-              <div class="holdings-chart-wrap">
-                <canvas data-cc-payments-chart x-init="$nextTick(() => renderCreditCardPaymentsChart())"></canvas>
-              </div>
-            </div>
-          </div>
-          </div><!-- /cc-account-grid -->
-
-          </div><!-- /account tab -->
-
-          <div x-show="creditCardTab === 'statements'">
-            <h3 class="wallet101-section-heading">Monthly Statements</h3>
-            <div class="card" style="padding: 0; overflow: hidden">
-              <div class="table-wrap">
-                <table class="brokerage-positions-table">
-                  <thead>
-                    <tr>
-                      <th>Period</th>
-                      <th>Closing Date</th>
-                      <th class="num">Statement Balance</th>
-                      <th class="num">Minimum Due</th>
-                      <th>Status</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>April 2026</strong></td>
-                      <td>May 5, 2026</td>
-                      <td class="num">$1,284.55</td>
-                      <td class="num">$35.00</td>
-                      <td><span class="badge badge-yellow">Current</span></td>
-                      <td><button class="btn btn-outline btn-sm" disabled title="Available after closing">Download PDF</button></td>
-                    </tr>
-                    <tr>
-                      <td><strong>March 2026</strong></td>
-                      <td>Apr 5, 2026</td>
-                      <td class="num">$2,103.42</td>
-                      <td class="num">$45.00</td>
-                      <td><span class="badge badge-green">Paid</span></td>
-                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
-                    </tr>
-                    <tr>
-                      <td><strong>February 2026</strong></td>
-                      <td>Mar 5, 2026</td>
-                      <td class="num">$1,847.91</td>
-                      <td class="num">$40.00</td>
-                      <td><span class="badge badge-green">Paid</span></td>
-                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
-                    </tr>
-                    <tr>
-                      <td><strong>January 2026</strong></td>
-                      <td>Feb 5, 2026</td>
-                      <td class="num">$967.18</td>
-                      <td class="num">$35.00</td>
-                      <td><span class="badge badge-green">Paid</span></td>
-                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
-                    </tr>
-                    <tr>
-                      <td><strong>December 2025</strong></td>
-                      <td>Jan 5, 2026</td>
-                      <td class="num">$2,412.55</td>
-                      <td class="num">$50.00</td>
-                      <td><span class="badge badge-green">Paid</span></td>
-                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
-                    </tr>
-                    <tr>
-                      <td><strong>November 2025</strong></td>
-                      <td>Dec 5, 2025</td>
-                      <td class="num">$1,562.34</td>
-                      <td class="num">$35.00</td>
-                      <td><span class="badge badge-green">Paid</span></td>
-                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div><!-- /statements tab -->
-
-          <div x-show="creditCardTab === 'claims'">
-            <div style="display:flex; align-items:center; gap:14px; margin-top:0; margin-bottom: 14px">
-              <h3 class="wallet101-section-heading" style="margin:0">Claims &amp; Disputes</h3>
-              <button type="button" class="btn btn-primary btn-sm">+ File a Claim</button>
-            </div>
-            <div class="card" style="padding: 0; overflow: hidden">
-              <div class="table-wrap">
-                <table class="brokerage-positions-table">
-                  <thead>
-                    <tr>
-                      <th>Filed</th>
-                      <th>Reason</th>
-                      <th>Merchant</th>
-                      <th class="num">Amount</th>
-                      <th>Status</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Apr 18, 2026</td>
-                      <td>Unrecognized charge</td>
-                      <td><strong>NETFLIX.COM</strong> <span class="cc-txn-id">#2413131J01963BHC4</span></td>
-                      <td class="num">$22.99</td>
-                      <td><span class="badge badge-yellow">Under Review</span></td>
-                      <td><button class="btn btn-outline btn-sm">View</button></td>
-                    </tr>
-                    <tr>
-                      <td>Mar 28, 2026</td>
-                      <td>Duplicate charge</td>
-                      <td><strong>NIKE</strong> <span class="cc-txn-id">#2413152G12074QWE1</span></td>
-                      <td class="num">$134.99</td>
-                      <td><span class="badge badge-green">Resolved — Refunded</span></td>
-                      <td><button class="btn btn-outline btn-sm">View</button></td>
-                    </tr>
-                    <tr>
-                      <td>Mar 14, 2026</td>
-                      <td>Service not received</td>
-                      <td><strong>ADOBE CREATIVE CLOUD</strong> <span class="cc-txn-id">#2413161R01963HGF8</span></td>
-                      <td class="num">$54.99</td>
-                      <td><span class="badge badge-red">Denied</span></td>
-                      <td><button class="btn btn-outline btn-sm">View</button></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <p style="margin-top:14px; color: var(--muted); font-size: 12px">
-              Disputes filed within 60 days of the statement on which a charge appears. Most claims resolve in 30–90 days.
-            </p>
-          </div><!-- /claims tab -->
-
-          <div x-show="creditCardTab === 'terms'">
-            <h3 class="wallet101-section-heading">Cardholder Agreement</h3>
-            <div class="card" style="padding: 22px 26px; max-width: 760px; line-height: 1.6; color: var(--text)">
-              <p style="margin: 0 0 14px"><strong>Annual Percentage Rate (APR).</strong> The variable APR for purchases is 21.99%. The APR for cash advances is 26.99% and applies from the transaction date with no grace period. Penalty APR up to 29.99% may apply if a payment is more than 60 days past due.</p>
-              <p style="margin: 0 0 14px"><strong>Brokerage Rewards.</strong> Interest that would otherwise accrue to the issuer on carried balances is redirected to your linked brokerage account at the end of each statement cycle. Cash advance interest does not qualify for the brokerage rebate. Rewards are deposited as cash and are subject to clawback for charged-off accounts.</p>
-              <p style="margin: 0 0 14px"><strong>Fees.</strong> No annual fee. Cash advance fee: 5% of each advance, $10 minimum. Foreign transaction fee: 0%. Late payment fee: up to $40. Returned payment fee: up to $40.</p>
-              <p style="margin: 0 0 14px"><strong>Minimum Payment.</strong> The greater of $35 or 2% of the new balance, plus any past-due amount and amounts over your credit limit.</p>
-              <p style="margin: 0 0 14px"><strong>Grace Period.</strong> 25 days from the statement closing date for new purchases when the previous balance is paid in full.</p>
-              <p style="margin: 0 0 14px"><strong>Disputes.</strong> You have 60 days from the statement on which a charge appears to dispute a transaction. Contact customer support via the Contact Us form.</p>
-              <p style="margin: 0; color: var(--muted); font-size: 12px; font-style: italic">This is placeholder content. The full agreement will be provided upon account approval.</p>
-            </div>
-
-            <h3 class="wallet101-section-heading" style="margin-top:24px">Brokerage Agreement</h3>
-            <div class="card" style="padding: 22px 26px; max-width: 760px; line-height: 1.6; color: var(--text)">
-              <p style="margin: 0 0 14px"><strong>Linked Brokerage Account.</strong> Brokerage rewards require an active linked taxable brokerage account in your name. Joint, custodial, IRA, or 401(k) accounts are not eligible. You may change the linked account at any time; deposits will route to the account on file as of the statement closing date.</p>
-              <p style="margin: 0 0 14px"><strong>Deposit Timing.</strong> Redirected interest is calculated at the end of each statement cycle and deposited as cash into the linked brokerage account within 3 business days. Funds are immediately available for trading.</p>
-              <p style="margin: 0 0 14px"><strong>Investment Direction.</strong> All investment decisions are yours. We do not provide investment advice, manage your account, or auto-invest deposited funds. Deposits arrive as cash; you choose what to buy.</p>
-              <p style="margin: 0 0 14px"><strong>Tax Reporting.</strong> Brokerage deposits are treated as a rebate on your card balance and are not taxable income. Any subsequent investment gains, dividends, or interest earned in the brokerage account are reported on the brokerage's 1099 forms in the normal way.</p>
-              <p style="margin: 0 0 14px"><strong>Eligibility &amp; Clawback.</strong> If your card account is charged off, closed for cause, or has any payment more than 90 days past due, undeposited rewards are forfeited and prior deposits may be subject to clawback for the trailing 12 months.</p>
-              <p style="margin: 0 0 14px"><strong>Termination.</strong> Either party may terminate the brokerage rewards arrangement at any time. Earned but undeposited rewards through the termination date will be paid out within 30 days.</p>
-              <p style="margin: 0 0 14px"><strong>No Securities Affiliation.</strong> Brokerage services are provided by your independently-chosen broker. We are not a registered broker-dealer and do not custody your investments.</p>
-              <p style="margin: 0; color: var(--muted); font-size: 12px; font-style: italic">This is placeholder content. The full agreement will be provided upon enrollment in the brokerage rewards program.</p>
-            </div>
-          </div><!-- /terms tab -->
-
-          <div x-show="creditCardTab === 'tax-docs'">
-            <h3 class="wallet101-section-heading">Tax Documents</h3>
-            <div class="card" style="padding: 0; overflow: hidden">
-              <div class="table-wrap">
-                <table class="brokerage-positions-table">
-                  <thead>
-                    <tr>
-                      <th>Tax Year</th>
-                      <th>Form</th>
-                      <th>Description</th>
-                      <th>Issued</th>
-                      <th>Status</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td><strong>2025</strong></td>
-                      <td>1099-MISC</td>
-                      <td>Brokerage rewards (rebates over $600)</td>
-                      <td>Jan 31, 2026</td>
-                      <td><span class="badge badge-green">Available</span></td>
-                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
-                    </tr>
-                    <tr>
-                      <td><strong>2025</strong></td>
-                      <td>Year-End Summary</td>
-                      <td>Interest paid, fees, and rewards (informational)</td>
-                      <td>Jan 31, 2026</td>
-                      <td><span class="badge badge-green">Available</span></td>
-                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
-                    </tr>
-                    <tr>
-                      <td><strong>2024</strong></td>
-                      <td>1099-MISC</td>
-                      <td>Brokerage rewards (rebates over $600)</td>
-                      <td>Jan 31, 2025</td>
-                      <td><span class="badge badge-green">Available</span></td>
-                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
-                    </tr>
-                    <tr>
-                      <td><strong>2024</strong></td>
-                      <td>Year-End Summary</td>
-                      <td>Interest paid, fees, and rewards (informational)</td>
-                      <td>Jan 31, 2025</td>
-                      <td><span class="badge badge-green">Available</span></td>
-                      <td><button class="btn btn-outline btn-sm">Download PDF</button></td>
-                    </tr>
-                    <tr>
-                      <td><strong>2026</strong></td>
-                      <td>1099-MISC</td>
-                      <td>Pending year-end</td>
-                      <td>—</td>
-                      <td><span class="badge badge-yellow">Available Jan 31, 2027</span></td>
-                      <td><button class="btn btn-outline btn-sm" disabled title="Available after year-end">Download PDF</button></td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            <p style="margin-top:14px; color: var(--muted); font-size: 12px; line-height: 1.5">
-              Brokerage rewards are reported as a rebate on card spend and are generally not taxable income, but a 1099-MISC is issued when annual rewards exceed the IRS reporting threshold ($600). Investment gains in the linked brokerage account are reported separately on the broker's 1099-B / 1099-DIV / 1099-INT forms. Consult a tax professional for advice specific to your situation.
-            </p>
-          </div><!-- /tax-docs tab -->
-
-        </div><!-- /credit-cards -->
 
         <div x-show="page==='wallet-address'">
           <div class="page-title-block">

@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="460" height="140" viewBox="0 0 460 140" role="img" aria-label="Broke 2 Brokerage">
+  <title>Broke 2 Brokerage</title>
+
+  <!-- Background -->
+  <rect width="460" height="140" fill="#0a0014" rx="8"/>
+
+  <!-- Tinted badge frame around chain icon -->
+  <rect x="20" y="38" width="64" height="64" rx="14" fill="#8b5cf6" fill-opacity="0.12" stroke="#8b5cf6" stroke-width="1.5" opacity="0.7"/>
+
+  <!-- Animated chain icon -->
+  <g transform="translate(28,46) scale(2)">
+    <g fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    </g>
+
+    <!-- Cutout gap behind sliver -->
+    <path d="M17.54 13.54l3-3" stroke="#0a0014" stroke-width="3" stroke-linecap="round"/>
+
+    <!-- Animated purple sliver: swings out and clicks shut -->
+    <path d="M17.54 13.54l3-3" stroke="#a855f7" stroke-width="2.5" stroke-linecap="round" fill="none">
+      <animateTransform attributeName="transform" type="rotate"
+        values="0 17.54 13.54;30 17.54 13.54;30 17.54 13.54;0 17.54 13.54;0 17.54 13.54"
+        keyTimes="0;0.35;0.5;0.85;1"
+        keySplines="0.4 0 0.6 1;0 0 1 1;0.4 0 0.6 1;0 0 1 1"
+        calcMode="spline" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="stroke"
+        values="#a855f7;#a855f7;#a855f7;#e9d5ff;#a855f7;#a855f7"
+        keyTimes="0;0.5;0.84;0.87;0.95;1" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-width"
+        values="2.5;2.5;2.5;3.5;2.5;2.5"
+        keyTimes="0;0.5;0.84;0.87;0.95;1" dur="2.5s" repeatCount="indefinite"/>
+    </path>
+
+    <!-- Click effect: expanding ring 1 -->
+    <circle cx="19" cy="12" r="0.5" fill="none" stroke="#c4b5fd" stroke-width="0.4" opacity="0">
+      <animate attributeName="r" values="0.5;0.5;4.5;0.5"
+        keyTimes="0;0.84;0.95;0.96" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0;0.9;0;0"
+        keyTimes="0;0.84;0.86;0.95;1" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Click effect: expanding ring 2 -->
+    <circle cx="19" cy="12" r="0.5" fill="none" stroke="#a78bfa" stroke-width="0.3" opacity="0">
+      <animate attributeName="r" values="0.5;0.5;6;0.5"
+        keyTimes="0;0.86;0.99;1" dur="2.5s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0;0;0.7;0;0"
+        keyTimes="0;0.86;0.88;0.99;1" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Click effect: spark burst lines -->
+    <g opacity="0">
+      <line x1="19" y1="12" x2="19" y2="9" stroke="#e9d5ff" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="19" y1="12" x2="22" y2="12" stroke="#e9d5ff" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="19" y1="12" x2="19" y2="15" stroke="#e9d5ff" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="19" y1="12" x2="16" y2="12" stroke="#e9d5ff" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="19" y1="12" x2="21.1" y2="9.9" stroke="#e9d5ff" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="19" y1="12" x2="21.1" y2="14.1" stroke="#e9d5ff" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="19" y1="12" x2="16.9" y2="14.1" stroke="#e9d5ff" stroke-width="0.5" stroke-linecap="round"/>
+      <line x1="19" y1="12" x2="16.9" y2="9.9" stroke="#e9d5ff" stroke-width="0.5" stroke-linecap="round"/>
+      <animate attributeName="opacity" values="0;0;1;0;0"
+        keyTimes="0;0.84;0.86;0.92;1" dur="2.5s" repeatCount="indefinite"/>
+    </g>
+  </g>
+
+  <!-- Wordmark -->
+  <text x="112" y="82" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="40" font-weight="500" fill="#ffffff" letter-spacing="-0.5">broke</text>
+  <text x="222" y="82" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="40" font-weight="300" fill="#a855f7" font-style="italic">2</text>
+  <text x="246" y="82" font-family="Inter, system-ui, -apple-system, sans-serif" font-size="40" font-weight="500" fill="#ffffff" letter-spacing="-0.5">Brokerage</text>
+</svg>

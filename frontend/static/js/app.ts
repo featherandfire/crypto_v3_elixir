@@ -414,6 +414,9 @@ function humanizeAuthError(err: unknown): string {
 }
 
 window.loginApp = () => ({
+  // 'landing' shows the public marketing page; 'auth' shows the
+  // sign-in / register form. CTAs on the landing page flip this.
+  view: 'landing' as 'landing' | 'auth',
   tab: 'login' as 'login' | 'register',
   username: '', email: '', password: '',
   loading: false, error: '',
@@ -580,7 +583,7 @@ window.loginApp = () => ({
 
 // ── Dashboard component ─────────────────────────────────────────────────────
 
-const VALID_PAGES = ['portfolios', 'resources', 'marketplace', 'platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds', 'wallet-tutorial', 'market-extra', 'brokerage', 'holdings', 'contact-us', 'credit-cards'];
+const VALID_PAGES = ['portfolios', 'resources', 'marketplace', 'platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds', 'wallet-tutorial', 'market-extra', 'brokerage', 'holdings', 'contact-us'];
 
 // Editorial — use real, well-known addresses (e.g. Satoshi's) so readers can verify externally.
 type ChainAddressFormat = {
@@ -2407,7 +2410,6 @@ window.dashApp = () => ({
   page: restoredPage,
   cryptoOpen: ['portfolios', 'resources', 'marketplace', 'platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds', 'wallet-tutorial'].includes(restoredPage),
   traditionalOpen: ['brokerage', 'holdings', 'contact-us'].includes(restoredPage),
-  creditCardsOpen: ['credit-cards'].includes(restoredPage),
   currentTutorialWallet: '' as string,
   wallets101: WALLETS_101,
   chainAddressFormats: CHAIN_ADDRESS_FORMATS,
@@ -2455,84 +2457,6 @@ window.dashApp = () => ({
   contactSubmitting: false,
   contactError: null as string | null,
   contactSent: false,
-  // Credit Cards dashboard — placeholder values until a real card-account
-  // integration is wired in (Plaid Liabilities, MX, Akoya, etc.).
-  creditCardAccount: {
-    card_number: '4147 8398 2461 7234',
-    current_balance: 1842.37,
-    credit_limit: 8500,
-    statement_balance: 1284.55,
-    minimum_payment: 35,
-    next_payment_due: '2026-05-25',
-    apr: 21.99,
-    // Year-to-date payment breakdown.
-    principal_paid: 4820.00,  // money that reduced the balance
-    interest_paid: 18.50,     // penalty interest still owed to bank (late fees, etc.)
-  },
-  cardNumberVisible: false,
-  paymentModalOpen: false,
-  paymentAmount: '',
-  // Credit Cards page tab.
-  creditCardTab: 'account' as 'account' | 'statements' | 'claims' | 'terms' | 'tax-docs',
-  // Chart instances for the credit-card right-side doughnuts.
-  creditCardChart: null as Chart | null,
-  creditCardPaymentsChart: null as Chart | null,
-  // Credit Card transactions table sort.
-  ccSortBy: '' as '' | 'date' | 'merchant' | 'category' | 'amount' | 'brokerage' | 'status',
-  ccSortDir: 'asc' as 'asc' | 'desc',
-  // Credit Card transactions pagination.
-  ccPage: 1,
-  ccPageSize: 20,
-  // Posted transactions for the credit card account. Placeholder data
-  // until a real card-transaction feed (Plaid Transactions, MX, etc.)
-  // is wired in.
-  creditCardTransactions: [
-    { date: '2026-05-01', merchant: 'Trader Joe’s', location: 'WDM IA', txn_id: '2413123A20127FYZ4',           category: 'Groceries',     amount: 84.32,   status: 'pending' },
-    { date: '2026-04-30', merchant: 'Shell', location: 'AMES IA', txn_id: '2413124B30298GZW8',                  category: 'Gas',           amount: 52.18,   status: 'pending' },
-    { date: '2026-04-29', merchant: 'Amazon.com', location: 'SEATTLE WA', txn_id: '2413125C40365HXP2',             category: 'Online',        amount: 127.45,  status: 'pending' },
-    { date: '2026-04-28', merchant: 'Starbucks', location: 'DES MOINES IA', txn_id: '2413126D50492JKL9',              category: 'Dining',        amount: 6.75,    status: 'posted' },
-    { date: '2026-04-27', merchant: 'United Airlines', location: 'CHICAGO IL', txn_id: '2413127E60524MNB1',        category: 'Travel',        amount: 412.00,  status: 'posted' },
-    { date: '2026-04-26', merchant: 'Chipotle', location: 'DES MOINES IA', txn_id: '2413128F70635RTV5',               category: 'Dining',        amount: 14.92,   status: 'posted' },
-    { date: '2026-04-25', merchant: 'ATM Withdrawal', location: 'WDM IA', txn_id: '2413129G80741WXY3',         category: 'Cash Advance',  amount: 200.00,  status: 'posted' },
-    { date: '2026-04-24', merchant: 'Costco', location: 'URBANDALE IA', txn_id: '2413130H90852QZD7',                 category: 'Groceries',     amount: 218.67,  status: 'posted' },
-    { date: '2026-04-23', merchant: 'Netflix', location: 'LOS GATOS CA', txn_id: '2413131J01963BHC4',                category: 'Subscriptions', amount: 22.99,   status: 'posted' },
-    { date: '2026-04-22', merchant: 'Marriott Times Square', location: 'NEW YORK NY', txn_id: '2413132K12074VFE6',  category: 'Travel',        amount: 389.50,  status: 'posted' },
-    { date: '2026-04-21', merchant: 'AMC Theatres', location: 'DES MOINES IA', txn_id: '2413133L23185KSP8',           category: 'Entertainment', amount: 28.40,   status: 'posted' },
-    { date: '2026-04-19', merchant: 'Spotify', location: 'NEW YORK NY', txn_id: '2413134M34296LJD2',                category: 'Subscriptions', amount: 11.99,   status: 'posted' },
-    { date: '2026-04-18', merchant: 'Whole Foods', location: 'URBANDALE IA', txn_id: '2413135N45307TGH9',            category: 'Groceries',     amount: 64.21,   status: 'posted' },
-    { date: '2026-04-17', merchant: 'Verizon Wireless', location: 'BASKING RIDGE NJ', txn_id: '2413136P56418RDF1',       category: 'Utilities',     amount: 89.99,   status: 'posted' },
-    { date: '2026-04-16', merchant: 'Uber', location: 'SAN FRANCISCO CA', txn_id: '2413137Q67529BVN5',                   category: 'Transit',       amount: 23.40,   status: 'posted' },
-    { date: '2026-04-15', merchant: 'CVS Pharmacy', location: 'DES MOINES IA', txn_id: '2413138R78630MKC3',           category: 'Health',        amount: 18.65,   status: 'posted' },
-    { date: '2026-04-14', merchant: 'Online ACH Payment', location: '', txn_id: '7414718H66XSL8LAB',                  category: 'Payment',       amount: -2103.42, status: 'posted' },
-    { date: '2026-04-14', merchant: 'Comcast Xfinity', location: 'PHILADELPHIA PA', txn_id: '2413139S89741JFR7',        category: 'Utilities',     amount: 119.99,  status: 'posted' },
-    { date: '2026-04-13', merchant: 'DoorDash', location: 'SAN FRANCISCO CA', txn_id: '2413140T90852HZE2',               category: 'Dining',        amount: 32.18,   status: 'posted' },
-    { date: '2026-04-12', merchant: 'Costco', location: 'URBANDALE IA', txn_id: '2413141V01963QNW4',                 category: 'Groceries',     amount: 187.43,  status: 'posted' },
-    { date: '2026-04-11', merchant: 'Patagonia', location: 'VENTURA CA', txn_id: '2413142W12074LRS6',              category: 'Online',        amount: 245.00,  status: 'posted' },
-    { date: '2026-04-10', merchant: 'Apple Store', location: 'CUPERTINO CA', txn_id: '2413143X23185PCA8',            category: 'Online',        amount: 1299.00, status: 'posted' },
-    { date: '2026-04-09', merchant: 'Shell', location: 'AMES IA', txn_id: '2413144Y34296DBT1',                  category: 'Gas',           amount: 47.82,   status: 'posted' },
-    { date: '2026-04-07', merchant: 'Microsoft 365', location: 'REDMOND WA', txn_id: '2413145Z45307GFH3',          category: 'Subscriptions', amount: 9.99,    status: 'posted' },
-    { date: '2026-04-06', merchant: 'Target', location: 'MINNEAPOLIS MN', txn_id: '2413146A56418KLM5',                 category: 'Online',        amount: 84.51,   status: 'posted' },
-    { date: '2026-04-05', merchant: 'Sephora', location: 'SAN FRANCISCO CA', txn_id: '2413147B67529WPQ9',                category: 'Online',        amount: 67.20,   status: 'posted' },
-    { date: '2026-04-03', merchant: 'Whole Foods', location: 'URBANDALE IA', txn_id: '2413148C78630RFE2',            category: 'Groceries',     amount: 92.18,   status: 'posted' },
-    { date: '2026-04-01', merchant: 'AAA Insurance', location: 'DES MOINES IA', txn_id: '2413149D89741HJK4',          category: 'Insurance',     amount: 142.50,  status: 'posted' },
-    { date: '2026-03-31', merchant: 'Lyft', location: 'SAN FRANCISCO CA', txn_id: '2413150E90852MNB6',                   category: 'Transit',       amount: 18.75,   status: 'posted' },
-    { date: '2026-03-29', merchant: 'Costco Gas', location: 'URBANDALE IA', txn_id: '2413151F01963XYZ8',             category: 'Gas',           amount: 51.04,   status: 'posted' },
-    { date: '2026-03-28', merchant: 'Nike', location: 'BEAVERTON OR', txn_id: '2413152G12074QWE1',                   category: 'Online',        amount: 134.99,  status: 'posted' },
-    { date: '2026-03-27', merchant: 'Disney+', location: 'BURBANK CA', txn_id: '2413153H23185RTY3',                category: 'Subscriptions', amount: 13.99,   status: 'posted' },
-    { date: '2026-03-26', merchant: 'Hilton Resort', location: 'ORLANDO FL', txn_id: '2413154J34296UIO5',          category: 'Travel',        amount: 612.00,  status: 'posted' },
-    { date: '2026-03-24', merchant: 'Olive Garden', location: 'DES MOINES IA', txn_id: '2413155K45307ASD7',           category: 'Dining',        amount: 78.40,   status: 'posted' },
-    { date: '2026-03-23', merchant: 'Home Depot', location: 'DES MOINES IA', txn_id: '2413156L56418FGH9',             category: 'Online',        amount: 312.45,  status: 'posted' },
-    { date: '2026-03-21', merchant: 'ATM Withdrawal', location: 'WDM IA', txn_id: '2413157M67529JKL1',         category: 'Cash Advance',  amount: 300.00,  status: 'posted' },
-    { date: '2026-03-20', merchant: 'Amazon.com', location: 'SEATTLE WA', txn_id: '2413158N78630ZXC2',             category: 'Online',        amount: 76.83,   status: 'posted' },
-    { date: '2026-03-18', merchant: 'Stop & Shop', location: 'QUINCY MA', txn_id: '2413159P89741VBN4',            category: 'Groceries',     amount: 112.55,  status: 'posted' },
-    { date: '2026-03-16', merchant: 'GrubHub', location: 'CHICAGO IL', txn_id: '2413160Q90852MJK6',                category: 'Dining',        amount: 28.92,   status: 'posted' },
-    { date: '2026-03-14', merchant: 'Adobe Creative Cloud', location: 'SAN JOSE CA', txn_id: '2413161R01963HGF8',   category: 'Subscriptions', amount: 54.99,   status: 'posted' },
-    { date: '2026-03-12', merchant: 'Trader Joe’s', location: 'WDM IA', txn_id: '2413162S12074DSA1',           category: 'Groceries',     amount: 71.34,   status: 'posted' },
-    { date: '2026-03-10', merchant: 'Apple Music', location: 'CUPERTINO CA', txn_id: '2413163T23185PRT3',            category: 'Subscriptions', amount: 10.99,   status: 'posted' },
-    { date: '2026-03-08', merchant: '7-Eleven', location: 'DES MOINES IA', txn_id: '2413164V34296LKJ5',               category: 'Groceries',     amount: 12.50,   status: 'posted' },
-    { date: '2026-03-06', merchant: 'Verizon Wireless', location: 'BASKING RIDGE NJ', txn_id: '2413165W45307ZXC7',       category: 'Utilities',     amount: 89.99,   status: 'posted' },
-    { date: '2026-03-05', merchant: 'Costco', location: 'URBANDALE IA', txn_id: '2413166X56418QWE9',                 category: 'Groceries',     amount: 234.66,  status: 'posted' },
-  ],
   // ── Brokerage portfolios ──────────────────────────────────────────────
   // User-defined buckets for grouping stock positions. One Alpaca paper
   // account underlies everything, but the UI lets users tag/filter by
@@ -2579,10 +2503,8 @@ window.dashApp = () => ({
   allocationEditOpen: false,
   allocationEditSymbol: '',
   allocationEditValues: {} as Record<string, string>,
-  // Per-portfolio reward deposits (persisted). 'main' (and 'all') derive
-  // from totalBrokerageContribution() — that's the legacy aggregate.
-  // Newly-created portfolios start at $0 until rewards are explicitly
-  // routed into them.
+  // Per-portfolio reward deposits (persisted). Newly-created portfolios
+  // start at $0 until rewards are explicitly routed into them.
   brokerageRewardsByPortfolio: ((): Record<string, number> => {
     try {
       const v = localStorage.getItem('brokerageRewardsByPortfolio');
@@ -2675,6 +2597,7 @@ window.dashApp = () => ({
   // 'stocks' shows the curated stock categories; 'etfs' shows ETF baskets.
   screenerView: 'stocks' as 'stocks' | 'etfs',
   screenerCategory: 'mag-7' as string,
+  screenerSearch: '',
   filterSearchText: '',
   // Sub-filter (tier-2). Set when user clicks a sub-chip after selecting
   // a primary chip with sub-filters defined in FILTER_SUBCHIPS.
@@ -3591,12 +3514,8 @@ window.dashApp = () => ({
     (Alpine.store('toast') as ToastStore).show(`${this.fmtUSD(amt)} transferred to ${portfolioName}`, 'success');
   },
 
-  // Rewards deposited into the active portfolio. 'main' and 'all' inherit
-  // the historical total from credit-card transactions; new portfolios
-  // start at $0 until rewards are routed there.
   rewardsForActivePortfolio(this: any) {
     const id = this.activeBrokeragePortfolioId;
-    if (id === 'all' || id === 'main') return this.totalBrokerageContribution();
     return this.brokerageRewardsByPortfolio[id] || 0;
   },
 
@@ -4383,11 +4302,17 @@ window.dashApp = () => ({
   },
 
   filterScreenerStocks(this: any, cat: any) {
+    const q = (this.screenerSearch || '').trim().toLowerCase();
+    const matchSearch = (s: any) => {
+      if (!q) return true;
+      return (s.symbol || '').toLowerCase().includes(q) || (s.name || '').toLowerCase().includes(q);
+    };
     if (cat.id === 'low-price-dividend') {
       const divRange = this.lowPriceRange;
       const priceRange = this.lowSharePrice;
       const yieldRange = this.lowDivYield;
       return cat.stocks
+        .filter(matchSearch)
         .filter((s: any) => {
           const q = this.screenerQuotes[s.symbol];
           const d = this.screenerDividends[s.symbol];
@@ -4432,7 +4357,7 @@ window.dashApp = () => ({
     // = annual dividend / current price. Symbols without yield data sink
     // to the bottom so the top of the list always shows real picks.
     if (cat.id === 'dividend' && this.dividendSort === 'yield') {
-      return [...stocks].sort((a: any, b: any) => {
+      return [...stocks].filter(matchSearch).sort((a: any, b: any) => {
         const pa = this.screenerQuotes[a.symbol]?.price;
         const pb = this.screenerQuotes[b.symbol]?.price;
         const da = this.screenerDividends[a.symbol]?.annual_rate;
@@ -4446,7 +4371,7 @@ window.dashApp = () => ({
     // All other tabs — sort cheapest → most expensive. Symbols without a
     // loaded price sink to the bottom so the visible top of the list is
     // always the cheapest available picks.
-    return [...stocks].sort((a: any, b: any) => {
+    return [...stocks].filter(matchSearch).sort((a: any, b: any) => {
       const pa = this.screenerQuotes[a.symbol]?.price;
       const pb = this.screenerQuotes[b.symbol]?.price;
       const va = typeof pa === 'number' && pa > 0 ? pa : Number.POSITIVE_INFINITY;
@@ -4773,7 +4698,7 @@ window.dashApp = () => ({
     selector: string;
     type: 'doughnut' | 'pie';
     breakdown: { labels: string[]; values: number[]; symbolsByBucket: Record<string, string[]> };
-    state: 'holdingsChart' | 'holdingsDividendChart' | 'holdingsPriceChart' | 'creditCardChart' | 'creditCardPaymentsChart';
+    state: 'holdingsChart' | 'holdingsDividendChart' | 'holdingsPriceChart';
     valueSuffix?: string;
     colors?: string[];
   }) {
@@ -4903,71 +4828,6 @@ window.dashApp = () => ({
     });
   },
 
-  // Bucket credit-card transactions by category and sum amounts.
-  creditCardCategoryBreakdown(this: any) {
-    const buckets: Record<string, number> = {};
-    for (const t of this.creditCardTransactions || []) {
-      const cat = t.category || 'Other';
-      const amt = parseFloat(t.amount) || 0;
-      if (amt <= 0) continue;
-      buckets[cat] = (buckets[cat] || 0) + amt;
-    }
-    const entries = Object.entries(buckets).sort((a: any, b: any) => b[1] - a[1]);
-    return {
-      labels: entries.map(([k]) => k),
-      values: entries.map(([_, v]) => v),
-      symbolsByBucket: {},
-    };
-  },
-
-  renderCreditCardCategoryChart(this: any) {
-    this.renderHoldingsBreakdownChart({
-      selector: 'canvas[data-cc-category-chart]',
-      type: 'doughnut',
-      breakdown: this.creditCardCategoryBreakdown(),
-      state: 'creditCardChart',
-      // Same saturated chip-palette hues used by the Holdings doughnuts
-      // in Color Palette mode — vivid 500/600-level colors instead of
-      // the prior pastel 400-level set.
-      colors: [
-        '#16a34a', '#0ea5e9', '#f59e0b', '#ec4899', '#7c3aed', '#ef4444',
-        '#eab308', '#0891b2', '#ea580c', '#5b21b6', '#10b981', '#db2777',
-        '#2563eb', '#c026d3', '#0d9488', '#dc2626', '#84cc16', '#4f46e5',
-      ],
-    });
-  },
-
-  // Where YTD payments went — principal off the balance vs. residual
-  // interest paid to the bank vs. interest redirected into the brokerage.
-  paymentsBreakdown(this: any) {
-    const principal = parseFloat(this.creditCardAccount.principal_paid) || 0;
-    const interest = parseFloat(this.creditCardAccount.interest_paid) || 0;
-    const brokerage = this.totalBrokerageContribution();
-    const entries: Array<[string, number]> = [
-      ['Balance Paid', principal],
-      ['Interest Paid', interest],
-      ['Brokerage Deposits', brokerage],
-    ].filter(([_, v]) => v > 0) as Array<[string, number]>;
-    return {
-      labels: entries.map(([k]) => k),
-      values: entries.map(([_, v]) => v),
-      symbolsByBucket: {},
-    };
-  },
-
-  renderCreditCardPaymentsChart(this: any) {
-    this.renderHoldingsBreakdownChart({
-      selector: 'canvas[data-cc-payments-chart]',
-      type: 'doughnut',
-      breakdown: this.paymentsBreakdown(),
-      state: 'creditCardPaymentsChart',
-      // Saturated chip-palette equivalents — emerald for principal (good),
-      // red-600 for interest (lost to the bank), violet-600 for brokerage
-      // (the win condition of this card).
-      colors: ['#10b981', '#dc2626', '#7c3aed'],
-    });
-  },
-
   // Each price tier inherits the color of its dominant *holding* —
   // either by its industry chip (color palette) or by the dominant
   // single ticker's logo-sampled color (logo palette). So a tier
@@ -5079,64 +4939,6 @@ window.dashApp = () => ({
       const ka = keyFor(a), kb = keyFor(b);
       return ka < kb ? -dir : ka > kb ? dir : 0;
     });
-  },
-
-  // 30-day-carried interest on a transaction at the account APR — what
-  // a normal card sends to the bank, this card routes to the brokerage.
-  brokerageContribution(this: any, t: any) {
-    const amt = parseFloat(t.amount) || 0;
-    if (amt <= 0) return 0;  // payments and credits don't generate interest
-    const apr = parseFloat(this.creditCardAccount.apr) || 0;
-    return amt * (apr / 100) * (30 / 365);
-  },
-
-  // Sum across all transactions — what's been transferred to the brokerage
-  // account so far this period. Powers the Rewards Earned stat card.
-  totalBrokerageContribution(this: any) {
-    return (this.creditCardTransactions || []).reduce(
-      (sum: number, t: any) => sum + this.brokerageContribution(t),
-      0
-    );
-  },
-
-  sortedCcTransactions(this: any) {
-    if (!this.ccSortBy) return this.creditCardTransactions;
-    const dir = this.ccSortDir === 'asc' ? 1 : -1;
-    const keyFor = (t: any) => {
-      switch (this.ccSortBy) {
-        case 'amount':    return t.amount;
-        case 'brokerage': return this.brokerageContribution(t);
-        case 'date':      return t.date;          // ISO string sorts chronologically
-        default:          return (t[this.ccSortBy] || '').toString().toLowerCase();
-      }
-    };
-    return [...this.creditCardTransactions].sort((a: any, b: any) => {
-      const ka = keyFor(a), kb = keyFor(b);
-      return ka < kb ? -dir : ka > kb ? dir : 0;
-    });
-  },
-
-  cycleCcSort(this: any, field: 'date' | 'merchant' | 'category' | 'amount' | 'brokerage' | 'status') {
-    if (this.ccSortBy !== field) {
-      this.ccSortBy = field;
-      this.ccSortDir = 'asc';
-    } else if (this.ccSortDir === 'asc') {
-      this.ccSortDir = 'desc';
-    } else {
-      this.ccSortBy = '';
-      this.ccSortDir = 'asc';
-    }
-    this.ccPage = 1;
-  },
-
-  ccPageCount(this: any) {
-    return Math.max(1, Math.ceil(this.creditCardTransactions.length / this.ccPageSize));
-  },
-
-  pagedCcTransactions(this: any) {
-    const all = this.sortedCcTransactions();
-    const start = (this.ccPage - 1) * this.ccPageSize;
-    return all.slice(start, start + this.ccPageSize);
   },
 
   cycleHoldingsSort(this: any, field: 'symbol' | 'name' | 'industry' | 'side' | 'qty' | 'avg' | 'current' | 'mv' | 'pl' | 'div') {
