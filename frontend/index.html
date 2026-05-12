@@ -786,6 +786,11 @@ animate();
   </div>
 
   <nav class="sidebar-nav">
+    <!-- Crypto section: hidden in v1 while we focus on the brokerage product.
+         All routes/components still exist; flip `showCrypto = true` in app.ts
+         (or via localStorage in DevTools) to restore. -->
+    <template x-if="showCrypto">
+    <div>
     <div class="nav-item nav-item-parent" :class="{active: ['portfolios','resources','marketplace','wallet','wallet-address','fund-account','pick-a-coin','buy-a-coin','transaction-hash','exchange-funds','platforms'].includes(page), expanded: cryptoOpen}" @click="page='portfolios'; cryptoOpen = true">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042.348-1.97M7.48 20.364l3.126-17.727"/></svg>
       <span class="nav-item-label">Crypto</span>
@@ -833,7 +838,9 @@ animate();
         Exchange funds
       </div>
     </div>
-    <div class="nav-item nav-item-parent" :class="{active: ['brokerage','holdings','contact-us'].includes(page), expanded: traditionalOpen}" @click="page='brokerage'; traditionalOpen = true">
+    </div>
+    </template>
+    <div class="nav-item nav-item-parent" :class="{active: ['brokerage','holdings','contact-us','account-setup'].includes(page), expanded: traditionalOpen}" @click="page='brokerage'; traditionalOpen = true">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/><path d="M3 10h18"/></svg>
       <span class="nav-item-label">Investments</span>
       <svg class="nav-chevron" :class="{open: traditionalOpen}" @click.stop="traditionalOpen = !traditionalOpen" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
@@ -847,12 +854,25 @@ animate();
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
         Holdings
       </div>
+      <div class="nav-item nav-item-child" :class="{active: page==='account-setup'}" @click="page='account-setup'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Account
+      </div>
       <div class="nav-item nav-item-child" :class="{active: page==='contact-us'}" @click="page='contact-us'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
         Contact Us
       </div>
     </div>
 
+    <div class="nav-item nav-item-parent" :class="{active: page==='investor-memo'}" @click="page='investor-memo'; memoSlide = 1">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" x2="8" y1="13" y2="13"/><line x1="16" x2="8" y1="17" y2="17"/><line x1="10" x2="8" y1="9" y2="9"/></svg>
+      <span class="nav-item-label">Investor Memo</span>
+    </div>
+
+    <div class="nav-item nav-item-parent" :class="{active: page==='personas'}" @click="page='personas'">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span class="nav-item-label">Personas</span>
+    </div>
   </nav>
 
   <div class="sidebar-footer">
@@ -2534,6 +2554,13 @@ animate();
             <button type="button" class="page-back-btn icon-only" @click="loadBrokerage()" title="Refresh" aria-label="Refresh" :disabled="loadingBrokerage">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="loadingBrokerage ? 'animation: spin 1s linear infinite' : ''"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             </button>
+            <div x-show="alpacaAccount" class="wishlist-btn-row">
+              <button type="button" class="btn btn-outline wishlist-btn" @click="wishListOpen = true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
+                Wish List
+                <span x-show="wishList.length" class="wishlist-count" x-text="wishList.length"></span>
+              </button>
+            </div>
           </div>
 
           <div x-show="brokerageError" class="card" style="border-color: rgba(255,51,102,0.4); padding: 14px 18px; color: #ff8a8a; margin-bottom: 18px">
@@ -2545,6 +2572,10 @@ animate();
           </div>
 
           <div x-show="alpacaAccount" class="brokerage-stats">
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Portfolio</div>
+              <div class="brokerage-stat-value" x-text="activeBrokeragePortfolioId === 'all' ? 'All Portfolios' : (brokeragePortfolios.find(p => p.id === activeBrokeragePortfolioId)?.name || '—')"></div>
+            </div>
             <div class="brokerage-stat">
               <div class="brokerage-stat-label">Total Amount Deposited</div>
               <div class="brokerage-stat-value" x-text="fmtUSD(depositedForActivePortfolio())"></div>
@@ -2568,49 +2599,80 @@ animate();
                 </div>
               </template>
             </div>
+            <!-- Rewards Deposited — hidden for now; bring back when card-rewards routing is live.
             <div class="brokerage-stat">
               <div class="brokerage-stat-label">Rewards Deposited</div>
               <div class="brokerage-stat-value pos" x-text="fmtUSD(rewardsForActivePortfolio())"></div>
               <div class="brokerage-stat-pct">from credit card</div>
             </div>
-          </div>
-
-          <div x-show="alpacaAccount" class="wishlist-btn-row">
-            <button type="button" class="btn btn-outline btn-sm wishlist-btn" @click="wishListOpen = true">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
-              Wish List
-              <span x-show="wishList.length" class="wishlist-count" x-text="wishList.length"></span>
-            </button>
+            -->
           </div>
 
           <div x-show="alpacaAccount" class="brokerage-meta">
             <span>Account <code x-text="alpacaAccount?.account_number"></code></span>
             <span>Status <code x-text="alpacaAccount?.status"></code></span>
-            <button type="button" class="btn btn-sm btn-outline brokerage-add-funds" @click="addFundsOpen = true">
+            <button type="button" class="btn btn-sm btn-outline brokerage-add-funds" @click="canDeposit() ? addFundsOpen = true : page = 'account-setup'">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add Funds
             </button>
+            <button type="button" class="portfolio-chip portfolio-chip-add" @click="newBrokeragePortfolioOpen = true">+ New Portfolio</button>
             <span x-show="alpacaAccount?.pattern_day_trader" style="color:#ff8a8a">PDT flagged</span>
           </div>
 
-          <!-- Add Funds modal — payment API integration is a TODO. -->
+          <!-- Add Funds modal — Broker API stub. POSTs deposit intent to
+               /api/broker/funding/deposits; live Alpaca Broker call slots in
+               server-side once partner approval lands. -->
           <div class="modal-backdrop" x-show="addFundsOpen" @click.self="addFundsOpen = false" x-cloak>
             <div class="modal">
               <button class="modal-close" @click="addFundsOpen = false" type="button">&times;</button>
               <div class="modal-title">Add Funds</div>
               <p style="margin:0 0 14px; color: var(--muted); font-size: 13px">
-                Funds always land in <strong style="color:var(--text)">Main Account</strong>. Move money to other portfolios via Transfer once they're created.
+                Funds land in your <strong style="color:var(--text)">main portfolio</strong> via Alpaca's ACH rails. Sandbox mode: real Alpaca transfer, no real money. ACH limit is one transfer per day per account.
               </p>
+
+              <div class="form-group">
+                <label class="form-label">Source bank</label>
+                <div class="add-funds-bank">
+                  <span class="add-funds-bank-dot"></span>
+                  <span x-text="addFundsBankLabel"></span>
+                  <span class="add-funds-bank-tag">Linked · stub</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Method</label>
+                <div class="add-funds-methods">
+                  <button type="button" class="add-funds-method" :class="{active: addFundsMethod === 'ach'}" @click="addFundsMethod = 'ach'">
+                    <span class="add-funds-method-name">ACH</span>
+                    <span class="add-funds-method-meta">1–3 business days · free</span>
+                  </button>
+                  <button type="button" class="add-funds-method" :class="{active: addFundsMethod === 'instant'}" @click="addFundsMethod = 'instant'">
+                    <span class="add-funds-method-name">Instant</span>
+                    <span class="add-funds-method-meta">≤ $1,000 · immediate</span>
+                  </button>
+                  <button type="button" class="add-funds-method" :class="{active: addFundsMethod === 'wire'}" @click="addFundsMethod = 'wire'">
+                    <span class="add-funds-method-name">Wire</span>
+                    <span class="add-funds-method-meta">Same-day · bank fees may apply</span>
+                  </button>
+                </div>
+              </div>
+
               <div class="form-group">
                 <label class="form-label">Amount (USD)</label>
                 <input class="form-input" type="number" min="0" step="0.01" x-model="addFundsAmount" placeholder="0.00" @keydown.enter="submitAddFunds()" />
               </div>
+
+              <p x-show="addFundsError" class="add-funds-error" x-text="addFundsError"></p>
               <p style="margin: 8px 0 0; color: var(--muted); font-size: 12px; font-style: italic">
-                Payment provider not yet connected — funds are tracked locally for now.
+                Sandbox connection live. Instant funding maps to ACH server-side, so it shares the same one-per-day limit. Failed transfers are recorded with the Alpaca error in the deposit row.
               </p>
+
               <div class="modal-actions">
-                <button type="button" class="btn btn-outline" @click="addFundsOpen = false">Cancel</button>
-                <button type="button" class="btn btn-primary" :disabled="!parseFloat(addFundsAmount) || parseFloat(addFundsAmount) <= 0" @click="submitAddFunds()">Add Funds</button>
+                <button type="button" class="btn btn-outline" @click="addFundsOpen = false" :disabled="addFundsSubmitting">Cancel</button>
+                <button type="button" class="btn btn-primary" :disabled="addFundsSubmitting || !parseFloat(addFundsAmount) || parseFloat(addFundsAmount) <= 0" @click="submitAddFunds()">
+                  <span x-show="!addFundsSubmitting">Initiate deposit</span>
+                  <span x-show="addFundsSubmitting">Submitting…</span>
+                </button>
               </div>
             </div>
           </div>
@@ -2658,7 +2720,7 @@ animate();
               </div>
               <div class="form-group">
                 <label class="form-label">Type</label>
-                <select class="form-input" x-model="orderForm.type">
+                <select class="form-input" x-model="orderForm.type" @change="if (orderForm.type === 'limit' && !orderForm.limit_price) { const p = Number(alpacaQuote?.price); if (p > 0) orderForm.limit_price = p.toFixed(2); }">
                   <option value="limit">Limit</option>
                   <option value="market">Market</option>
                 </select>
@@ -2762,18 +2824,40 @@ animate();
                     </div>
                     <div class="screener-start-card">
                       <div class="screener-start-step">02</div>
-                      <div class="screener-start-card-title">Read the badges</div>
-                      <p><span class="screener-start-pill gold">▲</span> green up-arrow = outperforming peers. <span class="screener-start-pill purple">▼</span> red down-arrow = underperforming. Risk tier badges (Conservative · Medium · Aggressive) show how volatile a fund has historically been.</p>
+                      <div class="screener-start-card-title">Review a test portfolio</div>
+                      <p>Review these starter portfolios — the goal is to start strategically. You don't have to be loaded, you just have to learn.</p>
+                      <a href="#" @click.prevent="page = 'starter-portfolio'" class="screener-start-thumb" title="Open the Starter Portfolio walkthrough">
+                        <img src="/static/img/starter_portfolio.png" alt="Starter portfolio dashboard preview" loading="lazy" @error="$el.style.display='none'" />
+                        <span class="screener-start-thumb-caption">View Starter Portfolio →</span>
+                      </a>
                     </div>
                     <div class="screener-start-card">
                       <div class="screener-start-step">03</div>
-                      <div class="screener-start-card-title">Build a wishlist before you buy</div>
-                      <p>Tap the <strong>★</strong> on any card to add it to your wishlist. Open the wishlist to see Buy First / Buy Last priorities and set quantities. Nothing is purchased until you confirm — the wishlist is a planning tool.</p>
+                      <div class="screener-start-card-title">
+                        <svg class="screener-start-star" width="16" height="16" viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
+                        Make a Wish List!
+                      </div>
+                      <p>Make a wishlist of the assets you wish to purchase later, and when dividends are deposited into your account they will be used to make your purchases.</p>
+                      <button type="button" class="btn btn-outline wishlist-btn screener-start-wishlist-btn" @click="wishListOpen = true">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
+                        Wish List
+                        <span x-show="wishList.length" class="wishlist-count" x-text="wishList.length"></span>
+                      </button>
                     </div>
                     <div class="screener-start-card">
                       <div class="screener-start-step">04</div>
                       <div class="screener-start-card-title">Use Filters to narrow the field</div>
-                      <p>The Filters tab lets you screen by share price (good for first-timers with smaller deposits), dividend frequency, and risk tier. Start narrow, find a few names you understand, then expand.</p>
+                      <p>Use the filter tabs to review the different types of investments you can purchase.</p>
+                    </div>
+                    <div class="screener-start-card">
+                      <div class="screener-start-step">05</div>
+                      <div class="screener-start-card-title">Make a purchase</div>
+                      <p>Once you've found a position you understand, use the order form to set your quantity and submit the trade. Start small — every purchase teaches you something the next one won't have to.</p>
+                    </div>
+                    <div class="screener-start-card">
+                      <div class="screener-start-step">06</div>
+                      <div class="screener-start-card-title">Hold and reinvest</div>
+                      <p>The hard part is doing nothing. Let dividends compound, ignore daily price noise, and revisit your holdings on your own schedule — not the market's.</p>
                     </div>
                   </div>
                   <div class="screener-start-foot">
@@ -3009,19 +3093,19 @@ animate();
           <h3 class="wallet101-section-heading" style="margin-top:24px">Recent orders</h3>
           <div class="screener-tabs" style="margin-bottom:10px">
             <button type="button" class="screener-tab" :class="{active: recentOrdersTab === 'active'}" @click="recentOrdersTab = 'active'">
-              Active <span style="opacity:0.6" x-text="`(${alpacaOrders.filter(o => ['new','accepted','pending_new','partially_filled','pending_cancel','pending_replace','replaced','held'].includes(o.status)).length})`"></span>
+              Active <span style="opacity:0.6" x-text="`(${myAlpacaOrders().filter(o => ['new','accepted','pending_new','partially_filled','pending_cancel','pending_replace','replaced','held'].includes(o.status)).length})`"></span>
             </button>
             <button type="button" class="screener-tab" :class="{active: recentOrdersTab === 'filled'}" @click="recentOrdersTab = 'filled'">
-              Filled <span style="opacity:0.6" x-text="`(${alpacaOrders.filter(o => o.status === 'filled' || o.status === 'partially_filled').length})`"></span>
+              Filled <span style="opacity:0.6" x-text="`(${myAlpacaOrders().filter(o => o.status === 'filled' || o.status === 'partially_filled').length})`"></span>
             </button>
             <button type="button" class="screener-tab" :class="{active: recentOrdersTab === 'expired'}" @click="recentOrdersTab = 'expired'">
-              Expired <span style="opacity:0.6" x-text="`(${alpacaOrders.filter(o => ['expired','canceled','rejected'].includes(o.status)).length})`"></span>
+              Expired <span style="opacity:0.6" x-text="`(${myAlpacaOrders().filter(o => ['expired','canceled','rejected'].includes(o.status)).length})`"></span>
             </button>
           </div>
-          <div x-show="alpacaOrders.length === 0 && !loadingBrokerage" class="card" style="padding: 22px; text-align: center; color: var(--muted)">
+          <div x-show="myAlpacaOrders().length === 0 && !loadingBrokerage" class="card" style="padding: 22px; text-align: center; color: var(--muted)">
             No orders yet.
           </div>
-          <div x-show="alpacaOrders.length && recentOrdersFiltered().length === 0" class="card" style="padding: 18px; text-align: center; color: var(--muted)">
+          <div x-show="myAlpacaOrders().length && recentOrdersFiltered().length === 0" class="card" style="padding: 18px; text-align: center; color: var(--muted)">
             No <span x-text="recentOrdersTab"></span> orders.
           </div>
           <div x-show="recentOrdersFiltered().length" class="card" style="padding: 0; overflow: hidden">
@@ -3046,10 +3130,10 @@ animate();
                     <tr>
                       <td><strong x-text="o.symbol"></strong></td>
                       <td>
-                        <template x-if="brokeragePortfolios.find(p => p.id === positionPortfolioMap[o.symbol])">
-                          <span class="portfolio-row-tag" :style="`color: ${brokeragePortfolios.find(p => p.id === positionPortfolioMap[o.symbol])?.color}; border-color: ${brokeragePortfolios.find(p => p.id === positionPortfolioMap[o.symbol])?.color}`" x-text="brokeragePortfolios.find(p => p.id === positionPortfolioMap[o.symbol])?.name"></span>
+                        <template x-if="primaryPortfolioFor(o.symbol)">
+                          <span class="portfolio-row-tag" :style="`color: ${primaryPortfolioFor(o.symbol)?.color}; border-color: ${primaryPortfolioFor(o.symbol)?.color}`" x-text="primaryPortfolioFor(o.symbol)?.name"></span>
                         </template>
-                        <span x-show="!brokeragePortfolios.find(p => p.id === positionPortfolioMap[o.symbol])" class="text-muted">—</span>
+                        <span x-show="!primaryPortfolioFor(o.symbol)" class="text-muted">—</span>
                       </td>
                       <td :class="o.side==='buy' ? 'pos' : 'neg'" x-text="o.side"></td>
                       <td x-text="o.side==='buy' ? 'Bid' : 'Ask'" :title="o.side==='buy' ? 'Buy → resting on the bid side of the order book' : 'Sell → resting on the ask side of the order book'"></td>
@@ -3071,23 +3155,32 @@ animate();
         </div><!-- /brokerage -->
 
         <div x-show="page==='holdings'">
-          <div class="page-title-block">
-            <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>Holdings</h2>
-            <p class="page-subtitle">My Portfolios</p>
-            <div class="coin-stack" x-show="filteredAlpacaPositions().length">
-              <template x-for="p in filteredAlpacaPositions()" :key="p.symbol">
-                <div class="coin-stack-wrap" style="cursor:default">
-                  <img class="coin-stack-icon"
-                       x-show="logoUrlFor(p.symbol)"
-                       :src="logoUrlFor(p.symbol, 96)"
-                       :alt="p.symbol"
-                       @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
-                  <div class="coin-stack-icon coin-stack-fallback"
-                       :style="logoUrlFor(p.symbol) ? 'display:none' : 'display:flex'"
-                       x-text="p.symbol.slice(0, 4)"></div>
-                  <span class="coin-stack-tip" x-text="p.symbol + ' · ' + p.qty + (Number(p.qty) === 1 ? ' share' : ' shares')"></span>
-                </div>
-              </template>
+          <div class="page-header-row">
+            <div class="page-title-block">
+              <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>Holdings</h2>
+              <p class="page-subtitle">My Portfolios</p>
+              <div class="coin-stack" x-show="filteredAlpacaPositions().length">
+                <template x-for="p in filteredAlpacaPositions()" :key="p.symbol">
+                  <div class="coin-stack-wrap" style="cursor:default">
+                    <img class="coin-stack-icon"
+                         x-show="logoUrlFor(p.symbol)"
+                         :src="logoUrlFor(p.symbol, 96)"
+                         :alt="p.symbol"
+                         @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
+                    <div class="coin-stack-icon coin-stack-fallback"
+                         :style="logoUrlFor(p.symbol) ? 'display:none' : 'display:flex'"
+                         x-text="p.symbol.slice(0, 4)"></div>
+                    <span class="coin-stack-tip" x-text="p.symbol + ' · ' + p.qty + (Number(p.qty) === 1 ? ' share' : ' shares')"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+            <div x-show="alpacaPositions.length" class="wishlist-btn-row">
+              <button type="button" class="btn btn-outline wishlist-btn" @click="wishListOpen = true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
+                Wish List
+                <span x-show="wishList.length" class="wishlist-count" x-text="wishList.length"></span>
+              </button>
             </div>
           </div>
 
@@ -3104,7 +3197,9 @@ animate();
               <span class="portfolio-chip-dot" style="background: #5c5280"></span>
               All
             </button>
-            <template x-for="p in brokeragePortfolios" :key="p.id">
+            <!-- Main Account chip hidden — chips render only non-main portfolios.
+                 To show all, change the filter to `p => true`. -->
+            <template x-for="p in brokeragePortfolios.filter(p => !p.is_main)" :key="p.id">
               <button type="button" class="portfolio-chip"
                       :class="{ active: activeBrokeragePortfolioId === p.id }"
                       :style="`--chip-color: ${p.color}`"
@@ -3116,9 +3211,7 @@ animate();
               </button>
             </template>
             <button type="button" class="portfolio-chip portfolio-chip-add" @click="newBrokeragePortfolioOpen = true">+ New Portfolio</button>
-            <button type="button" class="portfolio-chip portfolio-chip-add"
-                    x-show="activeBrokeragePortfolioId !== 'main' && activeBrokeragePortfolioId !== 'all'"
-                    @click="transferModalOpen = true">↔ Transfer from Main</button>
+            <button type="button" class="portfolio-chip portfolio-chip-add" @click="canDeposit() ? addFundsOpen = true : page = 'account-setup'">+ Add Funds</button>
           </div>
 
           <!-- Transfer modal — moves cash from Main → active portfolio. -->
@@ -3176,16 +3269,26 @@ animate();
 
           <div x-show="alpacaPositions.length" class="brokerage-stats">
             <div class="brokerage-stat">
-              <div class="brokerage-stat-label">Cash</div>
+              <div class="brokerage-stat-label" title="Total cash you've put into this account — Total Spent (cost basis of open positions) plus Available Balance (uninvested cash).">Total Deposited</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(holdingsTotals().costBasis + cashForActivePortfolio())"></div>
+              <div class="brokerage-stat-pct">spent + available</div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label">Available Balance</div>
               <div class="brokerage-stat-value" x-text="fmtUSD(cashForActivePortfolio())"></div>
               <div class="brokerage-stat-pct">available to invest</div>
+            </div>
+            <div class="brokerage-stat">
+              <div class="brokerage-stat-label" title="Sum of (purchase price × quantity) across every open position — i.e., the total cash you've spent acquiring the holdings you currently own.">Total Spent</div>
+              <div class="brokerage-stat-value" x-text="fmtUSD(holdingsTotals().costBasis)"></div>
+              <div class="brokerage-stat-pct">cost basis of open positions</div>
             </div>
             <div class="brokerage-stat">
               <div class="brokerage-stat-label">Portfolio Value</div>
               <div class="brokerage-stat-value" x-text="fmtUSD(holdingsTotals().marketValue)"></div>
             </div>
             <div class="brokerage-stat">
-              <div class="brokerage-stat-label">Total P&amp;L</div>
+              <div class="brokerage-stat-label">Total Profit &amp; Loss</div>
               <div class="brokerage-stat-value" :class="holdingsTotals().pl >= 0 ? 'pos' : 'neg'">
                 <span x-text="(holdingsTotals().pl >= 0 ? '+' : '') + fmtUSD(holdingsTotals().pl)"></span>
                 <span class="brokerage-stat-pct" x-show="holdingsTotals().costBasis > 0" x-text="' · ' + (holdingsTotals().pl / holdingsTotals().costBasis * 100).toFixed(2) + '%'"></span>
@@ -3199,8 +3302,8 @@ animate();
               </div>
             </div>
             <div class="brokerage-stat">
-              <div class="brokerage-stat-label">Positions</div>
-              <div class="brokerage-stat-value" x-text="alpacaPositions.length"></div>
+              <div class="brokerage-stat-label" title="A position is a single ticker you currently own. A regular stock counts as one position. A REIT, BDC, or ETF is also one position in your account, but each one represents ownership across many underlying assets — properties, private loans, or hundreds of stocks.">Position/Assets</div>
+              <div class="brokerage-stat-value" x-text="filteredAlpacaPositions().length"></div>
               <div class="brokerage-stat-pct" x-show="holdingsTotals().topWeight > 0" x-text="`${holdingsTotals().topSymbol} ${holdingsTotals().topWeight.toFixed(0)}% top`"></div>
             </div>
             <div class="brokerage-stat">
@@ -3213,27 +3316,30 @@ animate();
               <div class="brokerage-stat-value" x-text="fmtUSD(holdingsTotals().totalPaid)"></div>
               <div class="brokerage-stat-pct">received in last 12 months</div>
             </div>
+            <!-- Rewards Deposited — hidden for now; bring back when card-rewards routing is live.
             <div class="brokerage-stat">
               <div class="brokerage-stat-label">Rewards Deposited</div>
               <div class="brokerage-stat-value pos" x-text="fmtUSD(rewardsForActivePortfolio())"></div>
               <div class="brokerage-stat-pct">from credit card</div>
             </div>
-          </div>
-
-          <div x-show="alpacaPositions.length" class="wishlist-btn-row">
-            <button type="button" class="btn btn-outline btn-sm wishlist-btn" @click="wishListOpen = true">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:5px"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
-              Wish List
-              <span x-show="wishList.length" class="wishlist-count" x-text="wishList.length"></span>
-            </button>
+            -->
           </div>
 
           <div x-show="alpacaPositions.length" class="holdings-palette-toggle">
             <button type="button" class="holdings-palette-tab" :class="{active: holdingsPaletteMode === 'logo'}" @click="holdingsPaletteMode = 'logo'" title="Slice color sampled from each holding's logo; slice size = market value">Logo Palette</button>
             <button type="button" class="holdings-palette-tab" :class="{active: holdingsPaletteMode === 'chip'}" @click="holdingsPaletteMode = 'chip'" title="Slices bucketed by screener industry chip; chip-color palette">Color Palette</button>
+            <button type="button" class="holdings-palette-tab" :class="{active: holdingsPaletteMode === 'projection'}" @click="holdingsPaletteMode = 'projection'" title="Project the current portfolio's growth over 10 years across conservative / expected / optimistic return scenarios.">10Y Projection</button>
           </div>
 
-          <div x-show="alpacaPositions.length" class="holdings-charts-grid">
+          <div x-show="alpacaPositions.length && holdingsPaletteMode === 'projection'" class="holdings-treemap-card card holdings-chart-card">
+            <h3 class="holdings-chart-title">10-Year Growth Projection</h3>
+            <p class="holdings-chart-subtitle">Starts from your current portfolio value (<span x-text="fmtUSD(holdingsTotals().marketValue)"></span>) and projects compounded returns across three scenarios. Dividend yield (<span x-text="holdingsTotals().dividendYield.toFixed(2) + '%'"></span> annualized) is added on top of each price-appreciation assumption — assumes reinvestment.</p>
+            <div class="holdings-treemap-wrap">
+              <canvas data-holdings-projection></canvas>
+            </div>
+          </div>
+
+          <div x-show="alpacaPositions.length && holdingsPaletteMode !== 'projection'" class="holdings-charts-grid">
             <div class="card holdings-chart-card">
               <h3 class="holdings-chart-title">Filter by Stock Percentage</h3>
               <p class="holdings-chart-subtitle">Each position is bucketed by its primary screener chip. Symbols outside the screener fall into "Other."</p>
@@ -3284,17 +3390,10 @@ animate();
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'name' }" :style="holdingsSortBy === 'name' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
                       </button>
                     </th>
-                    <th>Portfolio</th>
                     <th>
                       <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('industry')" :title="holdingsSortBy !== 'industry' ? 'Sort A→Z' : holdingsSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
                         Industry
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'industry' }" :style="holdingsSortBy === 'industry' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
-                      </button>
-                    </th>
-                    <th>
-                      <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('side')" :title="holdingsSortBy !== 'side' ? 'Sort A→Z' : holdingsSortDir === 'asc' ? 'Sort Z→A' : 'Clear sort'">
-                        Side
-                        <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'side' }" :style="holdingsSortBy === 'side' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
                       </button>
                     </th>
                     <th class="num">
@@ -3305,7 +3404,7 @@ animate();
                     </th>
                     <th class="num">
                       <button type="button" class="holdings-sort-btn" @click="cycleHoldingsSort('avg')" :title="holdingsSortBy !== 'avg' ? 'Sort low → high' : holdingsSortDir === 'asc' ? 'Sort high → low' : 'Clear sort'">
-                        Avg entry
+                        Purchase Price
                         <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor" :class="{ active: holdingsSortBy === 'avg' }" :style="holdingsSortBy === 'avg' && holdingsSortDir === 'desc' ? 'transform:rotate(180deg)' : ''" style="opacity:.55; margin-left:3px"><path d="M5 0 L10 8 L0 8 Z"/></svg>
                       </button>
                     </th>
@@ -3350,27 +3449,8 @@ animate();
                       </td>
                       <td x-text="nameForPosition(p.symbol).toUpperCase()"></td>
                       <td>
-                        <button type="button" class="btn btn-outline btn-sm" @click="openAllocationEdit(p.symbol)" title="Edit per-portfolio allocation">
-                          <span x-text="(() => {
-                            const m = positionAllocation[p.symbol] || {};
-                            const entries = Object.entries(m).filter(([_, q]) => q > 0);
-                            // Active portfolio chip narrows the display to that
-                            // portfolio's allocation only — no cross-portfolio leak.
-                            if (activeBrokeragePortfolioId !== 'all') {
-                              const qty = m[activeBrokeragePortfolioId];
-                              const name = brokeragePortfolios.find(bp => bp.id === activeBrokeragePortfolioId)?.name || activeBrokeragePortfolioId;
-                              return qty > 0 ? `${name}: ${qty}` : 'Unallocated';
-                            }
-                            // 'All' chip shows the full allocation breakdown.
-                            const names = entries.map(([id, q]) => `${brokeragePortfolios.find(bp => bp.id === id)?.name || id}: ${q}`);
-                            return names.length ? names.join(', ') : 'Unallocated';
-                          })()"></span>
-                        </button>
-                      </td>
-                      <td>
                         <span class="holdings-industry-tag" :style="`color: ${chipColors[chipForPosition(p.symbol)] || chipColors.Other}; border-color: ${chipColors[chipForPosition(p.symbol)] || chipColors.Other}`" x-text="chipForPosition(p.symbol)"></span>
                       </td>
-                      <td x-text="p.side"></td>
                       <td class="num" x-text="p.qty"></td>
                       <td class="num" x-text="fmtUSD(parseFloat(p.avg_entry_price))"></td>
                       <td class="num" x-text="fmtUSD(parseFloat(p.current_price))"></td>
@@ -3415,6 +3495,171 @@ animate();
           </div>
         </div><!-- /holdings -->
 
+        <div x-show="page==='account-setup'">
+          <div class="page-title-block">
+            <h2 class="page-title">Brokerage account setup</h2>
+            <p class="page-subtitle">Required before you can deposit funds. Your information is submitted to Alpaca, our regulated brokerage partner; we never store it ourselves.</p>
+          </div>
+
+          <!-- Already onboarded? Show status; skip the form. -->
+          <template x-if="brokerageAccount">
+            <div class="card" style="padding:24px; max-width:680px">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px">
+                <span x-show="brokerageAccount?.kyc_state==='active'" style="font-size:18px">✓</span>
+                <strong style="font-size:18px" x-text="
+                  brokerageAccount?.kyc_state==='active' ? 'Account active' :
+                  brokerageAccount?.kyc_state==='failed' ? 'Account rejected' :
+                  'Approval in progress'
+                "></strong>
+              </div>
+              <dl style="display:grid; grid-template-columns:max-content 1fr; gap:8px 16px; font-size:14px">
+                <dt style="color:var(--muted)">Account number</dt>
+                <dd><code x-text="brokerageAccount?.alpaca_account_number || '—'"></code></dd>
+                <dt style="color:var(--muted)">Status</dt>
+                <dd><code x-text="brokerageAccount?.status || 'pending'"></code></dd>
+                <dt style="color:var(--muted)">Last synced</dt>
+                <dd x-text="brokerageAccount?.last_synced_at ? new Date(brokerageAccount.last_synced_at).toLocaleString() : '—'"></dd>
+              </dl>
+              <p x-show="brokerageAccount?.kyc_state==='pending'" style="color:var(--muted); margin-top:16px; font-size:13px">Sandbox accounts typically approve within ~15 seconds. Refresh or try a deposit to advance the status.</p>
+              <p x-show="brokerageAccount?.kyc_state==='failed'" style="color:#ff8a8a; margin-top:16px; font-size:13px">Alpaca rejected this submission. Contact support to retry.</p>
+              <div style="margin-top:20px; display:flex; gap:8px">
+                <button type="button" class="btn btn-outline" @click="loadBrokerageAccount()">Refresh status</button>
+                <button type="button" class="btn btn-primary" x-show="brokerageAccount?.kyc_state==='active'" @click="page='brokerage'">Back to Brokerage</button>
+              </div>
+            </div>
+          </template>
+
+          <!-- No account yet — show the KYC form. -->
+          <template x-if="!brokerageAccount">
+            <form @submit.prevent="submitKyc()" class="card" style="padding:24px; max-width:760px; display:grid; gap:24px">
+              <p style="color:var(--muted); font-size:13px; margin:0; border-left:3px solid var(--primary); padding-left:12px">
+                <strong style="color:var(--text)">Sandbox mode.</strong> Use real-looking but non-real data for testing. Alpaca's sandbox validates format (valid SSN range, real-looking address) but doesn't perform actual identity verification.
+              </p>
+
+              <section>
+                <h3 style="margin:0 0 12px; font-size:15px">Personal information</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
+                  <div class="form-group">
+                    <label class="form-label">First name</label>
+                    <input class="form-input" type="text" x-model="kycForm.given_name" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Last name</label>
+                    <input class="form-input" type="text" x-model="kycForm.family_name" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Date of birth</label>
+                    <input class="form-input" type="date" x-model="kycForm.date_of_birth" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">SSN (XXX-XX-XXXX)</label>
+                    <input class="form-input" type="text" inputmode="numeric" autocomplete="off" x-model="kycForm.tax_id" placeholder="123-45-6789" required />
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h3 style="margin:0 0 12px; font-size:15px">Contact</h3>
+                <div style="display:grid; grid-template-columns:1fr; gap:12px">
+                  <div class="form-group">
+                    <label class="form-label">Phone (E.164, +1...)</label>
+                    <input class="form-input" type="tel" x-model="kycForm.phone_number" placeholder="+14155551234" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Street address</label>
+                    <input class="form-input" type="text" x-model="kycForm.street_address" required />
+                  </div>
+                </div>
+                <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px">
+                  <div class="form-group">
+                    <label class="form-label">City</label>
+                    <input class="form-input" type="text" x-model="kycForm.city" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">State (2-letter)</label>
+                    <input class="form-input" type="text" maxlength="2" x-model="kycForm.state" placeholder="CA" required style="text-transform:uppercase" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">ZIP</label>
+                    <input class="form-input" type="text" x-model="kycForm.postal_code" placeholder="94103" required />
+                  </div>
+                </div>
+              </section>
+
+              <section>
+                <h3 style="margin:0 0 12px; font-size:15px">Funding source</h3>
+                <div class="form-group">
+                  <select class="form-input" x-model="kycForm.funding_source">
+                    <option value="employment_income">Employment income</option>
+                    <option value="investments">Investments</option>
+                    <option value="savings">Savings</option>
+                    <option value="family">Family</option>
+                    <option value="inheritance">Inheritance</option>
+                    <option value="business_income">Business income</option>
+                  </select>
+                </div>
+              </section>
+
+              <section>
+                <h3 style="margin:0 0 12px; font-size:15px">Disclosures</h3>
+                <p style="color:var(--muted); font-size:12px; margin:0 0 12px">Answer "yes" only if any apply to you.</p>
+                <label style="display:flex; gap:10px; align-items:center; padding:8px 0; cursor:pointer">
+                  <input type="checkbox" x-model="kycForm.is_control_person" />
+                  <span>I am a control person of a publicly-traded company.</span>
+                </label>
+                <label style="display:flex; gap:10px; align-items:center; padding:8px 0; cursor:pointer">
+                  <input type="checkbox" x-model="kycForm.is_affiliated_exchange_or_finra" />
+                  <span>I am affiliated with a securities exchange or FINRA member firm.</span>
+                </label>
+                <label style="display:flex; gap:10px; align-items:center; padding:8px 0; cursor:pointer">
+                  <input type="checkbox" x-model="kycForm.is_politically_exposed" />
+                  <span>I am a politically exposed person.</span>
+                </label>
+                <label style="display:flex; gap:10px; align-items:center; padding:8px 0; cursor:pointer">
+                  <input type="checkbox" x-model="kycForm.immediate_family_exposed" />
+                  <span>An immediate family member is a politically exposed person.</span>
+                </label>
+              </section>
+
+              <section>
+                <h3 style="margin:0 0 12px; font-size:15px">Agreements</h3>
+                <p style="color:var(--muted); font-size:12px; margin:0 0 12px">
+                  Click each link to open Alpaca's standard agreement, then check the box to accept.
+                </p>
+                <label style="display:flex; gap:10px; align-items:flex-start; padding:8px 0; cursor:pointer">
+                  <input type="checkbox" x-model="kycForm.agreement_customer" required />
+                  <span>I have read and accept the
+                    <a href="https://files.alpaca.markets/disclosures/library/CustAcctAgmt.pdf" target="_blank" rel="noopener noreferrer"><strong>Customer Agreement</strong></a>.
+                  </span>
+                </label>
+                <label style="display:flex; gap:10px; align-items:flex-start; padding:8px 0; cursor:pointer">
+                  <input type="checkbox" x-model="kycForm.agreement_account" required />
+                  <span>I have read and accept the
+                    <a href="https://files.alpaca.markets/disclosures/library/AcctAppDisc.pdf" target="_blank" rel="noopener noreferrer"><strong>Account Application Disclosure</strong></a>.
+                  </span>
+                </label>
+                <label style="display:flex; gap:10px; align-items:flex-start; padding:8px 0; cursor:pointer">
+                  <input type="checkbox" x-model="kycForm.agreement_margin" required />
+                  <span>I have read and accept the
+                    <a href="https://files.alpaca.markets/disclosures/library/MarginAgmt.pdf" target="_blank" rel="noopener noreferrer"><strong>Margin Agreement</strong></a>
+                    <span style="color:var(--muted); font-size:12px">(required even for cash-only accounts)</span>.
+                  </span>
+                </label>
+              </section>
+
+              <p x-show="kycError" style="color:#ff8a8a; margin:0" x-text="kycError"></p>
+
+              <div style="display:flex; gap:8px; justify-content:flex-end">
+                <button type="button" class="btn btn-outline" @click="page='brokerage'" :disabled="kycSubmitting">Cancel</button>
+                <button type="submit" class="btn btn-primary" :disabled="kycSubmitting">
+                  <span x-show="!kycSubmitting">Submit for approval</span>
+                  <span x-show="kycSubmitting">Submitting…</span>
+                </button>
+              </div>
+            </form>
+          </template>
+        </div><!-- /account-setup -->
+
         <div x-show="page==='contact-us'">
           <div class="page-title-block">
             <h2 class="page-title"><svg class="page-title-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Contact Us</h2>
@@ -3455,6 +3700,682 @@ animate();
             </form>
           </div>
         </div><!-- /contact-us -->
+
+        <!-- Starter Portfolio walkthrough — full-size example screenshots. -->
+        <div x-show="page==='starter-portfolio'">
+          <div class="page-header-row">
+            <div class="page-title-block">
+              <h2 class="page-title">
+                <svg class="page-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
+                Starter Portfolio
+              </h2>
+              <p class="page-subtitle">An example of a small, strategic starter portfolio. The goal isn't size — it's learning the moving parts: cost basis, dividend yield, allocation, and long-term projection.</p>
+            </div>
+            <button type="button" class="page-back-btn" @click="page = 'brokerage'" title="Back to brokerage">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              Back
+            </button>
+          </div>
+
+          <div class="starter-portfolio-gallery">
+            <figure class="starter-portfolio-figure">
+              <img src="/static/img/starter_portfolio.png" alt="Starter portfolio — top-line dashboard with stat tiles and allocation charts" loading="lazy" />
+              <figcaption>
+                <strong>The dashboard view.</strong> Lifetime contributions ($20 deposited), what's been spent vs. what's still cash on hand, current portfolio value, and the projected dividend yield (≈19.6% of portfolio value annualized — possible because the example mixes high-yield BDCs and REITs). The three doughnuts on the right break the same money down by industry, dividend share, and price tier.
+              </figcaption>
+            </figure>
+
+            <section class="starter-portfolio-glossary">
+              <h3 class="starter-portfolio-glossary-title">What each stat tile is telling you</h3>
+              <p class="starter-portfolio-glossary-intro">Read top-to-bottom — each row mirrors one tile across the top of the Holdings page.</p>
+              <dl class="starter-portfolio-stat-list">
+                <div class="starter-portfolio-stat-row">
+                  <dt>Total Deposited</dt>
+                  <dd>Total amount of money deposited into the account.</dd>
+                </div>
+                <div class="starter-portfolio-stat-row">
+                  <dt>Available Balance</dt>
+                  <dd>Uninvested cash, ready to be spent.</dd>
+                </div>
+                <div class="starter-portfolio-stat-row">
+                  <dt>Total Spent</dt>
+                  <dd>Total amount of funds spent.</dd>
+                </div>
+                <div class="starter-portfolio-stat-row">
+                  <dt>Portfolio Value</dt>
+                  <dd>What your portfolio/holdings is currently valued at.</dd>
+                </div>
+                <div class="starter-portfolio-stat-row">
+                  <dt>Total Profit &amp; Loss</dt>
+                  <dd>The current profit or loss of the portfolio — this can be volatile, especially in early stages.</dd>
+                </div>
+                <div class="starter-portfolio-stat-row">
+                  <dt>Day's Change</dt>
+                  <dd>How much your portfolio has moved today in dollars and percent. Resets at market open. Useful for context, not necessarily for decisions.</dd>
+                </div>
+                <div class="starter-portfolio-stat-row">
+                  <dt>Position/Assets</dt>
+                  <dd>Number of unique tickers/assets you own. A regular stock = one position. A REIT, BDC, or ETF is also one position in your account, but each one represents ownership across many underlying assets — properties, private loans, or hundreds of stocks.</dd>
+                </div>
+                <div class="starter-portfolio-stat-row">
+                  <dt>Yearly Dividend Income</dt>
+                  <dd>Projected cash payouts over the next 12 months from the portfolio.</dd>
+                </div>
+                <div class="starter-portfolio-stat-row">
+                  <dt>Yearly Dividend Payout</dt>
+                  <dd>Cash you've actually already received in dividends over the last 12 months.</dd>
+                </div>
+              </dl>
+            </section>
+
+            <figure class="starter-portfolio-figure">
+              <img src="/static/img/starter_portfolio2.png" alt="Starter portfolio — holdings table detail" loading="lazy" />
+              <figcaption>
+                <strong>The holdings detail.</strong> Six positions for under $20 total: a gold miner (BTG), a closed-end credit fund (ECC), two BDCs/REITs (OXSQ, RC, SACH), and a thematic small-cap (UAVS). Each row shows purchase price, current price, market value, projected annual dividend, and lifetime P&L — the building blocks of a real portfolio at miniature scale.
+              </figcaption>
+            </figure>
+
+            <section class="starter-portfolio-glossary">
+              <h3 class="starter-portfolio-glossary-title">From $20 to a working portfolio — how the math compounds</h3>
+              <p class="starter-portfolio-glossary-intro">A starter portfolio doesn't need to be impressive. It needs to teach you the mechanics. Here's what this $20 starter looks like across a 10-year horizon, assuming dividends are reinvested at the portfolio's current ≈19.6% yield.</p>
+              <dl class="starter-portfolio-stat-list">
+                <div class="starter-portfolio-stat-row">
+                  <dt>Deposited</dt>
+                  <dd><strong>$20.00</strong> — total cash put into the account.</dd>
+                </div>
+                <div class="starter-portfolio-stat-row">
+                  <dt>Spent</dt>
+                  <dd><strong>$19.65</strong> — used to buy six dividend-paying positions across mining, credit, REITs, BDCs, and small-cap thematics.</dd>
+                </div>
+                <div class="starter-portfolio-stat-row">
+                  <dt>Available Balance</dt>
+                  <dd><strong>$0.35</strong> — cash still sitting, ready to deploy on the next opportunity.</dd>
+                </div>
+              </dl>
+
+              <div class="projection-scale" aria-label="10-year projection across three scenarios">
+                <div class="projection-scale-header">
+                  <span class="projection-scale-eyebrow">10-year value · scenarios</span>
+                  <span class="projection-scale-axis">$0 → $300</span>
+                </div>
+                <div class="projection-scale-row">
+                  <div class="projection-scale-meta">
+                    <span class="projection-scale-name">Conservative</span>
+                    <span class="projection-scale-rate">4% growth + 19.6% reinvested div · 23.6% CAGR</span>
+                  </div>
+                  <div class="projection-scale-track">
+                    <div class="projection-scale-fill conservative" style="width: 55.3%">
+                      <span class="projection-scale-amount">$166</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="projection-scale-row">
+                  <div class="projection-scale-meta">
+                    <span class="projection-scale-name">Expected</span>
+                    <span class="projection-scale-rate">7% S&amp;P-historical + 19.6% reinvested div · 26.6% CAGR</span>
+                  </div>
+                  <div class="projection-scale-track">
+                    <div class="projection-scale-fill expected" style="width: 70.3%">
+                      <span class="projection-scale-amount">$211</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="projection-scale-row">
+                  <div class="projection-scale-meta">
+                    <span class="projection-scale-name">Optimistic</span>
+                    <span class="projection-scale-rate">10% bull-market + 19.6% reinvested div · 29.6% CAGR</span>
+                  </div>
+                  <div class="projection-scale-track">
+                    <div class="projection-scale-fill optimistic" style="width: 89.0%">
+                      <span class="projection-scale-amount">$267</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="projection-scale-baseline">
+                  <span class="projection-scale-baseline-marker"></span>
+                  <span>Starting deposit · $20</span>
+                </div>
+              </div>
+              <p class="starter-portfolio-glossary-note">The point isn't the dollar amount — it's that <strong>$20 can turn into ~$200 over a decade</strong> not because of luck, but because dividends compound on top of price growth. Reinvest, don't withdraw, and let math do the heavy lifting.</p>
+            </section>
+          </div>
+        </div><!-- /starter-portfolio -->
+
+        <!-- Investor Memorandum — slide deck rendered as web pages. -->
+        <div x-show="page==='investor-memo'" class="memo">
+          <!-- Cover slide (memoSlide === 0) -->
+          <div x-show="memoSlide === 0" class="memo-slide memo-cover">
+            <div class="memo-cover-bg"></div>
+            <div class="memo-cover-content">
+              <div class="memo-cover-brand">Broke 2 Brokerage</div>
+              <div class="memo-eyebrow memo-eyebrow-gold">Feather &amp; Fire</div>
+              <h1 class="memo-cover-title">
+                The credit card<br>
+                that turns spending<br>
+                <em class="memo-cover-emphasis">into investing.</em>
+              </h1>
+              <div class="memo-cover-meta">
+                <div class="memo-cover-rule"></div>
+                <div class="memo-cover-meta-title">Investor Memorandum</div>
+                <div class="memo-cover-meta-sub">Pre-Seed Round  ·  $2.0M</div>
+              </div>
+              <div class="memo-confidential">Confidential</div>
+            </div>
+          </div>
+
+          <!-- Slide 2 — The Insight -->
+          <div x-show="memoSlide === 1" class="memo-slide memo-page memo-page-dark">
+            <div class="memo-cover-bg"></div>
+            <div class="memo-page-content">
+            <div class="memo-section-eyebrow"><span class="memo-section-num">01</span><span class="memo-section-dot">·</span><span class="memo-section-name">The Insight</span></div>
+            <h2 class="memo-headline">Most Americans who don't invest haven't failed to act.</h2>
+            <h3 class="memo-headline-em">They haven't been taught how to act, in order not to fail.</h3>
+            <div class="memo-divider"></div>
+            <p class="memo-lead"><strong>The credit card industry knows that the poorest customer is the most profitable…</strong><br><strong>But we also know, that wealth builds health.</strong></p>
+            <p class="memo-body">
+              We're building the product that pays everyone: a credit card whose rewards are automatically deposited in the cardholder's own brokerage account, surrounded by an educational experience that turns first-time investors into confident ones.
+            </p>
+            </div><!-- /memo-page-content -->
+            <div class="memo-footer">
+              <span>Feather &amp; Fire</span>
+              <span class="memo-footer-sep">|</span>
+              <span>Pre-Seed Memorandum</span>
+              <span class="memo-footer-sep">|</span>
+              <span>Confidential</span>
+              <span class="memo-footer-page" x-text="memoSlide + 1"></span>
+            </div>
+          </div>
+
+          <!-- Slide 3 — The Problem -->
+          <div x-show="memoSlide === 2" class="memo-slide memo-page memo-page-dark">
+            <div class="memo-cover-bg"></div>
+            <div class="memo-page-content">
+              <div class="memo-section-eyebrow"><span class="memo-section-num">02</span><span class="memo-section-dot">·</span><span class="memo-section-name">The Problem</span></div>
+              <h2 class="memo-headline">Two failures, one customer.</h2>
+              <p class="memo-lead-italic" style="margin-bottom: 32px">
+                Today's consumer is failed on both ends of their financial life. We solve both with one product.
+              </p>
+              <div class="memo-two-col">
+                <div class="memo-card">
+                  <svg class="memo-card-icon" width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4H4V6h16v2zM6 12h4v2H6v-2z"/></svg>
+                  <h3 class="memo-card-title">A debt tool with no extra credit.</h3>
+                  <ul class="memo-card-list">
+                    <li>System is designed to benefit those who pay the most the least.</li>
+                    <li>Hidden fees, high interest rates and flimsy rewards… is short-term revenue, not long-term relationships.</li>
+                    <li>Rewards funded by revolvers — transactors collect points, revolvers pay for them.</li>
+                    <li>Minimum payments contribute to bad financial literacy, not good.</li>
+                  </ul>
+                </div>
+                <div class="memo-card">
+                  <svg class="memo-card-icon" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/></svg>
+                  <h3 class="memo-card-title">Designed in the Dark.</h3>
+                  <ul class="memo-card-list">
+                    <li>Tickers and charts with no comprehension layer — buy buttons everywhere, context nowhere.</li>
+                    <li>Robo-advisors auto-allocate, keep the human out of the loop.</li>
+                    <li>Platforms designed to obscure financial understanding and independence.</li>
+                    <li>Jargons, not bargains.</li>
+                    <li>Sweeping money under the rug.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="memo-footer">
+              <span>Feather &amp; Fire</span>
+              <span class="memo-footer-sep">|</span>
+              <span>Pre-Seed Memorandum</span>
+              <span class="memo-footer-sep">|</span>
+              <span>Confidential</span>
+              <span class="memo-footer-page" x-text="memoSlide + 1"></span>
+            </div>
+          </div>
+
+          <!-- Slide 4 — Knowledge barrier (Janus Henderson 2024) -->
+          <div x-show="memoSlide === 3" class="memo-slide memo-page memo-page-dark">
+            <div class="memo-cover-bg"></div>
+            <div class="memo-page-content">
+              <div class="memo-section-eyebrow"><span class="memo-section-num">02a</span><span class="memo-section-dot">·</span><span class="memo-section-name">The Evidence</span></div>
+              <h2 class="memo-headline memo-headline-mid">Knowledge is the second-biggest barrier to investing.</h2>
+              <p class="memo-lead-italic" style="margin-bottom: 18px">
+                Reasons cited by U.S. adults who don't hold investment assets (Janus Henderson, 2024). Respondents could select multiple.
+              </p>
+              <div class="memo-callouts-title-row">
+                <span class="memo-callouts-title">Broke 2 Brokerage</span>
+              </div>
+              <div class="memo-barriers-row">
+                <div class="memo-chart-wrap memo-chart-wrap-barriers">
+                  <canvas data-memo-barriers></canvas>
+                </div>
+                <div class="memo-callouts">
+                  <div class="memo-callouts-list">
+                    <div class="memo-callout">
+                      <span class="memo-callout-arrow">▲</span>
+                      <span class="memo-callout-text">Building wealth means you won't need as much liquidity, but when the time comes you can sell with a few clicks.</span>
+                    </div>
+                    <div class="memo-callout">
+                      <span class="memo-callout-arrow">▲</span>
+                      <span class="memo-callout-text">Interact with an intuitive and engaging platform designed to optimize learning.</span>
+                    </div>
+                    <div class="memo-callout">
+                      <span class="memo-callout-arrow">▲</span>
+                      <span class="memo-callout-text">For most of us, debt is a reality — it should be a tool and not a technicality.</span>
+                    </div>
+                    <div class="memo-callout">
+                      <span class="memo-callout-arrow">▲</span>
+                      <span class="memo-callout-text"><em>Means</em> now means "meant for the average user."</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <p class="memo-body" style="margin-top: 22px">
+                <strong style="color:var(--memo-gold)">Lack of understanding</strong> ranks just below "I keep cash" and ahead of "I have debt." A third of non-investors say the gap is education. That's the opening: build comprehension <em>into</em> the product, not next to it.
+              </p>
+              <p class="memo-source">
+                Source: Janus Henderson "Risky Business? What Makes You Invest (or Not)" report, October 2024. Survey conducted by HarrisX among U.S. adults without investment assets (~48% of the population).
+              </p>
+            </div>
+            <div class="memo-footer">
+              <span>Feather &amp; Fire</span>
+              <span class="memo-footer-sep">|</span>
+              <span>Pre-Seed Memorandum</span>
+              <span class="memo-footer-sep">|</span>
+              <span>Confidential</span>
+              <span class="memo-footer-page" x-text="memoSlide + 1"></span>
+            </div>
+          </div>
+
+          <!-- Slide 5 — Credit card P&L skew (McKinsey 2022) -->
+          <div x-show="memoSlide === 4" class="memo-slide memo-page memo-page-dark">
+            <div class="memo-cover-bg"></div>
+            <div class="memo-page-content">
+              <div class="memo-section-eyebrow"><span class="memo-section-num">02b</span><span class="memo-section-dot">·</span><span class="memo-section-name">The Evidence</span></div>
+              <h2 class="memo-headline memo-headline-mid">The credit-card P&amp;L is wildly skewed — and that's the alignment problem.</h2>
+              <p class="memo-lead-italic" style="margin-bottom: 26px">
+                Industry-wide profitability per account, transactors vs. revolvers (McKinsey, 2022).
+              </p>
+              <div class="memo-pnl-grid">
+                <div class="memo-stat-card">
+                  <div class="memo-stat-eyebrow">Transactors</div>
+                  <div class="memo-stat-sub">Pay in full each month</div>
+                  <div class="memo-stat-value" style="color:#d2a84a">$25</div>
+                  <div class="memo-stat-foot">profit per account / yr</div>
+                  <div class="memo-stat-meta">~40% of accounts</div>
+                </div>
+                <div class="memo-stat-card">
+                  <div class="memo-stat-eyebrow">Revolvers</div>
+                  <div class="memo-stat-sub">Carry a balance month to month</div>
+                  <div class="memo-stat-value" style="color:#b44dff">$240</div>
+                  <div class="memo-stat-foot">profit per account / yr</div>
+                  <div class="memo-stat-meta">~60% of accounts · 85–90% of net revenue</div>
+                </div>
+              </div>
+              <div class="memo-chart-wrap" style="margin-top: 22px; height: 180px">
+                <canvas data-memo-pnl></canvas>
+              </div>
+              <p class="memo-body" style="margin-top: 22px">
+                <strong>The problem this poses for any responsible card program:</strong> the industry's profit is overwhelmingly generated by customers carrying balances they often can't afford. A program that's serious about customer wellbeing has to make a solid deal, a bang for their buck, that doesn't solely rely on risk or luck.
+              </p>
+              <p class="memo-source">
+                Source: McKinsey, "Reinventing credit cards: Responses to new lending models in the US," 2022. Per-account profit is industry-blended across general-purpose card portfolios.
+              </p>
+
+              <!-- Bridge: who's actually carrying the balances? -->
+              <div class="memo-section-divider"></div>
+              <div class="memo-subsection-eyebrow">And the balances are increasingly young.</div>
+              <h3 class="memo-subhead">Younger generations now carry more credit-card debt than the generations above them.</h3>
+              <p class="memo-lead-italic" style="margin-bottom: 18px">
+                Average credit-card balance by generation, June 2025 — Experian consumer-debt study.
+              </p>
+              <div class="memo-chart-wrap" style="height: 280px">
+                <canvas data-memo-generations></canvas>
+              </div>
+              <p class="memo-body" style="margin-top: 22px">
+                <strong>Gen Z balances ($3,493) now exceed the Silent Generation ($3,445).</strong> <strong>Millennials ($6,961) have surpassed Boomers ($6,795).</strong> Younger consumers are growing balances 3–4% per year — driven by groceries, rent, and BNPL <span class="text-muted" style="font-style:italic">(Buy Now, Pay Later — short-term installment loans like Affirm, Klarna, and Afterpay that increasingly settle onto a credit card)</span> — while older balances stay flat. The revolver pool that powers industry profit is steadily filling with the customers least equipped to pay it down.
+              </p>
+              <p class="memo-source">
+                Source: Experian "Average Credit Card Debt by Age," September 2025 analysis of June 2025 credit data.
+              </p>
+            </div>
+            <div class="memo-footer">
+              <span>Feather &amp; Fire</span>
+              <span class="memo-footer-sep">|</span>
+              <span>Pre-Seed Memorandum</span>
+              <span class="memo-footer-sep">|</span>
+              <span>Confidential</span>
+              <span class="memo-footer-page" x-text="memoSlide + 1"></span>
+            </div>
+          </div>
+
+          <!-- Slide 6 — Put your money where your mouth is (interchange flow) -->
+          <div x-show="memoSlide === 5" class="memo-slide memo-page memo-page-dark">
+            <div class="memo-cover-bg"></div>
+            <div class="memo-page-content">
+              <div class="memo-section-eyebrow"><span class="memo-section-num">03</span><span class="memo-section-dot">·</span><span class="memo-section-name">The Mechanism</span></div>
+              <h2 class="memo-headline memo-headline-mid">Put your money where your mouth is.</h2>
+              <p class="memo-lead-italic" style="margin-bottom: 28px">
+                How a $100 card purchase actually distributes — and why our share is what funds rewards back into the cardholder's brokerage account.
+              </p>
+              <p class="memo-lead-italic" style="margin: 0 0 14px 0; color: rgba(248, 245, 238, 0.85); font-style: normal; font-weight: 600">Example: $100 card purchase</p>
+
+              <div class="flow">
+                <!-- Row 1: Customer → Merchant -->
+                <div class="flow-row">
+                  <div class="flow-box">
+                    <div class="flow-box-title">Customer</div>
+                    <div class="flow-box-sub">Pays $100</div>
+                  </div>
+                  <div class="flow-arrow flow-arrow-h">
+                    <span class="flow-arrow-label">$100</span>
+                    <span class="flow-arrow-line"></span>
+                    <span class="flow-arrow-tip">▶</span>
+                  </div>
+                  <div class="flow-box">
+                    <div class="flow-box-title">Merchant</div>
+                    <div class="flow-box-sub">Receives $98 net</div>
+                  </div>
+                </div>
+
+                <!-- Vertical: Merchant → Interchange Pool -->
+                <div class="flow-vert flow-vert-merchant">
+                  <span class="flow-arrow-label flow-vert-label">$2 fee</span>
+                  <span class="flow-vert-line"></span>
+                  <span class="flow-vert-tip">▼</span>
+                </div>
+
+                <!-- Row 2: Interchange pool (single box, centered) -->
+                <div class="flow-row flow-row-pool">
+                  <div class="flow-box flow-box-pool">
+                    <div class="flow-box-title">Interchange pool</div>
+                    <div class="flow-box-sub">$2.00 to be distributed</div>
+                  </div>
+                </div>
+
+                <!-- Vertical: pool → 3 splits -->
+                <div class="flow-fan">
+                  <span class="flow-fan-line flow-fan-l"></span>
+                  <span class="flow-fan-line flow-fan-c"></span>
+                  <span class="flow-fan-line flow-fan-r"></span>
+                </div>
+
+                <!-- Row 3: 3 destinations -->
+                <div class="flow-row flow-row-3col">
+                  <div class="flow-box">
+                    <div class="flow-box-title">Card networks</div>
+                    <div class="flow-box-sub">Visa or Mastercard — ~$0.15</div>
+                  </div>
+                  <div class="flow-box">
+                    <div class="flow-box-title">Sponsor bank</div>
+                    <div class="flow-box-sub">Issuer — ~$0.30</div>
+                  </div>
+                  <div class="flow-box flow-box-business">
+                    <div class="flow-box-title">Your business</div>
+                    <div class="flow-box-sub">Program manager — ~$1.55</div>
+                  </div>
+                </div>
+
+                <!-- Vertical: Your business → Net to your business -->
+                <div class="flow-vert flow-vert-business">
+                  <span class="flow-vert-line"></span>
+                  <span class="flow-vert-tip">▼</span>
+                </div>
+
+                <!-- Row 4: Net to your business (right-aligned) -->
+                <div class="flow-row flow-row-net">
+                  <div class="flow-box flow-box-business flow-box-net">
+                    <div class="flow-box-title">Net to your business</div>
+                    <div class="flow-box-sub">~$1.55 per $100 spend</div>
+                    <div class="flow-box-sub flow-box-sub-em">Funds rewards + revenue</div>
+                  </div>
+                </div>
+
+                <!-- Vertical: Net → 2 splits (rewards + net revenue) -->
+                <div class="flow-fan flow-fan-pair">
+                  <span class="flow-fan-line flow-fan-pair-l flow-fan-line-dashed"></span>
+                  <span class="flow-fan-line flow-fan-pair-r"></span>
+                </div>
+
+                <!-- Row 5: Customer rewards + Net revenue -->
+                <div class="flow-row flow-row-pair">
+                  <div class="flow-box flow-box-rewards">
+                    <div class="flow-box-title">Customer rewards</div>
+                    <div class="flow-box-sub">Routed to brokerage</div>
+                  </div>
+                  <div class="flow-box flow-box-business">
+                    <div class="flow-box-title">Net revenue</div>
+                    <div class="flow-box-sub">After rewards funded</div>
+                  </div>
+                </div>
+              </div>
+
+              <p class="memo-source" style="margin-top: 24px">
+                Splits are illustrative averages — actual rates vary by card type, merchant category, and program negotiation.
+              </p>
+            </div>
+            <div class="memo-footer">
+              <span>Feather &amp; Fire</span>
+              <span class="memo-footer-sep">|</span>
+              <span>Pre-Seed Memorandum</span>
+              <span class="memo-footer-sep">|</span>
+              <span>Confidential</span>
+              <span class="memo-footer-page" x-text="memoSlide + 1"></span>
+            </div>
+          </div>
+
+          <!-- Slide nav -->
+          <div class="memo-nav">
+            <button type="button" class="memo-nav-btn" :disabled="memoSlide === 0" @click="memoPrev()" aria-label="Previous slide">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+              Previous
+            </button>
+            <div class="memo-nav-dots">
+              <template x-for="i in memoSlideCount" :key="i">
+                <button type="button" class="memo-nav-dot" :class="{ active: memoSlide === i - 1 }" @click="memoSlide = i - 1" :aria-label="`Slide ${i}`"></button>
+              </template>
+            </div>
+            <button type="button" class="memo-nav-btn" :disabled="memoSlide === memoSlideCount - 1" @click="memoNext()" aria-label="Next slide">
+              Next
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+          </div>
+        </div><!-- /investor-memo -->
+
+        <!-- Personas — customer-persona authoring tool -->
+        <div x-show="page==='personas'">
+          <div class="page-title-block">
+            <h2 class="page-title">
+              <svg class="page-title-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              Personas
+            </h2>
+            <p class="page-subtitle">Capture the customers we're building for — archetype, demographics, behavior, goals, and pain points. Saved locally on this device.</p>
+          </div>
+
+          <div class="persona-builder">
+            <!-- Form -->
+            <div class="card persona-form-card">
+              <h3 class="persona-form-title" x-text="personaEditingId ? 'Edit persona' : 'New persona'"></h3>
+              <form @submit.prevent="savePersona()">
+                <div class="persona-form-section-title">Profile</div>
+                <div class="persona-form-grid">
+                  <div class="form-group">
+                    <label class="form-label">Name <span class="required">*</span></label>
+                    <input class="form-input" type="text" x-model="personaForm.name" placeholder="Marcus, the Comeback Saver" required />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Age</label>
+                    <input class="form-input" type="text" x-model="personaForm.age" placeholder="28" />
+                  </div>
+                </div>
+                <div class="persona-form-section-title">Customer behavior</div>
+                <div class="persona-form-grid">
+                  <div class="form-group">
+                    <label class="form-label">Monthly card spend ($)</label>
+                    <input class="form-input" type="number" min="0" step="50" x-model.number="personaForm.monthly_spend" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Revolve rate (% of statement carried)</label>
+                    <input class="form-input" type="number" min="0" max="100" step="1" x-model.number="personaForm.revolve_rate" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">APR carried (%)</label>
+                    <input class="form-input" type="number" min="0" max="100" step="0.5" x-model.number="personaForm.apr" />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Time horizon (years)</label>
+                    <select class="form-input" x-model.number="personaForm.horizon_years">
+                      <template x-for="y in [1,2,3,4,5,6,7,8,9,10,15,20]" :key="y">
+                        <option :value="y" x-text="y"></option>
+                      </template>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="persona-form-section-title">Program levers</div>
+                <div class="persona-slider-grid">
+                  <div class="persona-slider">
+                    <div class="persona-slider-row">
+                      <label class="form-label">Customer reward rate <span class="text-muted">(% of spend → brokerage)</span></label>
+                      <span class="persona-slider-value" x-text="(personaForm.reward_rate ?? 0).toFixed(2) + '%'"></span>
+                    </div>
+                    <input type="range" min="0" max="3" step="0.05" x-model.number="personaForm.reward_rate" />
+                  </div>
+                  <div class="persona-slider">
+                    <div class="persona-slider-row">
+                      <label class="form-label">Interchange fee collected by F&amp;F <span class="text-muted"></span></label>
+                      <span class="persona-slider-value" x-text="(personaForm.interchange_take ?? 0).toFixed(2) + '%'"></span>
+                    </div>
+                    <input type="range" min="0" max="3" step="0.05" x-model.number="personaForm.interchange_take" />
+                  </div>
+                  <div class="persona-slider">
+                    <div class="persona-slider-row">
+                      <label class="form-label">Interest revenue share <span class="text-muted">(% of revolver interest F&F keeps)</span></label>
+                      <span class="persona-slider-value" x-text="(personaForm.interest_share ?? 0).toFixed(0) + '%'"></span>
+                    </div>
+                    <input type="range" min="0" max="100" step="5" x-model.number="personaForm.interest_share" />
+                  </div>
+                  <div class="persona-slider">
+                    <div class="persona-slider-row">
+                      <label class="form-label">Brokerage Capital Appreciation <span class="text-muted">(Avg appreciation of the portfolio at 5% by S&P 500 )</span></label>
+                      <span class="persona-slider-value" x-text="(personaForm.market_return ?? 0).toFixed(1) + '%'"></span>
+                    </div>
+                    <input type="range" min="0" max="15" step="0.5" x-model.number="personaForm.market_return" />
+                  </div>
+                  <div class="persona-slider">
+                    <div class="persona-slider-row">
+                      <label class="form-label">Dividend yield <span class="text-muted">(annualized, reinvested into the brokerage account)</span></label>
+                      <span class="persona-slider-value" x-text="(personaForm.dividend_yield ?? 0).toFixed(2) + '%'"></span>
+                    </div>
+                    <input type="range" min="0" max="8" step="0.05" x-model.number="personaForm.dividend_yield" />
+                  </div>
+                </div>
+
+                <div class="form-actions">
+                  <button type="button" class="btn btn-outline" x-show="personaEditingId" @click="resetPersonaForm()">Cancel</button>
+                  <button type="submit" class="btn btn-primary" :disabled="!personaForm.name.trim()" x-text="personaEditingId ? 'Save changes' : 'Create persona'"></button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Live projection panel -->
+            <div class="card persona-projection-card">
+              <h3 class="persona-form-title">Projection</h3>
+              <div class="persona-projection-source" x-show="!personaViewingId">
+                <span class="persona-projection-source-label">Live preview</span>
+                <span class="text-muted" style="font-size: 11.5px">— updates as you edit the form</span>
+              </div>
+              <div class="persona-projection-source viewing" x-show="personaViewingId">
+                <span class="persona-projection-source-label viewing">Viewing</span>
+                <strong style="font-size: 13px" x-text="personas.find(x => x.id === personaViewingId)?.name"></strong>
+                <button type="button" class="persona-projection-clear" @click="clearPersonaView()">← back to live preview</button>
+              </div>
+              <div class="persona-side-block persona-side-customer">
+                <div class="persona-side-head">
+                  <span class="persona-side-tag gold">Customer</span>
+                  <span class="persona-side-sub">What the cardholder accumulates</span>
+                </div>
+                <div class="persona-stat-grid">
+                  <div class="persona-stat">
+                    <div class="persona-stat-label">Portfolio balance @ Y<span x-text="activeProjectionPersona().horizon_years"></span></div>
+                    <div class="persona-stat-value gold" x-text="'$' + Number(computePersonaProjection(activeProjectionPersona()).summary.balanceAtHorizon).toLocaleString('en-US', {maximumFractionDigits: 0})"></div>
+                  </div>
+                  <div class="persona-stat">
+                    <div class="persona-stat-label">Monthly reward deposit</div>
+                    <div class="persona-stat-value gold" x-text="'$' + Number(computePersonaProjection(activeProjectionPersona()).summary.monthlyReward).toFixed(2)"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="persona-side-block persona-side-company">
+                <div class="persona-side-head">
+                  <span class="persona-side-tag purple">Company</span>
+                  <span class="persona-side-sub">Fintech revenue we capture</span>
+                </div>
+                <div class="persona-stat-grid">
+                  <div class="persona-stat">
+                    <div class="persona-stat-label">Total revenue @ Y<span x-text="activeProjectionPersona().horizon_years"></span></div>
+                    <div class="persona-stat-value purple" x-text="'$' + Number(computePersonaProjection(activeProjectionPersona()).summary.totalRevenueAtHorizon).toLocaleString('en-US', {maximumFractionDigits: 0})"></div>
+                  </div>
+                  <div class="persona-stat">
+                    <div class="persona-stat-label">Avg revenue / yr</div>
+                    <div class="persona-stat-value purple" x-text="'$' + Number(computePersonaProjection(activeProjectionPersona()).summary.avgAnnualRevenue).toLocaleString('en-US', {maximumFractionDigits: 0})"></div>
+                  </div>
+                  <div class="persona-stat">
+                    <div class="persona-stat-label">Annual net interchange</div>
+                    <div class="persona-stat-value purple" x-text="'$' + Number(computePersonaProjection(activeProjectionPersona()).summary.annualNetInterchange).toLocaleString('en-US', {maximumFractionDigits: 0})"></div>
+                  </div>
+                  <div class="persona-stat">
+                    <div class="persona-stat-label">Annual interest income</div>
+                    <div class="persona-stat-value purple" x-text="'$' + Number(computePersonaProjection(activeProjectionPersona()).summary.annualInterest).toLocaleString('en-US', {maximumFractionDigits: 0})"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="persona-chart-wrap">
+                <canvas data-persona-projection></canvas>
+              </div>
+              <div class="persona-chart-legend">
+                <span class="persona-chart-legend-item">
+                  <span class="persona-chart-swatch" style="background:#d2a84a"></span>
+                  <span class="persona-side-tag gold">Customer</span> portfolio balance
+                </span>
+                <span class="persona-chart-legend-item">
+                  <span class="persona-chart-swatch" style="background:#b44dff"></span>
+                  <span class="persona-side-tag purple">Company</span> cumulative revenue
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Saved personas -->
+          <div style="margin-top: 24px">
+            <div class="persona-list-head">
+              <h3 class="persona-list-title">Saved Personas <span class="text-muted" style="font-weight: 500" x-show="personas.length" x-text="'· ' + personas.length"></span></h3>
+            </div>
+            <div x-show="!personas.length" class="card text-muted" style="padding: 24px; text-align: center; font-size: 13px">
+              No personas yet. Fill out the form above and click Create.
+            </div>
+            <div class="persona-grid" x-show="personas.length">
+              <template x-for="p in personas" :key="p.id">
+                <div class="persona-card">
+                  <div class="persona-card-head">
+                    <div class="persona-card-avatar" x-text="(p.name || '?').slice(0,1).toUpperCase()"></div>
+                    <div class="persona-card-id">
+                      <strong x-text="p.name"></strong>
+                    </div>
+                    <div class="persona-card-actions">
+                      <button type="button" class="btn btn-outline btn-sm" @click="editPersona(p.id)" title="Edit">Edit</button>
+                      <button type="button" class="btn btn-outline btn-sm persona-card-delete" @click="deletePersona(p.id)" title="Delete">Delete</button>
+                    </div>
+                  </div>
+                  <div class="persona-card-meta">
+                    <span x-show="p.age"><strong>Age</strong> <span x-text="p.age"></span></span>
+                    <span x-show="p.monthly_spend"><strong>Spend</strong> <span x-text="'$' + Number(p.monthly_spend).toLocaleString('en-US') + ' / mo'"></span></span>
+                  </div>
+                  <button type="button" class="persona-card-view-btn" @click="viewPersona(p.id)" :class="{ active: personaViewingId === p.id }">
+                    <span x-show="personaViewingId !== p.id">View projection ↑</span>
+                    <span x-show="personaViewingId === p.id">Showing in projection ✓</span>
+                  </button>
+                </div>
+              </template>
+            </div>
+          </div>
+        </div><!-- /personas -->
 
         <div x-show="page==='wallet-address'">
           <div class="page-title-block">

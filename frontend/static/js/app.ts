@@ -37,6 +37,10 @@ interface Portfolio {
 interface ApiError extends Error {
   status?: number;
   retryAfter?: number;
+  // Parsed JSON body from the failed response, when available. Lets
+  // callers branch on structured error fields (e.g. validation lists)
+  // instead of regexing the message string.
+  body?: Record<string, unknown>;
 }
 
 // ── API client ──────────────────────────────────────────────────────────────
@@ -143,6 +147,7 @@ async function apiFetch<T = unknown>(path: string, opts: RequestInit = {}): Prom
     }
     const e: ApiError = new Error(msg);
     e.status = res.status;
+    e.body = body;
     if (typeof body.retry_after === 'number') e.retryAfter = body.retry_after;
     throw e;
   }
@@ -195,6 +200,20 @@ function debounce<T extends (...args: any[]) => any>(fn: T, ms = 350): T {
     clearTimeout(t);
     t = setTimeout(() => fn.apply(this, a), ms);
   } as T;
+}
+
+// Flat allocation rows from /api/brokerage/positions → nested map keyed
+// by symbol then stringified portfolio_id, matching the shape the rest
+// of the UI expects.
+function allocationsToMap(
+  rows: Array<{ symbol: string; portfolio_id: number; qty: string }>,
+): Record<string, Record<string, number>> {
+  const out: Record<string, Record<string, number>> = {};
+  for (const r of rows) {
+    const sym = (out[r.symbol] ||= {});
+    sym[String(r.portfolio_id)] = parseFloat(r.qty) || 0;
+  }
+  return out;
 }
 
 function lsSet(key: string, value: unknown, ttlSeconds: number | null = null) {
@@ -583,7 +602,7 @@ window.loginApp = () => ({
 
 // ── Dashboard component ─────────────────────────────────────────────────────
 
-const VALID_PAGES = ['portfolios', 'resources', 'marketplace', 'platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds', 'wallet-tutorial', 'market-extra', 'brokerage', 'holdings', 'contact-us'];
+const VALID_PAGES = ['portfolios', 'resources', 'marketplace', 'platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds', 'wallet-tutorial', 'market-extra', 'brokerage', 'holdings', 'contact-us', 'investor-memo', 'personas', 'starter-portfolio', 'account-setup'];
 
 // Editorial — use real, well-known addresses (e.g. Satoshi's) so readers can verify externally.
 type ChainAddressFormat = {
@@ -2393,21 +2412,41 @@ const WALLETS_101: WalletEntry[] = [
     platform: 'laptop-first',
   },
 ];
+// Crypto pages still exist behind a feature flag (see `showCrypto` on the
+// component). Anyone landing on one while the flag is off gets redirected
+// to brokerage; the original page id stays in localStorage so flipping the
+// flag back on restores it.
+const CRYPTO_PAGES = new Set([
+  'portfolios', 'resources', 'marketplace', 'platforms', 'wallet',
+  'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin',
+  'transaction-hash', 'exchange-funds', 'wallet-tutorial', 'starter-portfolio',
+  'market-extra',
+]);
+const SHOW_CRYPTO = false;
+
 const restoredPage = (() => {
   try {
     const v = localStorage.getItem('currentPage');
     // Migrate retired page values silently.
-    if (v === 'dashboard' || v === 'market') return 'portfolios';
-    if (v === 'lookup') return 'transaction-hash';
-    if (v === 'crypto') return 'marketplace';
+    if (v === 'dashboard' || v === 'market') return SHOW_CRYPTO ? 'portfolios' : 'brokerage';
+    if (v === 'lookup') return SHOW_CRYPTO ? 'transaction-hash' : 'brokerage';
+    if (v === 'crypto') return SHOW_CRYPTO ? 'marketplace' : 'brokerage';
     if (v === 'traditional') return 'brokerage';
-    return v && VALID_PAGES.includes(v) ? v : 'portfolios';
-  } catch { return 'portfolios'; }
+    if (v && VALID_PAGES.includes(v)) {
+      if (!SHOW_CRYPTO && CRYPTO_PAGES.has(v)) return 'brokerage';
+      return v;
+    }
+    return SHOW_CRYPTO ? 'portfolios' : 'brokerage';
+  } catch { return SHOW_CRYPTO ? 'portfolios' : 'brokerage'; }
 })();
 
 window.dashApp = () => ({
   // State
   page: restoredPage,
+  // v1 feature flag — crypto section is hidden from the nav. Flipping
+  // this to true (here or via localStorage in DevTools) re-exposes the
+  // entire crypto product without code changes.
+  showCrypto: SHOW_CRYPTO,
   cryptoOpen: ['portfolios', 'resources', 'marketplace', 'platforms', 'wallet', 'wallet-address', 'fund-account', 'pick-a-coin', 'buy-a-coin', 'transaction-hash', 'exchange-funds', 'wallet-tutorial'].includes(restoredPage),
   traditionalOpen: ['brokerage', 'holdings', 'contact-us'].includes(restoredPage),
   currentTutorialWallet: '' as string,
@@ -2440,105 +2479,109 @@ window.dashApp = () => ({
   orderForm: {
     symbol: '',
     side: 'buy' as 'buy' | 'sell',
-    qty: '',
+    qty: '1',
     limit_price: '',
     type: 'limit' as 'limit' | 'market',
-    time_in_force: 'gtc' as 'gtc' | 'day' | 'ioc' | 'fok',
+    time_in_force: 'day' as 'gtc' | 'day' | 'ioc' | 'fok',
   },
+  // Tracks the last auto-filled limit price so we can keep refreshing it
+  // as the live quote moves — but stop the moment the user manually edits
+  // the field (so we don't overwrite their target).
+  _lastAutoLimitPrice: '' as string,
+  _quoteRefreshTimer: null as number | null,
   orderConfirmOpen: false,
   // Add Funds modal — payment provider hookup is a TODO; modal currently
   // shows a placeholder.
   addFundsOpen: false,
   addFundsAmount: '',
+  addFundsMethod: 'ach' as 'ach' | 'instant' | 'wire',
+  addFundsBankLabel: 'Chase ••••1234',
+  addFundsSubmitting: false,
+  addFundsError: '' as string,
+  brokerDeposits: [] as Array<{ id: number; amount: string; method: string; bank_label: string; reference: string; status: string; created_at: string }>,
   // Recent-orders status filter — 'active' (open / working orders), 'filled', 'expired'.
   recentOrdersTab: 'active' as 'active' | 'filled' | 'expired',
+  // Brokerage account (KYC) — null when the user hasn't onboarded yet.
+  brokerageAccount: null as null | {
+    id: number;
+    alpaca_account_id: string;
+    alpaca_account_number: string | null;
+    status: string | null;
+    kyc_state: string;
+    last_synced_at: string | null;
+  },
+  // KYC form state — collected on the account-setup page, POSTed to
+  // /api/brokerage/account. Nothing is persisted client-side beyond
+  // form lifetime (security — SSN especially).
+  kycForm: {
+    given_name: '',
+    middle_name: '',
+    family_name: '',
+    date_of_birth: '',
+    tax_id: '',
+    phone_number: '',
+    street_address: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    country: 'USA',
+    country_of_citizenship: 'USA',
+    country_of_birth: 'USA',
+    country_of_tax_residence: 'USA',
+    funding_source: 'employment_income',
+    is_control_person: false,
+    is_affiliated_exchange_or_finra: false,
+    is_politically_exposed: false,
+    immediate_family_exposed: false,
+    agreement_margin: false,
+    agreement_account: false,
+    agreement_customer: false,
+  },
+  kycSubmitting: false,
+  kycError: '' as string,
+  kycFieldErrors: [] as string[],
   // Contact Us form
   contactForm: { name: '', email: '', subject: '', message: '' },
   contactSubmitting: false,
   contactError: null as string | null,
   contactSent: false,
   // ── Brokerage portfolios ──────────────────────────────────────────────
-  // User-defined buckets for grouping stock positions. One Alpaca paper
-  // account underlies everything, but the UI lets users tag/filter by
-  // their own portfolio (e.g. "Retirement", "Travel Fund"). Persisted
-  // to localStorage. Phase 2 will filter the Holdings table by the
-  // active portfolio + tag positions to portfolios on order placement.
-  brokeragePortfolios: ((): Array<{ id: string; name: string; color: string }> => {
-    try {
-      const v = localStorage.getItem('brokeragePortfolios');
-      if (v) return JSON.parse(v);
-    } catch {}
-    return [{ id: 'main', name: 'Main Account', color: '#b44dff' }];
-  })(),
-  activeBrokeragePortfolioId: ((): string => {
-    try {
-      const v = localStorage.getItem('activeBrokeragePortfolioId');
-      if (v) return v;
-    } catch {}
-    return 'main';
-  })(),
+  // User-defined buckets for grouping stock positions ("Retirement",
+  // "Travel Fund"). DB-backed via /api/brokerage/portfolios — each
+  // user's list is fetched on init and re-fetched after create/delete.
+  // The user's main portfolio (`is_main: true`) is auto-created on
+  // first GET and is the destination for external Add-Funds deposits.
+  // The cash/allocation bookkeeping (positionAllocation, portfolioCash,
+  // ...) still lives in per-user localStorage for Phase 1; that moves
+  // to the DB in Phase 2.
+  brokeragePortfolios: [] as Array<{ id: number; name: string; color: string; is_main: boolean }>,
+  // Active chip — number for a real portfolio, 'all' for the aggregate view.
+  // Hydrated from localStorage (UI preference) after the portfolio list loads.
+  activeBrokeragePortfolioId: 'all' as number | 'all',
   // New-portfolio modal (brokerage-side).
   newBrokeragePortfolioOpen: false,
   newBrokeragePortfolioName: '',
   newBrokeragePortfolioColor: '#b44dff',
-  // symbol → portfolioId mapping (persisted). Legacy 1:1 tag — kept for
-  // the Recent Orders column display. New code uses positionAllocation.
-  positionPortfolioMap: ((): Record<string, string> => {
-    try {
-      const v = localStorage.getItem('positionPortfolioMap');
-      if (v) return JSON.parse(v);
-    } catch {}
-    return {};
-  })(),
   // symbol → { portfolioId → qty } — source of truth for per-portfolio
-  // share counts. Each order increments the active portfolio's qty.
-  positionAllocation: ((): Record<string, Record<string, number>> => {
-    try {
-      const v = localStorage.getItem('positionAllocation');
-      if (v) return JSON.parse(v);
-    } catch {}
-    return {};
-  })(),
+  // share counts. DB-backed via /api/brokerage/positions; updated by
+  // order placement and the allocation editor. The legacy 1:1
+  // positionPortfolioMap is now derived on demand via primaryPortfolioFor.
+  positionAllocation: {} as Record<string, Record<string, number>>,
   // Per-row allocation editor modal.
   allocationEditOpen: false,
   allocationEditSymbol: '',
   allocationEditValues: {} as Record<string, string>,
   // Per-portfolio reward deposits (persisted). Newly-created portfolios
   // start at $0 until rewards are explicitly routed into them.
-  brokerageRewardsByPortfolio: ((): Record<string, number> => {
-    try {
-      const v = localStorage.getItem('brokerageRewardsByPortfolio');
-      if (v) return JSON.parse(v);
-    } catch {}
-    return {};
-  })(),
+  brokerageRewardsByPortfolio: {} as Record<string, number>,
   // Cumulative deposits into the brokerage (only goes up — internal
   // transfers don't change it). Persisted.
-  totalDeposited: ((): number => {
-    try {
-      const v = localStorage.getItem('totalDeposited');
-      if (v) return parseFloat(v);
-    } catch {}
-    return 1000;
-  })(),
-  // Cash available per portfolio. Main starts seeded with the historical
-  // $770.67 (1000 deposited - 229.33 invested); new portfolios at $0.
-  portfolioCash: ((): Record<string, number> => {
-    try {
-      const v = localStorage.getItem('portfolioCash');
-      if (v) return JSON.parse(v);
-    } catch {}
-    return { main: 770.67 };
-  })(),
+  totalDeposited: 0,
+  // Cash available per portfolio. Empty until the user makes a deposit.
+  portfolioCash: {} as Record<string, number>,
   // Per-portfolio cumulative deposits (inflows only — Main gets external
   // Add Funds, others get internal transfers from Main).
-  portfolioDeposited: ((): Record<string, number> => {
-    try {
-      const v = localStorage.getItem('portfolioDeposited');
-      if (v) return JSON.parse(v);
-    } catch {}
-    return { main: 1000 };
-  })(),
+  portfolioDeposited: {} as Record<string, number>,
   transferModalOpen: false,
   transferAmount: '',
 
@@ -2564,7 +2607,8 @@ window.dashApp = () => ({
   // Holdings doughnut palette toggle. 'logo' samples each holding's
   // brand color from its Logo.dev image and slices by symbol. 'chip'
   // uses the curated screener-chip palette and buckets by industry.
-  holdingsPaletteMode: 'logo' as 'logo' | 'chip',
+  holdingsPaletteMode: 'logo' as 'logo' | 'chip' | 'projection',
+  holdingsProjectionChart: null as Chart | null,
   // Stocks the user wants to buy later — persisted in localStorage so
   // the list survives reloads. Modal opens from the "Wish List" button
   // under the Rewards Deposited tile.
@@ -2577,6 +2621,660 @@ window.dashApp = () => ({
   })(),
   wishListOpen: false,
   wishListInput: '',
+  // ── Personas — customer-persona authoring tool ───────────────────────
+  // Each persona captures who we're building for so the team can rally
+  // around concrete archetypes (Gen Z first-time investor, etc.).
+  personas: ((): any[] => {
+    try {
+      const raw = localStorage.getItem('personas');
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  })(),
+  personaForm: {
+    // Profile / demographics
+    name: '',
+    age: '',
+    // Behavior — drives the projection formula
+    monthly_spend: 1500,
+    revolve_rate: 40,            // % of monthly statement carried
+    apr: 24,                     // APR on carried balance (%)
+    // Program levers — sliders the team uses to tune the offer
+    reward_rate: 1.5,            // % of spend deposited to brokerage
+    interchange_take: 1.55,      // % of spend kept as our interchange share
+    interest_share: 30,          // % of revolver interest that flows to us
+    market_return: 5,            // assumed annualized price return (%)
+    dividend_yield: 2,           // annualized dividend yield on portfolio (%)
+    horizon_years: 10,           // years to project
+  },
+  personaEditingId: null as string | null,
+  // When set, the main projection panel previews this saved persona's
+  // numbers / chart instead of the live form. Click a card body to view;
+  // typing in the form or starting an edit clears the selection.
+  personaViewingId: null as string | null,
+  _savePersonas(this: any) {
+    try { localStorage.setItem('personas', JSON.stringify(this.personas)); } catch {}
+  },
+  resetPersonaForm(this: any) {
+    this.personaForm = {
+      name: '', age: '',
+      monthly_spend: 1500, revolve_rate: 40, apr: 24,
+      reward_rate: 1.5, interchange_take: 1.55, interest_share: 30,
+      market_return: 5, dividend_yield: 2, horizon_years: 10,
+    };
+    this.personaEditingId = null;
+  },
+  savePersona(this: any) {
+    const name = (this.personaForm.name || '').trim();
+    if (!name) return;
+    const data = { ...this.personaForm, name };
+    if (this.personaEditingId) {
+      this.personas = this.personas.map((p: any) =>
+        p.id === this.personaEditingId ? { ...p, ...data, updated_at: new Date().toISOString() } : p
+      );
+    } else {
+      this.personas = [
+        ...this.personas,
+        {
+          id: 'p_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+          ...data,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ];
+    }
+    this._savePersonas();
+    this.resetPersonaForm();
+  },
+  // Returns the persona object driving the projection panel — either the
+  // viewed saved persona, or the live form when no card is selected.
+  activeProjectionPersona(this: any) {
+    if (this.personaViewingId) {
+      const p = this.personas.find((x: any) => x.id === this.personaViewingId);
+      if (p) return p;
+    }
+    return this.personaForm;
+  },
+
+  viewPersona(this: any, id: string) {
+    this.personaViewingId = id;
+    // Cancel any in-progress edit so the form doesn't fight the view.
+    this.personaEditingId = null;
+  },
+
+  clearPersonaView(this: any) {
+    this.personaViewingId = null;
+  },
+
+  editPersona(this: any, id: string) {
+    const p = this.personas.find((x: any) => x.id === id);
+    if (!p) return;
+    const num = (v: any, dflt: number) => {
+      const n = parseFloat(v);
+      return Number.isFinite(n) ? n : dflt;
+    };
+    this.personaForm = {
+      name: p.name || '', age: p.age || '',
+      monthly_spend: num(p.monthly_spend, 1500),
+      revolve_rate: num(p.revolve_rate, 40),
+      apr: num(p.apr, 24),
+      reward_rate: num(p.reward_rate, 1.5),
+      interchange_take: num(p.interchange_take, 1.55),
+      interest_share: num(p.interest_share, 30),
+      market_return: num(p.market_return, 5),
+      dividend_yield: num(p.dividend_yield, 2),
+      horizon_years: num(p.horizon_years, 10),
+    };
+    this.personaEditingId = id;
+    this.personaViewingId = null;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  },
+
+  // ── Persona projection model ─────────────────────────────────────────
+  // Inputs come from `personaForm` (or any persona-shaped object); model
+  // is intentionally additive — to add a new revenue line or new lever,
+  // append it to `byYear[i]` and the chart picks it up via the sliders.
+  //
+  // Customer balance: instant vesting. Each month's reward is deposited
+  // immediately and earns the assumed monthly market return for the rest
+  // of the horizon. Balance at year y = future-value-of-annuity formula
+  // with monthly contributions.
+  //
+  // Revenue lines (your cut, per year):
+  //  - Net interchange — interchange_take% × spend MINUS reward_rate% × spend
+  //  - Interest revenue — revolved-balance interest × interest_share%
+  //
+  // Returns { byYear: [{year, balance, netInterchange, interest, total,
+  // cumulative}], summary: {balanceAtHorizon, totalRevenueAtHorizon,
+  // avgAnnualRevenue, programMargin}}.
+  computePersonaProjection(this: any, p: any) {
+    const num = (v: any, dflt: number) => {
+      const n = parseFloat(v);
+      return Number.isFinite(n) && n >= 0 ? n : dflt;
+    };
+    const monthlySpend = num(p.monthly_spend, 0);
+    const revolveRate = num(p.revolve_rate, 0) / 100;
+    const apr = num(p.apr, 0) / 100;
+    const rewardRate = num(p.reward_rate, 0) / 100;
+    const interchangeTake = num(p.interchange_take, 0) / 100;
+    const interestShare = num(p.interest_share, 0) / 100;
+    const marketReturn = num(p.market_return, 0) / 100;
+    const dividendYield = num(p.dividend_yield, 0) / 100;
+    const horizonYears = Math.max(1, Math.floor(num(p.horizon_years, 10)));
+
+    const monthlyReward = monthlySpend * rewardRate;
+    // Total annual return = price appreciation + reinvested dividend yield.
+    // Compounded to a monthly rate for the FV-of-annuity formula.
+    const totalAnnualReturn = marketReturn + dividendYield;
+    const monthlyMarket = totalAnnualReturn > 0 ? Math.pow(1 + totalAnnualReturn, 1 / 12) - 1 : 0;
+
+    // Annual revenue per year is constant in this v1 (assumes flat spend).
+    const annualSpend = monthlySpend * 12;
+    const annualNetInterchange = annualSpend * (interchangeTake - rewardRate);
+    // Crude revolver interest model: revolveRate × spend carries for ~half
+    // a year on average and accrues APR over that period. Multiply by our
+    // interest share to get our cut.
+    const annualInterest = annualSpend * revolveRate * apr * 0.5 * interestShare;
+    const annualRevenue = annualNetInterchange + annualInterest;
+
+    const byYear: Array<{
+      year: number;
+      balance: number;
+      netInterchange: number;
+      interest: number;
+      annualRevenue: number;
+      cumulativeRevenue: number;
+    }> = [];
+
+    let cumulative = 0;
+    for (let y = 1; y <= horizonYears; y++) {
+      const months = y * 12;
+      let balance: number;
+      if (monthlyMarket > 0 && monthlyReward > 0) {
+        balance = monthlyReward * (Math.pow(1 + monthlyMarket, months) - 1) / monthlyMarket;
+      } else {
+        balance = monthlyReward * months;
+      }
+      cumulative += annualRevenue;
+      byYear.push({
+        year: y,
+        balance,
+        netInterchange: annualNetInterchange,
+        interest: annualInterest,
+        annualRevenue,
+        cumulativeRevenue: cumulative,
+      });
+    }
+
+    const last = byYear[byYear.length - 1];
+    const balanceAtHorizon = last?.balance || 0;
+    const totalRevenueAtHorizon = last?.cumulativeRevenue || 0;
+    const avgAnnualRevenue = horizonYears > 0 ? totalRevenueAtHorizon / horizonYears : 0;
+    // Program margin = our net rev / what customer earned via rewards.
+    // Higher = we keep more relative to what we give. Useful for the
+    // "tune the offer" intuition slider.
+    const totalRewardsDeployed = annualSpend * rewardRate * horizonYears;
+    const programMargin = totalRewardsDeployed > 0 ? totalRevenueAtHorizon / totalRewardsDeployed : 0;
+
+    return {
+      byYear,
+      summary: {
+        balanceAtHorizon,
+        totalRevenueAtHorizon,
+        avgAnnualRevenue,
+        programMargin,
+        annualNetInterchange,
+        annualInterest,
+        annualRevenue,
+        monthlyReward,
+        annualSpend,
+        horizonYears,
+      },
+    };
+  },
+
+  personaProjectionChart: null as Chart | null,
+  personaCardCharts: {} as Record<string, Chart | null>,
+
+  // Render a compact projection chart inside a saved-persona card. Same
+  // gold (customer) + purple (company) palette as the live preview, but
+  // sized smaller and with no axis labels so it reads as a sparkline.
+  renderPersonaCardChart(this: any, persona: any) {
+    const canvas = document.querySelector<HTMLCanvasElement>(`canvas[data-persona-card="${persona.id}"]`);
+    if (!canvas) return;
+    const proj = this.computePersonaProjection(persona);
+    const labels = ['0', ...proj.byYear.map((r: any) => 'Y' + r.year)];
+    const balanceData = [0, ...proj.byYear.map((r: any) => Math.round(r.balance))];
+    const revenueData = [0, ...proj.byYear.map((r: any) => Math.round(r.cumulativeRevenue))];
+
+    if (this.personaCardCharts[persona.id]) {
+      this.personaCardCharts[persona.id]!.destroy();
+    }
+    this.personaCardCharts[persona.id] = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Customer balance',
+            data: balanceData,
+            borderColor: '#d2a84a',
+            backgroundColor: 'rgba(210, 168, 74, 0.14)',
+            borderWidth: 2,
+            tension: 0.25,
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          },
+          {
+            label: 'Company revenue',
+            data: revenueData,
+            borderColor: '#b44dff',
+            backgroundColor: 'rgba(180, 77, 255, 0.12)',
+            borderWidth: 2,
+            tension: 0.25,
+            fill: true,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0d0a1e',
+            borderColor: '#261d4a',
+            borderWidth: 1,
+            callbacks: {
+              label: (ctx: any) => `${ctx.dataset.label}: $${Number(ctx.parsed.y).toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: 'rgba(232, 224, 255, 0.55)',
+              font: { size: 10 },
+              callback: (v: any) => '$' + (Math.abs(v) >= 1000 ? (Number(v) / 1000).toFixed(0) + 'k' : Number(v).toFixed(0)),
+              maxTicksLimit: 4,
+            },
+            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+          },
+          x: {
+            ticks: { color: 'rgba(232, 224, 255, 0.55)', font: { size: 10 }, maxTicksLimit: 6 },
+            grid: { display: false },
+          },
+        },
+      },
+    });
+  },
+
+  renderAllPersonaCardCharts(this: any) {
+    for (const p of this.personas) {
+      this.$nextTick(() => this.renderPersonaCardChart(p));
+    }
+  },
+  renderPersonaProjectionChart(this: any) {
+    const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-persona-projection]');
+    if (!canvas) return;
+    const proj = this.computePersonaProjection(this.activeProjectionPersona());
+    const labels = ['0', ...proj.byYear.map((r: any) => 'Y' + r.year)];
+    const balanceData = [0, ...proj.byYear.map((r: any) => Math.round(r.balance))];
+    const revenueData = [0, ...proj.byYear.map((r: any) => Math.round(r.cumulativeRevenue))];
+
+    if (this.personaProjectionChart) this.personaProjectionChart.destroy();
+    this.personaProjectionChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Customer portfolio balance',
+            data: balanceData,
+            borderColor: '#d2a84a',
+            backgroundColor: 'rgba(210, 168, 74, 0.12)',
+            borderWidth: 2,
+            tension: 0.25,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            yAxisID: 'y',
+          },
+          {
+            label: 'Cumulative fintech revenue',
+            data: revenueData,
+            borderColor: '#b44dff',
+            backgroundColor: 'rgba(180, 77, 255, 0.10)',
+            borderWidth: 2,
+            tension: 0.25,
+            fill: true,
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            yAxisID: 'y',
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          // Custom legend lives below the chart so the "Customer" and
+          // "Company" tags can carry the same visual weight as the
+          // stat sections — the built-in Chart.js legend is too plain.
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#0d0a1e',
+            borderColor: '#261d4a',
+            borderWidth: 1,
+            callbacks: {
+              label: (ctx: any) => `${ctx.dataset.label}: $${Number(ctx.parsed.y).toLocaleString('en-US', { maximumFractionDigits: 0 })}`,
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              color: 'rgba(232, 224, 255, 0.7)',
+              callback: (v: any) => '$' + Number(v).toLocaleString('en-US'),
+            },
+            grid: { color: 'rgba(255, 255, 255, 0.06)' },
+          },
+          x: {
+            ticks: { color: 'rgba(232, 224, 255, 0.7)' },
+            grid: { color: 'rgba(255, 255, 255, 0.04)' },
+          },
+        },
+      },
+    });
+  },
+  deletePersona(this: any, id: string) {
+    if (!confirm('Delete this persona? This cannot be undone.')) return;
+    this.personas = this.personas.filter((p: any) => p.id !== id);
+    this._savePersonas();
+    if (this.personaEditingId === id) this.resetPersonaForm();
+  },
+
+  // Investor memorandum: which slide of the deck the user is on. 0 = cover.
+  memoSlide: 0,
+  memoSlideCount: 6,
+  memoCharts: {} as Record<string, Chart | null>,
+  memoNext(this: any) { if (this.memoSlide < this.memoSlideCount - 1) this.memoSlide += 1; },
+  memoPrev(this: any) { if (this.memoSlide > 0) this.memoSlide -= 1; },
+
+  // Render the Janus Henderson "barriers to investing" bar chart on slide 4.
+  renderMemoBarriersChart(this: any) {
+    const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-memo-barriers]');
+    if (!canvas) return;
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+
+    // Inline plugin — draws a large red down-arrow in front of each
+    // y-axis label. Arrows are placed at the far-left edge of the
+    // y-axis area; reserved space is added via `afterFit` so the
+    // arrows don't collide with the label text.
+    const redArrowsPlugin = {
+      id: 'memoRedYArrows',
+      afterDatasetsDraw(chart: any) {
+        const yAxis = chart.scales?.y;
+        if (!yAxis) return;
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.fillStyle = '#dc2626';
+        ctx.font = '700 24px ' + getComputedStyle(document.body).fontFamily;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        for (let i = 0; i < yAxis.ticks.length; i++) {
+          const y = yAxis.getPixelForTick(i);
+          // yAxis.left is the leftmost edge of the y-axis area; the
+          // afterFit hook reserved 32px there for the arrow.
+          ctx.fillText('▼', yAxis.left + 4, y);
+        }
+        ctx.restore();
+      },
+    };
+
+    // Inline plugin — draws each bar's percentage value just past the
+    // end of the bar so the magnitudes can be read at a glance.
+    const barriersDataLabels = {
+      id: 'memoBarriersDataLabels',
+      afterDatasetsDraw(chart: any) {
+        const ctx = chart.ctx;
+        const meta = chart.getDatasetMeta(0);
+        const data = chart.data.datasets[0].data as number[];
+        ctx.save();
+        ctx.font = '700 14px ' + getComputedStyle(document.body).fontFamily;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        meta.data.forEach((bar: any, i: number) => {
+          // Highlight the gold (lack-of-understanding) bar's label in
+          // gold; everything else gets the standard cream tone.
+          ctx.fillStyle = i === 1 ? '#d2a84a' : '#f8f5ee';
+          ctx.fillText(data[i] + '%', bar.x + 8, bar.y);
+        });
+        ctx.restore();
+      },
+    };
+
+    this.memoCharts.barriers = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: [
+          'Prefer easily accessible savings',
+          'Lack of understanding of investing',
+          'Existing debts / obligations',
+          'Lack of means to get started',
+        ],
+        datasets: [{
+          data: [38, 30, 30, 28],
+          backgroundColor: [
+            'rgba(180, 77, 255, 0.30)',
+            '#d2a84a',
+            'rgba(180, 77, 255, 0.30)',
+            'rgba(180, 77, 255, 0.30)',
+          ],
+          borderColor: [
+            'rgba(180, 77, 255, 0.55)',
+            '#b78b3a',
+            'rgba(180, 77, 255, 0.55)',
+            'rgba(180, 77, 255, 0.55)',
+          ],
+          borderWidth: 1,
+          borderRadius: 4,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: (ctx: any) => `${ctx.parsed.x}%` },
+            backgroundColor: '#0d0a1e', borderColor: '#261d4a', borderWidth: 1,
+          },
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 60,
+            ticks: { color: 'rgba(248, 245, 238, 0.65)', callback: (v: any) => v + '%', stepSize: 5 },
+            grid: { color: 'rgba(248, 245, 238, 0.06)' },
+          },
+          y: {
+            // Reserve room on the left of the axis for the red arrows
+            // drawn by the redArrowsPlugin so they sit before each label.
+            afterFit(scale: any) { scale.paddingLeft = (scale.paddingLeft || 0) + 24; scale.width += 24; },
+            ticks: { color: 'rgba(248, 245, 238, 0.85)', font: { size: 12 }, padding: 12 },
+            grid: { display: false },
+          },
+        },
+      },
+      plugins: [redArrowsPlugin, barriersDataLabels],
+    });
+  },
+
+  // Render the McKinsey transactor vs revolver comparison on slide 5.
+  renderMemoPnlChart(this: any) {
+    const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-memo-pnl]');
+    if (!canvas) return;
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+    this.memoCharts.pnl = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: ['Transactors', 'Revolvers'],
+        datasets: [{
+          data: [25, 240],
+          // Brand-aligned palette — gold for the small/healthy cohort,
+          // accent purple for the large/profit-driving revolver cohort.
+          backgroundColor: ['rgba(210, 168, 74, 0.55)', 'rgba(180, 77, 255, 0.55)'],
+          borderColor: ['#d2a84a', '#b44dff'],
+          borderWidth: 1,
+          borderRadius: 4,
+        }],
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: (ctx: any) => `$${ctx.parsed.x} profit / account / yr` },
+            backgroundColor: '#0d0a1e', borderColor: '#261d4a', borderWidth: 1,
+          },
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            max: 280,
+            ticks: { color: 'rgba(248, 245, 238, 0.65)', callback: (v: any) => '$' + v },
+            grid: { color: 'rgba(248, 245, 238, 0.06)' },
+          },
+          y: {
+            ticks: { color: 'rgba(248, 245, 238, 0.85)', font: { size: 13 } },
+            grid: { display: false },
+          },
+        },
+      },
+    });
+  },
+
+  // Render the Experian generational credit-card balance chart on slide 5.
+  renderMemoGenerationsChart(this: any) {
+    const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-memo-generations]');
+    if (!canvas) return;
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+
+    // Data-label plugin: render the dollar amount above each bar so the
+    // chart reads at a glance without forcing the eye to the y-axis.
+    const dataLabelPlugin = {
+      id: 'memoGenDataLabels',
+      afterDatasetsDraw(chart: any) {
+        const ctx = chart.ctx;
+        const meta = chart.getDatasetMeta(0);
+        const data = chart.data.datasets[0].data as number[];
+        ctx.save();
+        ctx.fillStyle = '#f8f5ee';
+        ctx.font = '700 14px ' + getComputedStyle(document.body).fontFamily;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        meta.data.forEach((bar: any, i: number) => {
+          const v = data[i];
+          ctx.fillText('$' + v.toLocaleString('en-US'), bar.x, bar.y - 6);
+        });
+        ctx.restore();
+      },
+    };
+
+    this.memoCharts.generations = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: [
+          ['Gen Z', '(11–28)'],
+          ['Millennials', '(29–44)'],
+          ['Gen X', '(45–60)'],
+          ['Boomers', '(61–79)'],
+          ['Silent Gen', '(80+)'],
+        ],
+        datasets: [{
+          data: [3493, 6961, 9600, 6795, 3445],
+          // Brand-aligned palette: lavender for the rising cohort (Gen Z),
+          // muted purple for Millennials, bright accent purple for the
+          // peak-debt cohort (Gen X), gold for Boomers, cream for the
+          // low-debt Silent Gen baseline.
+          backgroundColor: [
+            '#c4b5fd',                  // Gen Z — lavender
+            'rgba(180, 77, 255, 0.55)', // Millennials — muted purple
+            '#b44dff',                  // Gen X — full accent purple (peak)
+            '#d2a84a',                  // Boomers — gold
+            'rgba(248, 245, 238, 0.55)', // Silent Gen — cream
+          ],
+          borderColor: [
+            '#a78bfa',
+            'rgba(180, 77, 255, 0.85)',
+            '#9333ea',
+            '#b78b3a',
+            'rgba(248, 245, 238, 0.85)',
+          ],
+          borderWidth: 1,
+          borderRadius: 4,
+          maxBarThickness: 78,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        layout: { padding: { top: 22 } },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: (ctx: any) => '$' + ctx.parsed.y.toLocaleString('en-US') },
+            backgroundColor: '#0d0a1e', borderColor: '#261d4a', borderWidth: 1,
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 10500,
+            ticks: {
+              color: 'rgba(248, 245, 238, 0.65)',
+              stepSize: 2000,
+              callback: (v: any) => '$' + Number(v).toLocaleString('en-US'),
+            },
+            grid: { color: 'rgba(248, 245, 238, 0.06)' },
+            title: {
+              display: true,
+              text: 'Average credit-card balance (USD)',
+              color: 'rgba(248, 245, 238, 0.55)',
+              font: { size: 11, style: 'italic' },
+            },
+          },
+          x: {
+            ticks: { color: 'rgba(248, 245, 238, 0.85)', font: { size: 12 } },
+            grid: { display: false },
+          },
+        },
+      },
+      plugins: [dataLabelPlugin],
+    });
+  },
+
+  renderMemoCharts(this: any) {
+    if (this.memoSlide === 3) this.$nextTick(() => this.renderMemoBarriersChart());
+    if (this.memoSlide === 4) this.$nextTick(() => {
+      this.renderMemoPnlChart();
+      this.renderMemoGenerationsChart();
+    });
+  },
   // Per-symbol planned purchase quantity. Persisted in localStorage so
   // the user can plan a shopping list across sessions.
   wishListQty: ((): Record<string, string> => {
@@ -2702,6 +3400,16 @@ window.dashApp = () => ({
   async init(this: any) {
     await (Alpine.store('auth') as AuthStore).init();
     if (!(Alpine.store('auth') as AuthStore).isLoggedIn) return;
+    await this._loadBrokerageState();
+    // Await account load so we can redirect new users to onboarding
+    // before the brokerage UI renders any deposit-gated controls.
+    await this.loadBrokerageAccount();
+    if (!this.brokerageAccount && this.page !== 'account-setup') {
+      // First-time login with no Alpaca account yet — route to KYC.
+      // Keeps the user from staring at an "empty" brokerage page with
+      // a Deposit button that just bounces them here.
+      this.page = 'account-setup';
+    }
 
     await this.loadPortfolios();
     if (this.portfolios.length) {
@@ -2753,13 +3461,51 @@ window.dashApp = () => ({
       if (open) this.loadWishListQuotes();
     });
 
+    this.$watch('memoSlide', () => {
+      if (this.page === 'investor-memo') this.renderMemoCharts();
+    });
+    this.$watch('page', (p: string) => {
+      if (p === 'investor-memo') this.$nextTick(() => this.renderMemoCharts());
+      if (p === 'personas') this.$nextTick(() => this.renderPersonaProjectionChart());
+    });
+    // Form-input changes re-render the projection (when nothing is being viewed).
+    this.$watch('personaForm', () => {
+      if (this.page === 'personas' && !this.personaViewingId) {
+        this.$nextTick(() => this.renderPersonaProjectionChart());
+      }
+    });
+    // Selecting a saved persona re-renders the projection with that persona's data.
+    this.$watch('personaViewingId', () => {
+      if (this.page === 'personas') this.$nextTick(() => this.renderPersonaProjectionChart());
+    });
+    // List change (save / edit / delete) keeps the viewed projection fresh.
+    this.$watch('personas', () => {
+      if (this.page === 'personas') this.$nextTick(() => this.renderPersonaProjectionChart());
+    });
+
     this.$watch('holdingsPaletteMode', () => {
       if (this.page === 'holdings') {
         this.$nextTick(() => {
-          this.renderHoldingsChart();
-          this.renderHoldingsDividendChart();
-          this.renderHoldingsPriceChart();
+          if (this.holdingsPaletteMode === 'projection') {
+            this.renderHoldingsProjection();
+          } else {
+            this.renderHoldingsChart();
+            this.renderHoldingsDividendChart();
+            this.renderHoldingsPriceChart();
+          }
         });
+      }
+    });
+    // Re-render projection whenever underlying portfolio data shifts so the
+    // chart stays in sync with live Alpaca polls and dividend resolution.
+    this.$watch('alpacaPositions', () => {
+      if (this.page === 'holdings' && this.holdingsPaletteMode === 'projection') {
+        this.$nextTick(() => this.renderHoldingsProjection());
+      }
+    });
+    this.$watch('screenerDividends', () => {
+      if (this.page === 'holdings' && this.holdingsPaletteMode === 'projection') {
+        this.$nextTick(() => this.renderHoldingsProjection());
       }
     });
 
@@ -3324,7 +4070,6 @@ window.dashApp = () => ({
       this.alpacaAccount = account;
       this.alpacaPositions = Array.isArray(positions) ? positions : [];
       this.alpacaOrders = Array.isArray(orders) ? orders : [];
-      this._autoAssignPositions();
       if (this.page === 'holdings') {
         // Pick up dividend data for any symbol that doesn't have it yet
         // (handles new buys mid-session — symbols absent from
@@ -3349,29 +4094,149 @@ window.dashApp = () => ({
   async loadAlpacaQuote(this: any, symbol: string) {
     if (this._quoteFetchTimer) clearTimeout(this._quoteFetchTimer);
     const sym = (symbol || '').trim().toUpperCase();
-    if (!sym) { this.alpacaQuote = null; return; }
+    if (!sym) {
+      this.alpacaQuote = null;
+      this._stopLimitPriceRefresh();
+      return;
+    }
     this._quoteFetchTimer = setTimeout(async () => {
-      try {
-        const q = await apiFetch<any>(`/alpaca/quote/${encodeURIComponent(sym)}`);
-        this.alpacaQuote = { symbol: sym, ...q };
-      } catch {
-        this.alpacaQuote = null;
-      }
+      await this._fetchAndApplyQuote(sym);
+      this._startLimitPriceRefresh();
     }, 250);
   },
 
-  // Persist portfolio list + active selection to localStorage.
-  _saveBrokeragePortfolios(this: any) {
+  // One-shot quote fetch + limit-price auto-fill. Field updates only when
+  // empty or still matching the previous auto-fill (user hasn't customized).
+  async _fetchAndApplyQuote(this: any, sym: string) {
     try {
-      localStorage.setItem('brokeragePortfolios', JSON.stringify(this.brokeragePortfolios));
-      localStorage.setItem('activeBrokeragePortfolioId', this.activeBrokeragePortfolioId);
+      const q = await apiFetch<any>(`/alpaca/quote/${encodeURIComponent(sym)}`);
+      if ((this.orderForm.symbol || '').trim().toUpperCase() !== sym) return;
+      this.alpacaQuote = { symbol: sym, ...q };
+      const price = Number(q?.price);
+      if (!Number.isFinite(price) || price <= 0) return;
+      const formatted = price.toFixed(2);
+      const current = (this.orderForm.limit_price || '').trim();
+      if (current === '' || current === this._lastAutoLimitPrice) {
+        this.orderForm.limit_price = formatted;
+        this._lastAutoLimitPrice = formatted;
+      }
+    } catch {
+      this.alpacaQuote = null;
+    }
+  },
+
+  // Re-fetches the quote every 15s while a symbol is selected. Once the
+  // user types in the limit field, _lastAutoLimitPrice no longer matches
+  // and subsequent polls leave their value alone.
+  _startLimitPriceRefresh(this: any) {
+    this._stopLimitPriceRefresh();
+    this._quoteRefreshTimer = window.setInterval(() => {
+      const sym = (this.orderForm.symbol || '').trim().toUpperCase();
+      if (!sym) {
+        this._stopLimitPriceRefresh();
+        return;
+      }
+      this._fetchAndApplyQuote(sym);
+    }, 15000);
+  },
+
+  _stopLimitPriceRefresh(this: any) {
+    if (this._quoteRefreshTimer) {
+      clearInterval(this._quoteRefreshTimer);
+      this._quoteRefreshTimer = null;
+    }
+  },
+
+  // Per-user localStorage key. Returns null until auth resolves so callers
+  // can short-circuit instead of writing under a stale namespace.
+  _lsKey(this: any, base: string): string | null {
+    const uid = (Alpine.store('auth') as AuthStore).user?.id;
+    return uid == null ? null : `${base}:${uid}`;
+  },
+
+  // Numeric id of the user's main / starter portfolio, or null while
+  // the list is still loading. The destination for external Add-Funds
+  // deposits and the source for internal transfers; replaces the legacy
+  // 'main' string literal.
+  mainPortfolioId(this: any): number | null {
+    return this.brokeragePortfolios.find((p: any) => p.is_main)?.id ?? null;
+  },
+
+  // Hydrate brokerage state. Portfolios + allocations come from the API
+  // (DB-backed, scoped to user_id). Cash/deposit bookkeeping still reads
+  // per-user localStorage for now (Phase 3 territory). Active selection
+  // is a UI preference; defaults to the main portfolio's id.
+  async _loadBrokerageState(this: any) {
+    const uid = (Alpine.store('auth') as AuthStore).user?.id;
+    if (uid == null) return;
+    const get = (k: string) => localStorage.getItem(`${k}:${uid}`);
+    try {
+      const [portsRes, allocsRes] = await Promise.all([
+        apiFetch<{ portfolios: any[] }>('/brokerage/portfolios'),
+        apiFetch<{ allocations: any[] }>('/brokerage/positions'),
+      ]);
+      this.brokeragePortfolios = portsRes.portfolios || [];
+      this.positionAllocation = allocationsToMap(allocsRes.allocations || []);
+    } catch {
+      this.brokeragePortfolios = [];
+      this.positionAllocation = {};
+    }
+    try {
+      const savedActive = get('activeBrokeragePortfolioId');
+      const mainId = this.mainPortfolioId();
+      if (savedActive === 'all') {
+        this.activeBrokeragePortfolioId = 'all';
+      } else if (savedActive != null) {
+        const n = parseInt(savedActive, 10);
+        const stillExists = this.brokeragePortfolios.some((p: any) => p.id === n);
+        this.activeBrokeragePortfolioId = stillExists ? n : (mainId ?? 'all');
+      } else {
+        this.activeBrokeragePortfolioId = mainId ?? 'all';
+      }
+      this.brokerageRewardsByPortfolio = JSON.parse(get('brokerageRewardsByPortfolio') || '{}');
+      this.totalDeposited = parseFloat(get('totalDeposited') || '0') || 0;
+      this.portfolioCash = JSON.parse(get('portfolioCash') || '{}');
+      this.portfolioDeposited = JSON.parse(get('portfolioDeposited') || '{}');
     } catch {}
   },
 
-  _savePositionPortfolioMap(this: any) {
+  // PUT the new allocation map for a symbol and reflect the response in
+  // local state. Used by both the allocation editor and the order-place
+  // flow — both replace the full per-symbol map atomically.
+  async _saveSymbolAllocation(
+    this: any,
+    symbol: string,
+    allocations: Record<string, number>,
+  ) {
+    const sym = symbol.toUpperCase();
+    const body: Record<string, string> = {};
+    for (const [pid, qty] of Object.entries(allocations)) {
+      if (qty > 0) body[pid] = String(qty);
+    }
+    const res = await apiFetch<{ symbol: string; allocations: any[] }>(
+      `/brokerage/positions/${encodeURIComponent(sym)}`,
+      { method: 'PUT', body: JSON.stringify({ allocations: body }) },
+    );
+    const next = { ...this.positionAllocation };
+    if (res.allocations.length === 0) {
+      delete next[sym];
+    } else {
+      const map: Record<string, number> = {};
+      for (const a of res.allocations) {
+        map[String(a.portfolio_id)] = parseFloat(a.qty) || 0;
+      }
+      next[sym] = map;
+    }
+    this.positionAllocation = next;
+  },
+
+  // Persist active portfolio selection (UI preference). The list itself
+  // is server-managed — no localStorage writes for it anymore.
+  _saveBrokeragePortfolios(this: any) {
+    const k = this._lsKey('activeBrokeragePortfolioId');
+    if (!k) return;
     try {
-      localStorage.setItem('positionPortfolioMap', JSON.stringify(this.positionPortfolioMap));
-      localStorage.setItem('positionAllocation', JSON.stringify(this.positionAllocation));
+      localStorage.setItem(k, String(this.activeBrokeragePortfolioId));
     } catch {}
   },
 
@@ -3381,39 +4246,31 @@ window.dashApp = () => ({
     return Object.values(m).reduce((s: number, v: any) => s + (parseFloat(v) || 0), 0);
   },
 
-  // For each position, ensure positionAllocation has an entry that sums
-  // to the position's actual qty. New symbols get attributed to the
-  // active portfolio (or migrate from positionPortfolioMap if present).
-  _autoAssignPositions(this: any) {
-    const target = this.activeBrokeragePortfolioId === 'all'
-      ? (this.brokeragePortfolios[0]?.id || 'main')
-      : this.activeBrokeragePortfolioId;
-    let changed = false;
-    let allocChanged = false;
-    for (const p of this.alpacaPositions || []) {
-      // Legacy tag — preserve for orders-table display.
-      if (!this.positionPortfolioMap[p.symbol]) {
-        this.positionPortfolioMap[p.symbol] = target;
-        changed = true;
-      }
-      // New allocation: if not yet tracked, seed with full qty under the
-      // legacy tag's portfolio (best-effort migration).
-      const alpacaQty = parseFloat(p.qty) || 0;
-      const totalAlloc = this._totalAllocated(p.symbol);
-      if (totalAlloc === 0 && alpacaQty > 0) {
-        const seed = this.positionPortfolioMap[p.symbol] || target;
-        this.positionAllocation = {
-          ...this.positionAllocation,
-          [p.symbol]: { [seed]: alpacaQty },
-        };
-        allocChanged = true;
+  // Primary portfolio (id) for a symbol — the first entry in the
+  // allocation map with positive qty. Used by the Recent Orders column
+  // for the per-row portfolio tag. Replaces the old `positionPortfolioMap`
+  // localStorage state (now derived).
+  primaryPortfolioFor(this: any, symbol: string): any {
+    const allocs = this.positionAllocation[symbol] || {};
+    for (const [pid, qty] of Object.entries(allocs)) {
+      if ((qty as number) > 0) {
+        return this.brokeragePortfolios.find((p: any) => p.id === parseInt(pid, 10)) || null;
       }
     }
-    if (changed || allocChanged) this._savePositionPortfolioMap();
+    return null;
   },
 
-  setActiveBrokeragePortfolio(this: any, id: string) {
-    this.activeBrokeragePortfolioId = id;
+  setActiveBrokeragePortfolio(this: any, id: number | string) {
+    // Templates pass either a numeric portfolio id or the literal 'all'.
+    // The select element passes a string; coerce numeric strings to numbers.
+    if (id === 'all') {
+      this.activeBrokeragePortfolioId = 'all';
+    } else if (typeof id === 'string') {
+      const n = parseInt(id, 10);
+      this.activeBrokeragePortfolioId = Number.isFinite(n) ? n : 'all';
+    } else {
+      this.activeBrokeragePortfolioId = id;
+    }
     this._saveBrokeragePortfolios();
     if (this.page === 'holdings') {
       this.$nextTick(() => {
@@ -3424,24 +4281,15 @@ window.dashApp = () => ({
     }
   },
 
-  // Move a single position to another portfolio.
-  assignPositionPortfolio(this: any, symbol: string, portfolioId: string) {
-    this.positionPortfolioMap[symbol] = portfolioId;
-    this._savePositionPortfolioMap();
-    if (this.page === 'holdings') {
-      this.$nextTick(() => {
-        this.renderHoldingsChart();
-        this.renderHoldingsDividendChart();
-        this.renderHoldingsPriceChart();
-      });
-    }
-  },
-
   _savePortfolioCash(this: any) {
+    const k1 = this._lsKey('totalDeposited');
+    const k2 = this._lsKey('portfolioCash');
+    const k3 = this._lsKey('portfolioDeposited');
+    if (!k1 || !k2 || !k3) return;
     try {
-      localStorage.setItem('totalDeposited', String(this.totalDeposited));
-      localStorage.setItem('portfolioCash', JSON.stringify(this.portfolioCash));
-      localStorage.setItem('portfolioDeposited', JSON.stringify(this.portfolioDeposited));
+      localStorage.setItem(k1, String(this.totalDeposited));
+      localStorage.setItem(k2, JSON.stringify(this.portfolioCash));
+      localStorage.setItem(k3, JSON.stringify(this.portfolioDeposited));
     } catch {}
   },
 
@@ -3466,39 +4314,177 @@ window.dashApp = () => ({
     return parseFloat(this.portfolioCash[id]) || 0;
   },
 
-  // Add Funds → Main Account only. Bumps total deposited and Main's cash.
-  submitAddFunds(this: any) {
+  // Add Funds — POSTs the deposit intent to /api/broker/funding/deposits
+  // (stub Broker API endpoint). On success: bumps local Main cash + total
+  // deposited so the UI reflects the pending balance, and records the
+  // returned deposit row in `brokerDeposits` for the pending-deposits list.
+  // When the real Alpaca Broker call lands server-side, this same flow
+  // will move actual money — only the backend changes.
+  async submitAddFunds(this: any) {
+    if (this.addFundsSubmitting) return;
     const amt = parseFloat(this.addFundsAmount);
     if (!amt || amt <= 0) return;
-    this.totalDeposited += amt;
-    this.portfolioCash = {
-      ...this.portfolioCash,
-      main: (parseFloat(this.portfolioCash.main) || 0) + amt,
+
+    this.addFundsSubmitting = true;
+    this.addFundsError = '';
+    try {
+      const deposit = await apiFetch<any>('/broker/funding/deposits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: amt.toFixed(2),
+          method: this.addFundsMethod,
+          bank_label: this.addFundsBankLabel,
+        }),
+      });
+      this.brokerDeposits = [deposit, ...this.brokerDeposits];
+
+      // Alpaca rejected the transfer — show the error inline; don't
+      // credit cash, don't close the modal.
+      if (deposit.status === 'failed') {
+        this.addFundsError = deposit.note || 'Deposit failed at Alpaca.';
+        return;
+      }
+
+      // Optimistically credit the user's main portfolio. When status
+      // updates arrive (webhook → DB → /broker/funding/deposits refetch),
+      // this snapshot is reconciled.
+      const mainId = this.mainPortfolioId();
+      if (mainId != null) {
+        this.totalDeposited += amt;
+        this.portfolioCash = {
+          ...this.portfolioCash,
+          [mainId]: (parseFloat(this.portfolioCash[mainId]) || 0) + amt,
+        };
+        this.portfolioDeposited = {
+          ...this.portfolioDeposited,
+          [mainId]: (parseFloat(this.portfolioDeposited[mainId]) || 0) + amt,
+        };
+        this._savePortfolioCash();
+      }
+
+      this.addFundsOpen = false;
+      this.addFundsAmount = '';
+      (Alpine.store('toast') as ToastStore).show(
+        `${this.fmtUSD(amt)} deposit initiated · ${deposit.reference}`,
+        'success'
+      );
+    } catch (e: any) {
+      this.addFundsError = e?.message || 'Deposit failed. Please try again.';
+    } finally {
+      this.addFundsSubmitting = false;
+    }
+  },
+
+  async loadBrokerDeposits(this: any) {
+    try {
+      const res = await apiFetch<{ deposits: any[] }>('/broker/funding/deposits');
+      this.brokerDeposits = res.deposits || [];
+    } catch {
+      // Swallow — pending deposits are nice-to-have, not load-blocking.
+    }
+  },
+
+  // Fetch the user's Alpaca account state (or null if no onboarding yet).
+  // Called on init + after KYC submit. Drives the Add Funds gate.
+  async loadBrokerageAccount(this: any) {
+    try {
+      const res = await apiFetch<{ account: any }>('/brokerage/account');
+      this.brokerageAccount = res.account;
+    } catch (e: any) {
+      // 404 = no account yet; any other error = treat as missing.
+      this.brokerageAccount = null;
+    }
+  },
+
+  // Convenience predicate for templates: can the user actually deposit?
+  canDeposit(this: any): boolean {
+    return this.brokerageAccount?.kyc_state === 'active';
+  },
+
+  // Submit KYC form to the backend. Validates agreements client-side;
+  // backend re-validates everything and forwards to Alpaca.
+  async submitKyc(this: any) {
+    this.kycError = '';
+    this.kycFieldErrors = [];
+
+    const f = this.kycForm;
+    if (!f.agreement_margin || !f.agreement_account || !f.agreement_customer) {
+      this.kycError = 'You must accept all three agreements to continue.';
+      return;
+    }
+
+    const payload = {
+      given_name: f.given_name,
+      middle_name: f.middle_name || undefined,
+      family_name: f.family_name,
+      date_of_birth: f.date_of_birth,
+      tax_id: f.tax_id,
+      phone_number: f.phone_number,
+      street_address: f.street_address,
+      city: f.city,
+      state: f.state.toUpperCase(),
+      postal_code: f.postal_code,
+      country: f.country,
+      country_of_citizenship: f.country_of_citizenship,
+      country_of_birth: f.country_of_birth,
+      country_of_tax_residence: f.country_of_tax_residence,
+      funding_source: [f.funding_source],
+      is_control_person: f.is_control_person,
+      is_affiliated_exchange_or_finra: f.is_affiliated_exchange_or_finra,
+      is_politically_exposed: f.is_politically_exposed,
+      immediate_family_exposed: f.immediate_family_exposed,
     };
-    this.portfolioDeposited = {
-      ...this.portfolioDeposited,
-      main: (parseFloat(this.portfolioDeposited.main) || 0) + amt,
-    };
-    this._savePortfolioCash();
-    this.addFundsOpen = false;
-    this.addFundsAmount = '';
-    (Alpine.store('toast') as ToastStore).show(`${this.fmtUSD(amt)} added to Main Account`, 'success');
+
+    this.kycSubmitting = true;
+    try {
+      const res = await apiFetch<{ account: any }>('/brokerage/account', {
+        method: 'POST',
+        body: JSON.stringify(payload),
+      });
+      this.brokerageAccount = res.account;
+      // Clear sensitive fields immediately on success — don't leave SSN
+      // sitting in component state any longer than necessary.
+      this.kycForm.tax_id = '';
+      (Alpine.store('toast') as ToastStore).show(
+        'Account submitted — approval typically completes in a few seconds.',
+        'success',
+      );
+      this.page = 'brokerage';
+    } catch (e: any) {
+      const status = e?.status;
+      const body = e?.body;
+      if (status === 422 && body?.error === 'missing_fields') {
+        this.kycFieldErrors = body.fields || [];
+        this.kycError = `Missing: ${(body.fields || []).join(', ')}`;
+      } else if (status === 422 && body?.error === 'alpaca_rejected') {
+        this.kycError = `Alpaca rejected: ${body.message}`;
+      } else if (status === 409) {
+        this.kycError = 'You already have a brokerage account.';
+        this.loadBrokerageAccount();
+      } else {
+        this.kycError = e?.message || 'Submission failed. Please try again.';
+      }
+    } finally {
+      this.kycSubmitting = false;
+    }
   },
 
   // Transfer Main → active portfolio. Internal, zero-sum.
   submitTransfer(this: any) {
     const amt = parseFloat(this.transferAmount);
     const target = this.activeBrokeragePortfolioId;
+    const mainId = this.mainPortfolioId();
     if (!amt || amt <= 0) return;
-    if (target === 'main' || target === 'all') return;
-    const mainCash = parseFloat(this.portfolioCash.main) || 0;
+    if (mainId == null || target === mainId || target === 'all') return;
+    const mainCash = parseFloat(this.portfolioCash[mainId]) || 0;
     if (amt > mainCash) {
       (Alpine.store('toast') as ToastStore).show('Insufficient funds in Main Account', 'error');
       return;
     }
     this.portfolioCash = {
       ...this.portfolioCash,
-      main: mainCash - amt,
+      [mainId]: mainCash - amt,
       [target]: (parseFloat(this.portfolioCash[target]) || 0) + amt,
     };
     // Bump only the destination's cumulative deposits — Main's stays
@@ -3520,13 +4506,17 @@ window.dashApp = () => ({
   },
 
   // Positions for the active portfolio, pro-rated by allocated quantity.
-  // 'all' returns the unmodified Alpaca positions.
+  // 'all' aggregates across the user's portfolios — only positions where
+  // the user has nonzero allocation in *any* of their portfolios show.
+  // (The shared Alpaca paper account contains everyone's positions in v1;
+  // this filter keeps each user's view scoped to their own activity.)
   filteredAlpacaPositions(this: any) {
     const id = this.activeBrokeragePortfolioId;
-    if (id === 'all') return this.alpacaPositions || [];
     const out: any[] = [];
     for (const p of this.alpacaPositions || []) {
-      const allocQty = parseFloat(this.positionAllocation[p.symbol]?.[id]) || 0;
+      const allocQty = id === 'all'
+        ? this._totalAllocated(p.symbol)
+        : parseFloat(this.positionAllocation[p.symbol]?.[id]) || 0;
       if (allocQty <= 0) continue;
       const totalQty = parseFloat(p.qty) || 0;
       if (totalQty <= 0) continue;
@@ -3646,7 +4636,7 @@ window.dashApp = () => ({
     this.allocationEditOpen = true;
   },
 
-  saveAllocationEdit(this: any) {
+  async saveAllocationEdit(this: any) {
     const symbol = this.allocationEditSymbol;
     if (!symbol) return;
     const newAlloc: Record<string, number> = {};
@@ -3654,8 +4644,15 @@ window.dashApp = () => ({
       const n = parseFloat(v as string);
       if (n > 0) newAlloc[pid] = n;
     }
-    this.positionAllocation = { ...this.positionAllocation, [symbol]: newAlloc };
-    this._savePositionPortfolioMap();
+    try {
+      await this._saveSymbolAllocation(symbol, newAlloc);
+    } catch (e) {
+      (Alpine.store('toast') as ToastStore).show(
+        (e as Error).message || 'Could not save allocation',
+        'error',
+      );
+      return;
+    }
     this.allocationEditOpen = false;
     if (this.page === 'holdings') {
       this.$nextTick(() => {
@@ -3666,30 +4663,44 @@ window.dashApp = () => ({
     }
   },
 
-  createBrokeragePortfolio(this: any) {
+  async createBrokeragePortfolio(this: any) {
     const name = (this.newBrokeragePortfolioName || '').trim();
     if (!name) return;
-    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || `portfolio-${Date.now()}`;
-    let unique = id;
-    let n = 2;
-    while (this.brokeragePortfolios.some((p: any) => p.id === unique)) {
-      unique = `${id}-${n++}`;
+    try {
+      const res = await apiFetch<{ portfolio: any }>('/brokerage/portfolios', {
+        method: 'POST',
+        body: JSON.stringify({ name, color: this.newBrokeragePortfolioColor }),
+      });
+      this.brokeragePortfolios = [...this.brokeragePortfolios, res.portfolio];
+      this.activeBrokeragePortfolioId = res.portfolio.id;
+      this.newBrokeragePortfolioOpen = false;
+      this.newBrokeragePortfolioName = '';
+      this.newBrokeragePortfolioColor = '#b44dff';
+      this._saveBrokeragePortfolios();
+    } catch (e) {
+      (Alpine.store('toast') as ToastStore).show(
+        (e as Error).message || 'Could not create portfolio',
+        'error',
+      );
     }
-    this.brokeragePortfolios.push({ id: unique, name, color: this.newBrokeragePortfolioColor });
-    this.activeBrokeragePortfolioId = unique;
-    this.newBrokeragePortfolioOpen = false;
-    this.newBrokeragePortfolioName = '';
-    this.newBrokeragePortfolioColor = '#b44dff';
-    this._saveBrokeragePortfolios();
   },
 
-  deleteBrokeragePortfolio(this: any, id: string) {
-    if (this.brokeragePortfolios.length <= 1) return;  // keep at least one
-    this.brokeragePortfolios = this.brokeragePortfolios.filter((p: any) => p.id !== id);
-    if (this.activeBrokeragePortfolioId === id) {
-      this.activeBrokeragePortfolioId = this.brokeragePortfolios[0].id;
+  async deleteBrokeragePortfolio(this: any, id: number) {
+    const target = this.brokeragePortfolios.find((p: any) => p.id === id);
+    if (!target || target.is_main) return;  // can't delete the main portfolio
+    try {
+      await apiFetch(`/brokerage/portfolios/${id}`, { method: 'DELETE' });
+      this.brokeragePortfolios = this.brokeragePortfolios.filter((p: any) => p.id !== id);
+      if (this.activeBrokeragePortfolioId === id) {
+        this.activeBrokeragePortfolioId = this.mainPortfolioId() ?? 'all';
+      }
+      this._saveBrokeragePortfolios();
+    } catch (e) {
+      (Alpine.store('toast') as ToastStore).show(
+        (e as Error).message || 'Could not delete portfolio',
+        'error',
+      );
     }
-    this._saveBrokeragePortfolios();
   },
 
   async submitContactForm(this: any) {
@@ -3724,10 +4735,15 @@ window.dashApp = () => ({
       };
       if (f.type === 'limit') body.limit_price = f.limit_price;
 
-      // Resolve destination portfolio (skip 'all' → main).
+      // Resolve destination portfolio: when 'all' is active, fall back to
+      // the user's main portfolio.
       const targetPortfolio = this.activeBrokeragePortfolioId === 'all'
-        ? (this.brokeragePortfolios[0]?.id || 'main')
+        ? this.mainPortfolioId()
         : this.activeBrokeragePortfolioId;
+      if (targetPortfolio == null) {
+        this.orderError = 'No portfolio available — refresh and try again.';
+        return;
+      }
 
       // Estimate order cost: limit price for limit orders, latest ask for
       // market orders. Used to deduct from per-portfolio cash on a buy.
@@ -3749,17 +4765,25 @@ window.dashApp = () => ({
 
       await apiFetch<any>('/alpaca/orders', { method: 'POST', body: JSON.stringify(body) });
 
-      // Update legacy tag (still used by the Recent Orders portfolio column).
-      this.positionPortfolioMap = { ...this.positionPortfolioMap, [symbol]: targetPortfolio };
-      // Increment the destination portfolio's allocated qty (or decrement on sell).
+      // Increment (or decrement on sell) the destination portfolio's qty
+      // and persist the full per-symbol map via the allocations API.
       const existingAlloc = this.positionAllocation[symbol] || {};
-      const currentQty = parseFloat(existingAlloc[targetPortfolio]) || 0;
+      const targetKey = String(targetPortfolio);
+      const currentQty = parseFloat(existingAlloc[targetKey]) || 0;
       const delta = f.side === 'buy' ? qty : -qty;
       const newQty = Math.max(0, currentQty + delta);
       const next = { ...existingAlloc };
-      if (newQty > 0) next[targetPortfolio] = newQty; else delete next[targetPortfolio];
-      this.positionAllocation = { ...this.positionAllocation, [symbol]: next };
-      this._savePositionPortfolioMap();
+      if (newQty > 0) next[targetKey] = newQty; else delete next[targetKey];
+      try {
+        await this._saveSymbolAllocation(symbol, next);
+      } catch (e) {
+        // Order already placed at Alpaca — surface the persistence
+        // failure but don't unwind. Refresh will re-fetch true state.
+        (Alpine.store('toast') as ToastStore).show(
+          'Order placed but allocation save failed — refresh to resync.',
+          'error',
+        );
+      }
 
       // Adjust cash: deduct on buy, credit on sell.
       if (estCost > 0) {
@@ -3786,6 +4810,18 @@ window.dashApp = () => ({
 
   pickScreenerSymbol(this: any, sym: string) {
     this.orderForm.symbol = sym;
+    // Pre-fill the limit field instantly from the cached screener price so
+    // the user sees a number before the live-quote round-trip completes.
+    // loadAlpacaQuote will refresh it once the up-to-the-second quote lands.
+    const cachedPrice = Number(this.screenerQuotes?.[sym]?.price);
+    if (Number.isFinite(cachedPrice) && cachedPrice > 0) {
+      const formatted = cachedPrice.toFixed(2);
+      const current = (this.orderForm.limit_price || '').trim();
+      if (current === '' || current === this._lastAutoLimitPrice) {
+        this.orderForm.limit_price = formatted;
+        this._lastAutoLimitPrice = formatted;
+      }
+    }
     this.loadAlpacaQuote(sym);
     this.screenerOpen = false;
   },
@@ -4769,6 +5805,104 @@ window.dashApp = () => ({
     });
   },
 
+  // 10-year compound-growth projection from current portfolio state.
+  // Three scenarios — Conservative (4%), Expected (7%), Optimistic (10%)
+  // price appreciation, each plus the portfolio's current dividend yield
+  // assuming reinvestment. Re-runs whenever positions or dividends shift,
+  // so the chart tracks live Alpaca polls.
+  renderHoldingsProjection(this: any) {
+    const canvas = document.querySelector<HTMLCanvasElement>('canvas[data-holdings-projection]');
+    if (!canvas) return;
+
+    const totals = this.holdingsTotals();
+    const startValue = totals.marketValue || 0;
+    const divYieldPct = totals.dividendYield || 0; // already a percentage
+    const divYield = divYieldPct / 100;
+
+    const existing = Chart.getChart(canvas);
+    if (existing) existing.destroy();
+    if (startValue <= 0) return;
+
+    const labels = Array.from({ length: 11 }, (_, i) => `Year ${i}`);
+    const compute = (priceRate: number) =>
+      labels.map((_, i) => startValue * Math.pow(1 + priceRate + divYield, i));
+
+    const conservative = compute(0.04);
+    const expected = compute(0.07);
+    const optimistic = compute(0.10);
+
+    this.holdingsProjectionChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Optimistic — 10% + dividends',
+            data: optimistic,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.10)',
+            fill: '+1',
+            borderWidth: 1.8,
+            pointRadius: 0,
+            tension: 0.25,
+          },
+          {
+            label: 'Expected — 7% + dividends',
+            data: expected,
+            borderColor: '#b44dff',
+            backgroundColor: 'rgba(180, 77, 255, 0.10)',
+            fill: '+1',
+            borderWidth: 2.4,
+            pointRadius: 3,
+            pointBackgroundColor: '#b44dff',
+            tension: 0.25,
+          },
+          {
+            label: 'Conservative — 4% + dividends',
+            data: conservative,
+            borderColor: '#d2a84a',
+            backgroundColor: 'transparent',
+            fill: false,
+            borderWidth: 1.8,
+            pointRadius: 0,
+            tension: 0.25,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: {
+            position: 'top',
+            align: 'end',
+            labels: { color: '#bbb', boxHeight: 10, font: { size: 11 } },
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx: any) => `${ctx.dataset.label}: ${this.fmtUSD(ctx.parsed.y)}`,
+            },
+          },
+        },
+        scales: {
+          x: {
+            ticks: { color: '#888' },
+            grid: { color: 'rgba(255,255,255,0.05)' },
+          },
+          y: {
+            ticks: {
+              color: '#888',
+              callback: (val: any) => this.fmtUSD(Number(val)),
+            },
+            grid: { color: 'rgba(255,255,255,0.05)' },
+            beginAtZero: false,
+          },
+        },
+      } as any,
+    });
+  },
+
   renderHoldingsChart(this: any) {
     if (this.holdingsPaletteMode === 'chip') {
       // Chip palette — bucket by industry; default chip→color mapping
@@ -4953,17 +6087,27 @@ window.dashApp = () => ({
     }
   },
 
-  // Slice alpacaOrders by the selected Recent-orders tab.
+  // Orders for *this user's* portfolios only. The shared Alpaca paper
+  // account in v1 contains everyone's orders, so we filter to symbols
+  // the user has nonzero allocation for (same pattern as
+  // filteredAlpacaPositions). Once each user has their own Alpaca
+  // account (Phase 2 / KYC), this filter is a no-op.
+  myAlpacaOrders(this: any): any[] {
+    return (this.alpacaOrders || []).filter((o: any) => this._totalAllocated(o.symbol) > 0);
+  },
+
+  // Slice the user's orders by the selected Recent-orders tab.
   recentOrdersFiltered(this: any) {
     const tab = this.recentOrdersTab;
+    const orders = this.myAlpacaOrders();
     if (tab === 'filled') {
-      return this.alpacaOrders.filter((o: any) => o.status === 'filled' || o.status === 'partially_filled');
+      return orders.filter((o: any) => o.status === 'filled' || o.status === 'partially_filled');
     }
     if (tab === 'expired') {
-      return this.alpacaOrders.filter((o: any) => o.status === 'expired' || o.status === 'canceled' || o.status === 'rejected');
+      return orders.filter((o: any) => o.status === 'expired' || o.status === 'canceled' || o.status === 'rejected');
     }
     // 'active' — orders still working in the book.
-    return this.alpacaOrders.filter((o: any) =>
+    return orders.filter((o: any) =>
       ['new', 'accepted', 'pending_new', 'partially_filled', 'pending_cancel', 'pending_replace', 'replaced', 'held'].includes(o.status)
     );
   },

@@ -122,13 +122,20 @@ if config_env() == :prod do
 
   maybe_ipv6 = if System.get_env("ECTO_IPV6") in ~w(true 1), do: [:inet6], else: []
 
+  # Supabase + most managed Postgres require TLS. verify_none keeps the
+  # encryption but skips cert-chain validation — fine for v1; tighten with
+  # `cacertfile: "/etc/ssl/cert.pem", verify: :verify_peer` once you want
+  # full chain pinning. Toggle off by setting DB_SSL=false (useful for a
+  # local Postgres pointed at via DATABASE_URL).
+  ssl_enabled = System.get_env("DB_SSL", "true") not in ~w(false 0)
+  ssl_config = if ssl_enabled, do: [ssl: true, ssl_opts: [verify: :verify_none]], else: []
+
   config :crypto_portfolio_v3, CryptoPortfolioV3.Repo,
-    # ssl: true,
-    url: database_url,
-    pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
-    # For machines with several cores, consider starting multiple pools of `pool_size`
-    # pool_count: 4,
-    socket_options: maybe_ipv6
+    [
+      url: database_url,
+      pool_size: String.to_integer(System.get_env("POOL_SIZE") || "10"),
+      socket_options: maybe_ipv6
+    ] ++ ssl_config
 
   # The secret key base is used to sign/encrypt cookies and other secrets.
   # A default value is used in config/dev.exs and config/test.exs but you

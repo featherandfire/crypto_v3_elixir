@@ -23,6 +23,11 @@ defmodule CryptoPortfolioV3Web.Router do
 
     post "/contact", ContactController, :submit
 
+    # Alpaca Broker API webhook receiver. Unauthenticated by JWT; secured
+    # via HMAC signature verified inside the controller. Path prefix
+    # `/api/webhooks/` is matched by CacheBodyReader to stash the raw body.
+    post "/webhooks/alpaca", AlpacaWebhookController, :create
+
     get "/coins/top", CoinController, :top
     get "/coins/yearly-ranges", CoinController, :yearly_ranges
     get "/coins/supply", CoinController, :supply
@@ -61,6 +66,28 @@ defmodule CryptoPortfolioV3Web.Router do
       get "/alpaca/orders", AlpacaController, :list_orders
       post "/alpaca/orders", AlpacaController, :create_order
       delete "/alpaca/orders/:id", AlpacaController, :cancel_order
+
+      # Broker API funding stubs — record customer deposit intent locally
+      # until the real Alpaca Broker integration replaces them.
+      post "/broker/funding/deposits", BrokerFundingController, :create
+      get "/broker/funding/deposits", BrokerFundingController, :index
+      get "/broker/funding/verify", BrokerFundingController, :verify
+
+      # Brokerage portfolios (the chips on Holdings). Per-user buckets for
+      # grouping stock positions; the user's starter portfolio is auto-
+      # created by index when they have none.
+      # User's Alpaca customer account (KYC).
+      get "/brokerage/account", BrokerageAccountController, :show
+      post "/brokerage/account", BrokerageAccountController, :create
+
+      get "/brokerage/portfolios", BrokeragePortfolioController, :index
+      post "/brokerage/portfolios", BrokeragePortfolioController, :create
+      patch "/brokerage/portfolios/:id", BrokeragePortfolioController, :update
+      delete "/brokerage/portfolios/:id", BrokeragePortfolioController, :delete
+
+      # Per-symbol position allocations across the user's portfolios.
+      get "/brokerage/positions", BrokerageAllocationController, :index
+      put "/brokerage/positions/:symbol", BrokerageAllocationController, :update
 
       get "/portfolios", PortfolioController, :index
       post "/portfolios", PortfolioController, :create
