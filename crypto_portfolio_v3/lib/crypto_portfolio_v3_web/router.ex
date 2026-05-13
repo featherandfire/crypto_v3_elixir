@@ -89,6 +89,13 @@ defmodule CryptoPortfolioV3Web.Router do
       get "/brokerage/positions", BrokerageAllocationController, :index
       put "/brokerage/positions/:symbol", BrokerageAllocationController, :update
 
+      # Wishlist — user-authorized conditional orders. Auto-executed
+      # against the user's brokerage account when funds settle.
+      get "/wishlist", WishlistController, :index
+      post "/wishlist", WishlistController, :create
+      delete "/wishlist/:id", WishlistController, :delete
+      post "/wishlist/reorder", WishlistController, :reorder
+
       get "/portfolios", PortfolioController, :index
       post "/portfolios", PortfolioController, :create
       get "/portfolios/:id", PortfolioController, :show

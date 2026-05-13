@@ -1,12 +1,19 @@
 defmodule CryptoPortfolioV3.Alpaca do
   @moduledoc """
-  HTTP client for Alpaca's broker-style trading API.
+  HTTP client for Alpaca's *market-data* + *asset-metadata* APIs. Holds
+  no per-customer state — quotes, bars, snapshots, dividends, and asset
+  lookups apply to all users equally.
+
+  Account-scoped trading (account, positions, orders) moved to the
+  Broker API via `CryptoPortfolioV3.BrokerFunding.Client` so each user
+  operates against their own Alpaca customer account. This module no
+  longer touches paper-trading endpoints.
 
   Two base URLs:
 
-    * trading_url — account, positions, orders. Defaults to paper
-      (`paper-api.alpaca.markets`). Live trading uses `api.alpaca.markets`
-      and is gated behind explicit env-var override.
+    * trading_url — historical, retained for the few legacy code paths
+      that still use the paper-trading data feed. Defaults to
+      `paper-api.alpaca.markets`.
     * data_url — market data (quotes, bars). Always
       `data.alpaca.markets`; same for paper and live.
 
@@ -36,14 +43,6 @@ defmodule CryptoPortfolioV3.Alpaca do
   @change_ttl_ms 7 * 24 * 60 * 60 * 1000
 
   # ── Public API ──────────────────────────────────────────────────────────
-
-  @doc "Account snapshot — cash, equity, buying power, etc."
-  @spec account() :: result()
-  def account, do: get(:trading, "/v2/account")
-
-  @doc "Open positions across all symbols."
-  @spec positions() :: result()
-  def positions, do: get(:trading, "/v2/positions")
 
   @doc "Most recent quote for a stock symbol (NBBO)."
   @spec latest_quote(binary()) :: result()
@@ -452,21 +451,6 @@ defmodule CryptoPortfolioV3.Alpaca do
     %{annual_rate: 0, latest_rate: nil, latest_ex_date: nil, payment_count: 0}
   end
 
-  @doc "List orders. Pass keyword opts that map to Alpaca's query params (e.g. status: :open, limit: 50)."
-  @spec list_orders(keyword()) :: result()
-  def list_orders(opts \\ []), do: get(:trading, "/v2/orders", params: opts)
-
-  @doc """
-  Place an order. `params` is a map matching Alpaca's POST /v2/orders body —
-  at minimum `symbol`, `qty` (or `notional`), `side`, `type`, and `time_in_force`.
-  """
-  @spec place_order(map()) :: result()
-  def place_order(params) when is_map(params), do: post(:trading, "/v2/orders", params)
-
-  @doc "Cancel an open order by ID."
-  @spec cancel_order(binary()) :: result()
-  def cancel_order(id) when is_binary(id), do: delete(:trading, "/v2/orders/#{id}")
-
   @doc """
   Asset metadata for a list of symbols — used to detect delisted/non-tradable
   tickers (a proxy for liquidation/bankruptcy). Returns a map keyed by symbol
@@ -566,8 +550,6 @@ defmodule CryptoPortfolioV3.Alpaca do
   end
 
   defp get(env, path, opts \\ []), do: request(:get, env, path, opts)
-  defp post(env, path, body), do: request(:post, env, path, json: body)
-  defp delete(env, path), do: request(:delete, env, path, [])
 
   defp request(method, env, path, opts) do
     cfg = Application.fetch_env!(:crypto_portfolio_v3, :alpaca)

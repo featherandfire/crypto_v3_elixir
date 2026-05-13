@@ -1,16 +1,35 @@
 defmodule CryptoPortfolioV3Web.AlpacaController do
   @moduledoc """
-  Thin pass-through to `CryptoPortfolioV3.Alpaca`. All actions are gated
-  behind the authenticated pipeline in the router — credentials never
-  travel to the frontend.
+  Thin pass-through to Alpaca. Two underlying clients:
+
+    * Account-scoped trading (account, positions, orders) routes through
+      the Broker API to the *user's own* Alpaca customer account. The
+      user must have an ACTIVE brokerage_account (KYC complete) — calls
+      from un-onboarded users return empty results for reads and 412
+      for writes.
+
+    * Market data (quotes, bars, snapshots, dividends, etc.) stays on
+      the shared `Alpaca` paper data API — no per-user concept applies.
+
+  All routes are gated behind the authenticated pipeline; credentials
+  never travel to the frontend.
   """
   use CryptoPortfolioV3Web, :controller
 
   alias CryptoPortfolioV3.Alpaca
+  alias CryptoPortfolioV3.BrokerageAccounts
+  alias CryptoPortfolioV3.BrokerFunding.Client, as: BrokerClient
 
-  def account(conn, _params), do: render_result(conn, Alpaca.account())
+  def account(conn, _params), do: with_account(conn, &BrokerClient.get_trading_account/1)
 
-  def positions(conn, _params), do: render_result(conn, Alpaca.positions())
+  def positions(conn, _params) do
+    case BrokerageAccounts.active_alpaca_account_id(conn.assigns.current_user.id) do
+      {:ok, account_id} -> render_result(conn, BrokerClient.list_positions(account_id))
+      # Un-onboarded users see empty lists rather than errors so the
+      # brokerage page renders cleanly while they sit on the KYC redirect.
+      {:error, _} -> json(conn, [])
+    end
+  end
 
   def quote(conn, %{"symbol" => symbol}) when is_binary(symbol) do
     render_result(conn, Alpaca.latest_quote(String.upcase(symbol)))
@@ -111,8 +130,19 @@ defmodule CryptoPortfolioV3Web.AlpacaController do
   @order_keys ~w(symbol qty notional side type time_in_force limit_price stop_price extended_hours)
 
   def list_orders(conn, params) do
-    opts = Enum.filter([status: params["status"] || "all", limit: params["limit"] || 50], fn {_, v} -> v != nil end)
-    render_result(conn, Alpaca.list_orders(opts))
+    case BrokerageAccounts.active_alpaca_account_id(conn.assigns.current_user.id) do
+      {:ok, account_id} ->
+        opts =
+          Enum.filter(
+            [status: params["status"] || "all", limit: params["limit"] || 50],
+            fn {_, v} -> v != nil end
+          )
+
+        render_result(conn, BrokerClient.list_orders(account_id, opts))
+
+      {:error, _} ->
+        json(conn, [])
+    end
   end
 
   def create_order(conn, params) do
@@ -123,14 +153,45 @@ defmodule CryptoPortfolioV3Web.AlpacaController do
       |> Map.new()
 
     cond do
-      body["symbol"] in [nil, ""] -> bad_request(conn, "symbol required")
-      body["side"] not in ["buy", "sell"] -> bad_request(conn, "side must be buy or sell")
-      true -> render_result(conn, Alpaca.place_order(body))
+      body["symbol"] in [nil, ""] ->
+        bad_request(conn, "symbol required")
+
+      body["side"] not in ["buy", "sell"] ->
+        bad_request(conn, "side must be buy or sell")
+
+      true ->
+        case BrokerageAccounts.active_alpaca_account_id(conn.assigns.current_user.id) do
+          {:ok, account_id} ->
+            render_result(conn, BrokerClient.place_order(account_id, body))
+
+          {:error, reason} ->
+            conn
+            |> put_status(:precondition_failed)
+            |> json(%{error: "onboarding_required", reason: to_string(reason)})
+        end
     end
   end
 
   def cancel_order(conn, %{"id" => id}) when is_binary(id) do
-    render_result(conn, Alpaca.cancel_order(id))
+    case BrokerageAccounts.active_alpaca_account_id(conn.assigns.current_user.id) do
+      {:ok, account_id} ->
+        render_result(conn, BrokerClient.cancel_order(account_id, id))
+
+      {:error, reason} ->
+        conn
+        |> put_status(:precondition_failed)
+        |> json(%{error: "onboarding_required", reason: to_string(reason)})
+    end
+  end
+
+  # Resolves the authenticated user's Alpaca account_id then invokes the
+  # given Broker-API client fn. Returns an empty `nil`/200 for un-onboarded
+  # users so dashboards render without surfacing an error before KYC.
+  defp with_account(conn, fun) when is_function(fun, 1) do
+    case BrokerageAccounts.active_alpaca_account_id(conn.assigns.current_user.id) do
+      {:ok, account_id} -> render_result(conn, fun.(account_id))
+      {:error, _} -> json(conn, nil)
+    end
   end
 
   defp render_result(conn, {:ok, body}), do: json(conn, body)
@@ -142,6 +203,13 @@ defmodule CryptoPortfolioV3Web.AlpacaController do
   end
 
   defp render_result(conn, {:error, {:http, status, body}}) do
+    conn
+    |> put_status(status)
+    |> json(%{error: "alpaca_http_#{status}", body: body})
+  end
+
+  # Broker API client uses {:http_error, status, body}; same surface.
+  defp render_result(conn, {:error, {:http_error, status, body}}) do
     conn
     |> put_status(status)
     |> json(%{error: "alpaca_http_#{status}", body: body})

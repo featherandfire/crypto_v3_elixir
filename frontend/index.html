@@ -407,8 +407,8 @@ animate();
         <a href="#faq">FAQ</a>
       </nav>
       <div class="landing-nav-cta">
-        <button type="button" class="landing-link" @click="view='auth'; tab='login'">Sign in</button>
-        <button type="button" class="landing-btn primary" @click="view='auth'; tab='register'">Get Started</button>
+        <button type="button" class="landing-link" @click="view='auth'; tab='login'" data-testid="landing-signin">Sign in</button>
+        <button type="button" class="landing-btn primary" @click="view='auth'; tab='register'" data-testid="landing-get-started">Get Started</button>
       </div>
     </header>
 
@@ -672,7 +672,7 @@ animate();
           <strong class="text-accent" x-text="pendingEmail"></strong>
         </p>
 
-        <form @submit.prevent="submitVerify">
+        <form @submit.prevent="submitVerify" data-testid="verify-form">
           <div class="form-group">
             <label class="form-label">Verification code</label>
             <input
@@ -685,12 +685,13 @@ animate();
               autocomplete="one-time-code"
               x-ref="codeInput"
               x-init="$nextTick(() => verifyStep && $refs.codeInput?.focus())"
+              data-testid="verify-code"
             />
           </div>
 
           <div x-show="error" class="form-error" x-text="error"></div>
 
-          <button class="btn btn-primary btn-block" type="submit" :disabled="loading || verifyCode.length < 6">
+          <button class="btn btn-primary btn-block" type="submit" :disabled="loading || verifyCode.length < 6" data-testid="verify-submit">
             <span x-show="loading" class="spinner spinner-sm"></span>
             <span x-show="!loading">Verify &amp; sign in</span>
           </button>
@@ -721,25 +722,25 @@ animate();
         <p class="auth-subtitle">Track your future in real-time</p>
 
         <div class="page-tabs mb-20">
-          <div class="page-tab" :class="{active: tab==='login'}" @click="tab='login';error=''">Sign in</div>
-          <div class="page-tab" :class="{active: tab==='register'}" @click="tab='register';error=''">Create account</div>
+          <div class="page-tab" :class="{active: tab==='login'}" @click="tab='login';error=''" data-testid="auth-tab-login">Sign in</div>
+          <div class="page-tab" :class="{active: tab==='register'}" @click="tab='register';error=''" data-testid="auth-tab-register">Create account</div>
         </div>
 
-        <form @submit.prevent="submit">
+        <form @submit.prevent="submit" data-testid="auth-form">
           <div class="form-group">
             <label class="form-label">Username</label>
-            <input class="form-input" type="text" x-model="username" placeholder="username" required autocomplete="username" />
+            <input class="form-input" type="text" x-model="username" placeholder="username" required autocomplete="username" data-testid="auth-username" />
           </div>
 
           <div class="form-group" x-show="tab==='register'">
             <label class="form-label">Email</label>
-            <input class="form-input" type="email" x-model="email" placeholder="you@example.com" :required="tab==='register'" autocomplete="email" />
+            <input class="form-input" type="email" x-model="email" placeholder="you@example.com" :required="tab==='register'" autocomplete="email" data-testid="auth-email" />
           </div>
 
           <div class="form-group">
             <label class="form-label">Password</label>
             <div class="password-wrap">
-              <input class="form-input" :type="pwVisible ? 'text' : 'password'" x-model="password" placeholder="••••••••" required autocomplete="current-password" />
+              <input class="form-input" :type="pwVisible ? 'text' : 'password'" x-model="password" placeholder="••••••••" required autocomplete="current-password" data-testid="auth-password" />
               <button
                 type="button"
                 class="password-toggle"
@@ -762,7 +763,7 @@ animate();
 
           <div x-show="error" class="form-error" x-text="error"></div>
 
-          <button class="btn btn-primary btn-block" type="submit" :disabled="loading">
+          <button class="btn btn-primary btn-block" type="submit" :disabled="loading" data-testid="auth-submit">
             <span x-show="loading" class="spinner spinner-sm"></span>
             <span x-show="!loading" x-text="tab==='login' ? 'Sign in' : 'Create account'"></span>
           </button>
@@ -783,6 +784,7 @@ animate();
     <aside class="sidebar">
   <div class="sidebar-logo">
     <img src="/static/favicon/b2b-logo.svg" alt="Broke 2 Brokerage" class="sidebar-logo-img" />
+    <img src="/static/favicon/b2b-chain.svg" alt="Chain links connecting credit and investing" class="sidebar-chain-img" />
   </div>
 
   <nav class="sidebar-nav">
@@ -2555,10 +2557,10 @@ animate();
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="loadingBrokerage ? 'animation: spin 1s linear infinite' : ''"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             </button>
             <div x-show="alpacaAccount" class="wishlist-btn-row">
-              <button type="button" class="btn btn-outline wishlist-btn" @click="wishListOpen = true">
+              <button type="button" class="btn btn-outline wishlist-btn" @click="wishListOpen = true" data-testid="wishlist-open">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
                 Wish List
-                <span x-show="wishList.length" class="wishlist-count" x-text="wishList.length"></span>
+                <span x-show="wishList.length" class="wishlist-count" x-text="wishList.length" data-testid="wishlist-count"></span>
               </button>
             </div>
           </div>
@@ -2611,7 +2613,7 @@ animate();
           <div x-show="alpacaAccount" class="brokerage-meta">
             <span>Account <code x-text="alpacaAccount?.account_number"></code></span>
             <span>Status <code x-text="alpacaAccount?.status"></code></span>
-            <button type="button" class="btn btn-sm btn-outline brokerage-add-funds" @click="canDeposit() ? addFundsOpen = true : page = 'account-setup'">
+            <button type="button" class="btn btn-sm btn-outline brokerage-add-funds" @click="canDeposit() ? addFundsOpen = true : page = 'account-setup'" data-testid="addfunds-open">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add Funds
             </button>
@@ -2659,7 +2661,7 @@ animate();
 
               <div class="form-group">
                 <label class="form-label">Amount (USD)</label>
-                <input class="form-input" type="number" min="0" step="0.01" x-model="addFundsAmount" placeholder="0.00" @keydown.enter="submitAddFunds()" />
+                <input class="form-input" type="number" min="0" step="0.01" x-model="addFundsAmount" placeholder="0.00" @keydown.enter="submitAddFunds()" data-testid="addfunds-amount" />
               </div>
 
               <p x-show="addFundsError" class="add-funds-error" x-text="addFundsError"></p>
@@ -2669,7 +2671,7 @@ animate();
 
               <div class="modal-actions">
                 <button type="button" class="btn btn-outline" @click="addFundsOpen = false" :disabled="addFundsSubmitting">Cancel</button>
-                <button type="button" class="btn btn-primary" :disabled="addFundsSubmitting || !parseFloat(addFundsAmount) || parseFloat(addFundsAmount) <= 0" @click="submitAddFunds()">
+                <button type="button" class="btn btn-primary" :disabled="addFundsSubmitting || !parseFloat(addFundsAmount) || parseFloat(addFundsAmount) <= 0" @click="submitAddFunds()" data-testid="addfunds-submit">
                   <span x-show="!addFundsSubmitting">Initiate deposit</span>
                   <span x-show="addFundsSubmitting">Submitting…</span>
                 </button>
@@ -2794,6 +2796,7 @@ animate();
               <div class="screener-tabs">
                 <div class="screener-tabs-row">
                   <button type="button" class="screener-tab screener-tab-start" :class="{active: screenerCategory === 'start-here'}" @click="screenerCategory = 'start-here'; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''">Start Here!</button>
+                  <button type="button" class="screener-tab screener-tab-add" @click="canDeposit() ? addFundsOpen = true : page = 'account-setup'">+ Add Funds</button>
                 </div>
                 <div class="screener-tabs-row">
                   <button type="button" class="screener-tab screener-tab-view" :class="{active: screenerView === 'etfs' && screenerCategory !== 'start-here'}" @click="screenerView = 'etfs'; screenerCategory = 'index-etfs'; lowPriceRange = ''; lowSharePrice = ''; filterSubText = ''">ETFs</button>
@@ -2868,27 +2871,9 @@ animate();
                   <div x-show="screenerCategory === cat.id">
                     <!-- Per-category ETF description. -->
                     <div class="etf-cat-description" x-show="screenerView === 'etfs' && cat.description" x-text="cat.description"></div>
-                    <!-- Dividend payers explainer — text shifts with the active top-tier sub-filter. -->
-                    <div class="etf-cat-description" x-show="cat.id === 'dividend' && dividendTier === ''">
-                      <strong>What's a dividend payer?</strong> A company that returns part of its profit to shareholders as cash, typically every quarter. Buying shares of a steady dividend payer means a check shows up in your account on a regular schedule — no need to sell the stock. Dividend stocks tend to be mature, profitable businesses (mega-cap consumer brands, banks, utilities) where management has decided that returning cash is more useful than reinvesting it. Use the <em>Top tier</em> chips to filter to the most reliable dividend track records.
-                    </div>
-                    <div class="etf-cat-description" x-show="cat.id === 'dividend' && dividendTier === 'kings'">
-                      <strong>Dividend Kings — 50+ consecutive years of dividend increases.</strong> The most exclusive tier in dividend investing — only ~50 US-listed companies have raised their dividend every year for half a century or more. To stay on the list, a company must increase the per-share payout through every recession, every market crash, and every CEO transition since the 1970s or earlier. The longest active streak (<strong>AWR</strong>, American States Water) is over 70 years. A King's record signals extreme management discipline and very stable cash flow — but it's a backward-looking signal, not a guarantee. <strong>3M lost its King status in 2024</strong> after the Solventum spinoff broke a 65-year run, so even Kings can fall.
-                    </div>
-                    <div class="etf-cat-description" x-show="cat.id === 'dividend' && dividendTier === 'aristocrats'">
-                      <strong>S&amp;P 500 Dividend Aristocrats — 25 to 49 years of consecutive dividend increases.</strong> Companies that have raised their dividend every year for at least 25 years but haven't yet hit the 50-year King threshold. To qualify they must (1) be in the S&amp;P 500, (2) have a 25+ year increase streak, and (3) meet liquidity and market-cap minimums. The most-watched dividend index — ETFs like <strong>NOBL</strong> and <strong>REGL</strong> track it. This filter intentionally excludes the Kings (use the Kings chip for those) so you see modern-classic streak builders: <strong>MCD</strong> (~49y, the next King), <strong>MDT, RTX, NEE, MKC, CAT, ECL</strong>. Yields are typically modest (1.5%–4%), but the consistency of the growth compounds powerfully. The combined Aristocrats index has historically beaten the broader S&amp;P 500 with lower drawdowns.
-                    </div>
-                    <!-- Top-tier sub-chips for the Dividend payers tab. -->
-                    <div x-show="cat.id === 'dividend'" class="screener-filter-subchips" style="margin-bottom:8px">
-                      <span class="screener-filter-sublabel">Top tier:</span>
-                      <button type="button" class="screener-filter-subchip" :class="{active: dividendTier === 'kings'}" @click="dividendTier = dividendTier === 'kings' ? '' : 'kings'" title="Dividend Kings — 50+ consecutive years of dividend increases">Kings (50+ yrs)</button>
-                      <button type="button" class="screener-filter-subchip" :class="{active: dividendTier === 'aristocrats'}" @click="dividendTier = dividendTier === 'aristocrats' ? '' : 'aristocrats'" title="S&amp;P 500 Dividend Aristocrats only — 25 to 49 years of consecutive increases (Kings are filtered separately by their own chip)">Aristocrats (25–49 yrs)</button>
-                    </div>
-                    <!-- Sort-by-yield sub-chip for the Dividend payers tab. -->
-                    <div x-show="cat.id === 'dividend'" class="screener-filter-subchips" style="margin-bottom:10px">
-                      <span class="screener-filter-sublabel">Sort:</span>
-                      <button type="button" class="screener-filter-subchip" :class="{active: dividendSort === ''}" @click="dividendSort = ''" title="Cheapest share price first">Cheapest</button>
-                      <button type="button" class="screener-filter-subchip" :class="{active: dividendSort === 'yield'}" @click="dividendSort = 'yield'" title="Highest dividend yield first">Yield (high → low)</button>
+                    <!-- Dividend payers explainer. -->
+                    <div class="etf-cat-description" x-show="cat.id === 'dividend'">
+                      <strong>What's a dividend payer?</strong> A company that returns part of its profit to shareholders as cash, typically every quarter. Buying shares of a steady dividend payer means a check shows up in your account on a regular schedule — no need to sell the stock. Dividend stocks tend to be mature, profitable businesses (mega-cap consumer brands, banks, utilities) where management has decided that returning cash is more useful than reinvesting it. The <span class="screener-badge dividend-king" style="padding:2px 6px; font-size:9px">King</span> and <span class="screener-badge dividend-aristocrat" style="padding:2px 6px; font-size:9px">Aristocrat</span> badges mark companies with the most reliable dividend track records — 50+ and 25-49 consecutive years of increases respectively.
                     </div>
                     <!-- Share-price sub-chips for Under $20 + dividend. -->
                     <div x-show="cat.id === 'low-price-dividend'" class="screener-filter-subchips" style="margin-bottom:8px">
@@ -2940,13 +2925,18 @@ animate();
                               <span class="screener-dividend-yield" x-show="screenerQuotes[stock.symbol]?.price > 0" x-text="' · ' + ((screenerDividends[stock.symbol]?.annual_rate / screenerQuotes[stock.symbol]?.price) * 100).toFixed(2) + '% yield'"></span>
                               <span class="holdings-delist-badge" x-show="delistingRiskFor(stock.symbol)" :class="'delist-' + delistingRiskSeverity(stock.symbol)" :title="delistingRiskReason(stock.symbol)" x-text="delistingRiskFor(stock.symbol)"></span>
                             </span>
-                            <span class="screener-badges" x-show="screenerView === 'etfs' && (dividendFrequency(stock.symbol) || holdingsCountFor(stock.symbol) || riskTierFor(stock.symbol))">
+                            <span class="screener-badges" x-show="dividendFrequency(stock.symbol) || holdingsCountFor(stock.symbol) || riskTierFor(stock.symbol) || dividendStatusFor(stock.symbol) || (screenerDividends[stock.symbol]?.annual_rate > 0)">
                               <span class="screener-badge-group" x-show="dividendFrequency(stock.symbol)">
                                 <span class="screener-badge-label">Payout</span>
                                 <span class="screener-badge freq" x-text="dividendFrequency(stock.symbol)"></span>
                               </span>
                               <span class="screener-badge holdings" x-show="holdingsCountFor(stock.symbol)" x-text="holdingsCountFor(stock.symbol)"></span>
-                              <span class="screener-badge risk screener-risk-corner" x-show="riskTierFor(stock.symbol)" :class="'risk-' + (riskTierFor(stock.symbol) || '').toLowerCase()" x-text="riskTierFor(stock.symbol)"></span>
+                              <span class="screener-badge dividend-pays"
+                                    x-show="screenerDividends[stock.symbol]?.annual_rate > 0"
+                                    :title="'Annual dividend $' + Number(screenerDividends[stock.symbol]?.annual_rate || 0).toFixed(2) + '/share' + (screenerQuotes[stock.symbol]?.price > 0 ? ' · ' + ((screenerDividends[stock.symbol]?.annual_rate / screenerQuotes[stock.symbol]?.price) * 100).toFixed(2) + '% yield' : '')">Dividend</span>
+                              <span class="screener-badge dividend-king screener-badge-right" x-show="dividendStatusFor(stock.symbol) === 'King'" title="Dividend King — 50+ consecutive years of dividend increases">King</span>
+                              <span class="screener-badge dividend-aristocrat screener-badge-right" x-show="dividendStatusFor(stock.symbol) === 'Aristocrat'" title="S&amp;P 500 Dividend Aristocrat — 25 to 49 consecutive years of dividend increases">Aristocrat</span>
+                              <span class="screener-badge risk screener-badge-right" x-show="riskTierFor(stock.symbol)" :class="'risk-' + (riskTierFor(stock.symbol) || '').toLowerCase()" x-text="riskTierFor(stock.symbol)"></span>
                             </span>
                           </button>
                           <button type="button" class="screener-chart-toggle" @click="toggleScreenerChart(stock.symbol)" :title="expandedScreenerRow === stock.symbol ? 'Hide chart' : 'Show 1-year chart'" aria-label="Toggle chart">
@@ -3093,19 +3083,19 @@ animate();
           <h3 class="wallet101-section-heading" style="margin-top:24px">Recent orders</h3>
           <div class="screener-tabs" style="margin-bottom:10px">
             <button type="button" class="screener-tab" :class="{active: recentOrdersTab === 'active'}" @click="recentOrdersTab = 'active'">
-              Active <span style="opacity:0.6" x-text="`(${myAlpacaOrders().filter(o => ['new','accepted','pending_new','partially_filled','pending_cancel','pending_replace','replaced','held'].includes(o.status)).length})`"></span>
+              Active <span style="opacity:0.6" x-text="`(${alpacaOrders.filter(o => ['new','accepted','pending_new','partially_filled','pending_cancel','pending_replace','replaced','held'].includes(o.status)).length})`"></span>
             </button>
             <button type="button" class="screener-tab" :class="{active: recentOrdersTab === 'filled'}" @click="recentOrdersTab = 'filled'">
-              Filled <span style="opacity:0.6" x-text="`(${myAlpacaOrders().filter(o => o.status === 'filled' || o.status === 'partially_filled').length})`"></span>
+              Filled <span style="opacity:0.6" x-text="`(${alpacaOrders.filter(o => o.status === 'filled' || o.status === 'partially_filled').length})`"></span>
             </button>
             <button type="button" class="screener-tab" :class="{active: recentOrdersTab === 'expired'}" @click="recentOrdersTab = 'expired'">
-              Expired <span style="opacity:0.6" x-text="`(${myAlpacaOrders().filter(o => ['expired','canceled','rejected'].includes(o.status)).length})`"></span>
+              Expired <span style="opacity:0.6" x-text="`(${alpacaOrders.filter(o => ['expired','canceled','rejected'].includes(o.status)).length})`"></span>
             </button>
           </div>
-          <div x-show="myAlpacaOrders().length === 0 && !loadingBrokerage" class="card" style="padding: 22px; text-align: center; color: var(--muted)">
+          <div x-show="alpacaOrders.length === 0 && !loadingBrokerage" class="card" style="padding: 22px; text-align: center; color: var(--muted)">
             No orders yet.
           </div>
-          <div x-show="myAlpacaOrders().length && recentOrdersFiltered().length === 0" class="card" style="padding: 18px; text-align: center; color: var(--muted)">
+          <div x-show="alpacaOrders.length && recentOrdersFiltered().length === 0" class="card" style="padding: 18px; text-align: center; color: var(--muted)">
             No <span x-text="recentOrdersTab"></span> orders.
           </div>
           <div x-show="recentOrdersFiltered().length" class="card" style="padding: 0; overflow: hidden">
@@ -3437,7 +3427,14 @@ animate();
                 <tbody>
                   <template x-for="p in sortedHoldings()" :key="p.symbol">
                     <tr>
-                      <td>
+                      <td class="holdings-symbol-cell">
+                        <button type="button"
+                                class="screener-wishlist-star"
+                                :class="{ active: isInWishList(p.symbol) }"
+                                @click.stop="toggleWishList(p.symbol)"
+                                :title="isInWishList(p.symbol) ? 'Remove from wish list' : 'Add to wish list'">
+                          <svg width="15" height="15" viewBox="0 0 24 24" stroke-width="1.6" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" :fill="isInWishList(p.symbol) ? '#facc15' : 'none'"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>
+                        </button>
                         <img class="ticker-logo" x-show="logoUrlFor(p.symbol)" :src="logoUrlFor(p.symbol)" :alt="p.symbol" loading="lazy" @error="$el.style.display='none'" />
                         <strong x-text="p.symbol"></strong>
                         <template x-if="delistingRiskFor(p.symbol) && delistingFilingUrl(p.symbol)">
@@ -3446,6 +3443,12 @@ animate();
                         <template x-if="delistingRiskFor(p.symbol) && !delistingFilingUrl(p.symbol)">
                           <span class="holdings-delist-badge" :class="'delist-' + delistingRiskSeverity(p.symbol)" :title="delistingRiskReason(p.symbol)" x-text="delistingRiskFor(p.symbol)"></span>
                         </template>
+                        <span class="screener-badge dividend-pays"
+                              x-show="screenerDividends[p.symbol]?.annual_rate > 0"
+                              :title="'Annual dividend $' + Number(screenerDividends[p.symbol]?.annual_rate || 0).toFixed(2) + '/share' + (screenerQuotes[p.symbol]?.price > 0 ? ' · ' + ((screenerDividends[p.symbol]?.annual_rate / screenerQuotes[p.symbol]?.price) * 100).toFixed(2) + '% yield' : '')">Dividend</span>
+                        <span class="screener-badge dividend-king screener-badge-right" x-show="dividendStatusFor(p.symbol) === 'King'" title="Dividend King — 50+ consecutive years of dividend increases">King</span>
+                        <span class="screener-badge dividend-aristocrat screener-badge-right" x-show="dividendStatusFor(p.symbol) === 'Aristocrat'" title="S&amp;P 500 Dividend Aristocrat — 25 to 49 consecutive years of dividend increases">Aristocrat</span>
+                        <span class="screener-badge risk screener-badge-right" x-show="riskTierFor(p.symbol)" :class="'risk-' + (riskTierFor(p.symbol) || '').toLowerCase()" x-text="riskTierFor(p.symbol)"></span>
                       </td>
                       <td x-text="nameForPosition(p.symbol).toUpperCase()"></td>
                       <td>
@@ -3541,19 +3544,19 @@ animate();
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px">
                   <div class="form-group">
                     <label class="form-label">First name</label>
-                    <input class="form-input" type="text" x-model="kycForm.given_name" required />
+                    <input class="form-input" type="text" x-model="kycForm.given_name" required data-testid="kyc-given-name" />
                   </div>
                   <div class="form-group">
                     <label class="form-label">Last name</label>
-                    <input class="form-input" type="text" x-model="kycForm.family_name" required />
+                    <input class="form-input" type="text" x-model="kycForm.family_name" required data-testid="kyc-family-name" />
                   </div>
                   <div class="form-group">
                     <label class="form-label">Date of birth</label>
-                    <input class="form-input" type="date" x-model="kycForm.date_of_birth" required />
+                    <input class="form-input" type="date" x-model="kycForm.date_of_birth" required data-testid="kyc-dob" />
                   </div>
                   <div class="form-group">
                     <label class="form-label">SSN (XXX-XX-XXXX)</label>
-                    <input class="form-input" type="text" inputmode="numeric" autocomplete="off" x-model="kycForm.tax_id" placeholder="123-45-6789" required />
+                    <input class="form-input" type="text" inputmode="numeric" autocomplete="off" x-model="kycForm.tax_id" placeholder="123-45-6789" required data-testid="kyc-ssn" />
                   </div>
                 </div>
               </section>
@@ -3563,25 +3566,25 @@ animate();
                 <div style="display:grid; grid-template-columns:1fr; gap:12px">
                   <div class="form-group">
                     <label class="form-label">Phone (E.164, +1...)</label>
-                    <input class="form-input" type="tel" x-model="kycForm.phone_number" placeholder="+14155551234" required />
+                    <input class="form-input" type="tel" x-model="kycForm.phone_number" placeholder="+14155551234" required data-testid="kyc-phone" />
                   </div>
                   <div class="form-group">
                     <label class="form-label">Street address</label>
-                    <input class="form-input" type="text" x-model="kycForm.street_address" required />
+                    <input class="form-input" type="text" x-model="kycForm.street_address" required data-testid="kyc-street" />
                   </div>
                 </div>
                 <div style="display:grid; grid-template-columns:2fr 1fr 1fr; gap:12px">
                   <div class="form-group">
                     <label class="form-label">City</label>
-                    <input class="form-input" type="text" x-model="kycForm.city" required />
+                    <input class="form-input" type="text" x-model="kycForm.city" required data-testid="kyc-city" />
                   </div>
                   <div class="form-group">
                     <label class="form-label">State (2-letter)</label>
-                    <input class="form-input" type="text" maxlength="2" x-model="kycForm.state" placeholder="CA" required style="text-transform:uppercase" />
+                    <input class="form-input" type="text" maxlength="2" x-model="kycForm.state" placeholder="CA" required style="text-transform:uppercase" data-testid="kyc-state" />
                   </div>
                   <div class="form-group">
                     <label class="form-label">ZIP</label>
-                    <input class="form-input" type="text" x-model="kycForm.postal_code" placeholder="94103" required />
+                    <input class="form-input" type="text" x-model="kycForm.postal_code" placeholder="94103" required data-testid="kyc-zip" />
                   </div>
                 </div>
               </section>
@@ -3627,19 +3630,19 @@ animate();
                   Click each link to open Alpaca's standard agreement, then check the box to accept.
                 </p>
                 <label style="display:flex; gap:10px; align-items:flex-start; padding:8px 0; cursor:pointer">
-                  <input type="checkbox" x-model="kycForm.agreement_customer" required />
+                  <input type="checkbox" x-model="kycForm.agreement_customer" required data-testid="kyc-agree-customer" />
                   <span>I have read and accept the
                     <a href="https://files.alpaca.markets/disclosures/library/CustAcctAgmt.pdf" target="_blank" rel="noopener noreferrer"><strong>Customer Agreement</strong></a>.
                   </span>
                 </label>
                 <label style="display:flex; gap:10px; align-items:flex-start; padding:8px 0; cursor:pointer">
-                  <input type="checkbox" x-model="kycForm.agreement_account" required />
+                  <input type="checkbox" x-model="kycForm.agreement_account" required data-testid="kyc-agree-account" />
                   <span>I have read and accept the
                     <a href="https://files.alpaca.markets/disclosures/library/AcctAppDisc.pdf" target="_blank" rel="noopener noreferrer"><strong>Account Application Disclosure</strong></a>.
                   </span>
                 </label>
                 <label style="display:flex; gap:10px; align-items:flex-start; padding:8px 0; cursor:pointer">
-                  <input type="checkbox" x-model="kycForm.agreement_margin" required />
+                  <input type="checkbox" x-model="kycForm.agreement_margin" required data-testid="kyc-agree-margin" />
                   <span>I have read and accept the
                     <a href="https://files.alpaca.markets/disclosures/library/MarginAgmt.pdf" target="_blank" rel="noopener noreferrer"><strong>Margin Agreement</strong></a>
                     <span style="color:var(--muted); font-size:12px">(required even for cash-only accounts)</span>.
@@ -3651,7 +3654,7 @@ animate();
 
               <div style="display:flex; gap:8px; justify-content:flex-end">
                 <button type="button" class="btn btn-outline" @click="page='brokerage'" :disabled="kycSubmitting">Cancel</button>
-                <button type="submit" class="btn btn-primary" :disabled="kycSubmitting">
+                <button type="submit" class="btn btn-primary" :disabled="kycSubmitting" data-testid="kyc-submit">
                   <span x-show="!kycSubmitting">Submit for approval</span>
                   <span x-show="kycSubmitting">Submitting…</span>
                 </button>
@@ -5026,11 +5029,11 @@ animate();
       <button class="modal-close" @click="wishListOpen = false" type="button">&times;</button>
       <div class="modal-title">Wish List <span x-show="wishList.length" class="text-muted" style="font-size:13px; font-weight:500" x-text="'· ' + wishList.length + (wishList.length === 1 ? ' ticker' : ' tickers')"></span></div>
       <p class="text-muted" style="margin-bottom: 14px; font-size: 12.5px">
-        Stocks you've starred from the screener, plus any you've added manually. Saved locally on this device.
+        Stocks you've starred from the screener, plus any you've added manually. Saved to your account — follows you across devices.
       </p>
-      <form @submit.prevent="addToWishList(wishListInput)" style="display:flex; gap:8px; margin-bottom: 14px">
-        <input class="form-input" type="text" x-model="wishListInput" placeholder="Add a ticker (e.g. AAPL)" autocomplete="off" style="flex:1; text-transform:uppercase" />
-        <button type="submit" class="btn btn-primary" :disabled="!wishListInput.trim()">Add</button>
+      <form @submit.prevent="addToWishList(wishListInput)" style="display:flex; gap:8px; margin-bottom: 14px" data-testid="wishlist-add-form">
+        <input class="form-input" type="text" x-model="wishListInput" placeholder="Add a ticker (e.g. AAPL)" autocomplete="off" style="flex:1; text-transform:uppercase" data-testid="wishlist-add-input" />
+        <button type="submit" class="btn btn-primary" :disabled="!wishListInput.trim()" data-testid="wishlist-add-submit">Add</button>
       </form>
       <div x-show="!wishList.length" class="text-muted" style="padding: 18px 0; text-align:center; font-size: 13px">
         Your wish list is empty. Click any star on the screener or add a ticker above.
@@ -5082,6 +5085,15 @@ animate();
             <button type="button" class="wishlist-remove" @click="removeFromWishList(sym)" title="Remove" aria-label="Remove">&times;</button>
           </div>
         </template>
+      </div>
+      <div x-show="wishList.length" class="wishlist-subtotal">
+        <div class="wishlist-subtotal-label">Subtotal if all orders fill at current price</div>
+        <div class="wishlist-subtotal-value">
+          <span x-text="'~' + fmtUSD(wishlistSubtotal().total)"></span>
+          <span class="wishlist-subtotal-note text-muted"
+                x-show="wishlistSubtotal().noQty || wishlistSubtotal().unpriced"
+                x-text="(() => { const s = wishlistSubtotal(); const parts = []; if (s.noQty) parts.push(s.noQty + ' missing qty'); if (s.unpriced) parts.push(s.unpriced + ' loading price'); return ' · ' + parts.join(' · '); })()"></span>
+        </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-outline" @click="wishListOpen = false">Close</button>

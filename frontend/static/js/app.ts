@@ -775,20 +775,54 @@ const STOCK_SCREENER: ScreenerCategory[] = [
     view: 'etfs',
     description: 'Track a broad market index — like the S&P 500, Nasdaq-100, or total US market. One purchase gives you exposure to hundreds of companies at once. Cheapest fees in the entire ETF universe (often 0.03–0.10%) and the typical "core holding" most long-term portfolios are built around.',
     stocks: [
-      { symbol: 'SPY',  name: 'SPDR S&P 500 ETF',          note: 'ETF tracking the S&P 500 index.' },
-      { symbol: 'IVV',  name: 'iShares Core S&P 500 ETF',  note: 'ETF — S&P 500, BlackRock low-cost mirror of SPY.' },
+      // S&P 500
+      { symbol: 'SPY',  name: 'SPDR S&P 500 ETF',           note: 'ETF tracking the S&P 500 index.' },
+      { symbol: 'IVV',  name: 'iShares Core S&P 500 ETF',   note: 'ETF — S&P 500, BlackRock low-cost mirror of SPY.' },
       { symbol: 'VOO',  name: 'Vanguard S&P 500 ETF',       note: 'ETF — S&P 500, lower expense ratio than SPY.' },
+      { symbol: 'SPLG', name: 'SPDR Portfolio S&P 500',     note: 'ETF — low-cost S&P 500 from SSGA.' },
+      { symbol: 'RSP',  name: 'Invesco S&P 500 Equal Weight', note: 'ETF — S&P 500, every stock weighted equally.' },
+      // Nasdaq
       { symbol: 'QQQ',  name: 'Invesco QQQ',                note: 'ETF tracking the Nasdaq-100 index.' },
       { symbol: 'QQQM', name: 'Invesco Nasdaq-100 ETF',     note: 'ETF — Nasdaq-100, lower-cost long-term version of QQQ.' },
+      { symbol: 'ONEQ', name: 'Fidelity Nasdaq Composite',  note: 'ETF tracking the full Nasdaq Composite (~3,000 names).' },
+      // Russell — total US market by size
       { symbol: 'IWM',  name: 'iShares Russell 2000',       note: 'ETF tracking small-cap US stocks.' },
       { symbol: 'IWB',  name: 'iShares Russell 1000',       note: 'ETF — large-cap US stocks (Russell 1000).' },
       { symbol: 'IWV',  name: 'iShares Russell 3000',       note: 'ETF — broad US equity (Russell 3000).' },
-      { symbol: 'DIA',  name: 'SPDR Dow Jones Industrial',  note: 'ETF tracking the Dow 30.' },
+      { symbol: 'IWR',  name: 'iShares Russell Mid-Cap',    note: 'ETF — Russell Midcap, 800 mid-size US companies.' },
+      // Total US market
       { symbol: 'VTI',  name: 'Vanguard Total Stock Market', note: 'ETF — entire US stock market.' },
       { symbol: 'ITOT', name: 'iShares Core S&P Total US',  note: 'ETF — total US equity market.' },
+      { symbol: 'SCHB', name: 'Schwab US Broad Market',     note: 'ETF — total US market, Schwab low-cost flavor.' },
+      // Dow + mid/small caps
+      { symbol: 'DIA',  name: 'SPDR Dow Jones Industrial',  note: 'ETF tracking the Dow 30.' },
       { symbol: 'MDY',  name: 'SPDR S&P MidCap 400',        note: 'ETF — mid-cap US stocks.' },
-      { symbol: 'SPLG', name: 'SPDR Portfolio S&P 500',     note: 'ETF — low-cost S&P 500 from SSGA.' },
-      { symbol: 'RSP',  name: 'Invesco S&P 500 Equal Weight', note: 'ETF — S&P 500, every stock weighted equally.' },
+      { symbol: 'IJH',  name: 'iShares Core S&P Mid-Cap',   note: 'ETF — S&P MidCap 400, BlackRock low-cost flavor.' },
+      { symbol: 'IJR',  name: 'iShares Core S&P Small-Cap', note: 'ETF — S&P SmallCap 600, profitable small caps.' },
+      { symbol: 'VB',   name: 'Vanguard Small-Cap',         note: 'ETF — broad US small-cap exposure.' },
+      // Style tilts — value vs growth flavors of the same index
+      { symbol: 'VTV',  name: 'Vanguard Value',             note: 'ETF — large-cap US value, slower-growing but cheaper-priced names.' },
+      { symbol: 'VUG',  name: 'Vanguard Growth',            note: 'ETF — large-cap US growth, faster-growing tech-heavy names.' },
+      { symbol: 'IWD',  name: 'iShares Russell 1000 Value', note: 'ETF — Russell 1000 value tilt, BlackRock flavor.' },
+      { symbol: 'IWF',  name: 'iShares Russell 1000 Growth', note: 'ETF — Russell 1000 growth tilt, BlackRock flavor.' },
+      { symbol: 'MGK',  name: 'Vanguard Mega-Cap Growth',   note: 'ETF — top ~75 largest US growth companies.' },
+      { symbol: 'MGV',  name: 'Vanguard Mega-Cap Value',    note: 'ETF — top ~75 largest US value companies.' },
+      // Schwab low-cost size buckets
+      { symbol: 'SCHX', name: 'Schwab US Large-Cap',        note: 'ETF — Dow Jones US Large-Cap Total Market.' },
+      { symbol: 'SCHA', name: 'Schwab US Small-Cap',        note: 'ETF — Dow Jones US Small-Cap, Schwab low-cost.' },
+      { symbol: 'SCHM', name: 'Schwab US Mid-Cap',          note: 'ETF — Dow Jones US Mid-Cap, Schwab low-cost.' },
+      { symbol: 'SCHF', name: 'Schwab International Equity', note: 'ETF — developed-market intl, Schwab low-cost.' },
+      // Total-world / international diversifiers
+      { symbol: 'VT',   name: 'Vanguard Total World Stock', note: 'ETF — every investable stock globally (US + intl).' },
+      { symbol: 'VXUS', name: 'Vanguard Total Intl Stock',  note: 'ETF — total ex-US equity (developed + emerging).' },
+      { symbol: 'IXUS', name: 'iShares Core MSCI Total Intl', note: 'ETF — total ex-US equity, BlackRock flavor.' },
+      { symbol: 'ACWI', name: 'iShares MSCI All Country World', note: 'ETF — global equity, US + developed + emerging.' },
+      { symbol: 'VEA',  name: 'Vanguard FTSE Developed Mkts', note: 'ETF — developed-market equity outside the US.' },
+      { symbol: 'EFA',  name: 'iShares MSCI EAFE',          note: 'ETF — large/mid developed markets ex-US/Canada.' },
+      { symbol: 'IEFA', name: 'iShares Core MSCI EAFE',     note: 'ETF — MSCI EAFE, low-cost iShares Core flavor.' },
+      { symbol: 'VWO',  name: 'Vanguard FTSE Emerging Mkts', note: 'ETF — emerging-market equity (China, India, Brazil, etc.).' },
+      { symbol: 'IEMG', name: 'iShares Core MSCI Emerging Mkts', note: 'ETF — emerging markets, iShares Core low-cost.' },
+      { symbol: 'EEM',  name: 'iShares MSCI Emerging Mkts', note: 'ETF — original emerging-markets ETF, higher fee.' },
     ],
   },
   {
@@ -1622,6 +1656,41 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'DNA',  name: 'Ginkgo Bioworks',           note: 'Biotech — synthetic biology cell-programming platform.' },
       { symbol: 'PACB', name: 'Pacific Biosciences',       note: 'Biotech — long-read DNA sequencing.' },
       { symbol: 'ILMN', name: 'Illumina',                  note: 'Biotech — DNA sequencing market leader.' },
+      // Midstream / pipeline MLPs (oil & gas transport, high yields):
+      { symbol: 'ET',   name: 'Energy Transfer',            note: 'Midstream — pipelines and storage MLP, quarterly distribution.' },
+      { symbol: 'KMI',  name: 'Kinder Morgan',              note: 'Midstream — North American natural-gas pipeline operator.' },
+      { symbol: 'PAA',  name: 'Plains All American',        note: 'Midstream — crude oil pipelines and storage MLP.' },
+      { symbol: 'AM',   name: 'Antero Midstream',           note: 'Midstream — Appalachian gas gathering and water services.' },
+      { symbol: 'KGS',  name: 'Kodiak Gas Services',        note: 'Midstream — contracted natural-gas compression services.' },
+      // Royalty trusts (passive oil & gas income, monthly distributions):
+      { symbol: 'PBT',  name: 'Permian Basin Royalty Trust',note: 'Royalty trust — Permian basin oil & gas, monthly distributions.' },
+      { symbol: 'BPT',  name: 'BP Prudhoe Bay Royalty Trust',note: 'Royalty trust — Alaskan North Slope oil royalties.' },
+      { symbol: 'CRT',  name: 'Cross Timbers Royalty Trust',note: 'Royalty trust — Texas/Oklahoma/New Mexico oil & gas.' },
+      { symbol: 'MVO',  name: 'MV Oil Trust',               note: 'Royalty trust — Kansas/Colorado conventional oil.' },
+      // Closed-end funds (high-distribution income vehicles):
+      { symbol: 'PDO',  name: 'PIMCO Dynamic Income Opp',   note: 'Fund — PIMCO Dynamic Income Opps (multi-sector bond CEF, monthly).' },
+      { symbol: 'PHK',  name: 'PIMCO High Income Fund',     note: 'Fund — PIMCO High Income (high-yield bond CEF, monthly).' },
+      { symbol: 'HYT',  name: 'BlackRock Corporate High Yield', note: 'Fund — BlackRock High Yield (junk-bond CEF, monthly).' },
+      { symbol: 'JFR',  name: 'Nuveen Floating Rate Income',note: 'Fund — Nuveen Floating Rate (senior loan CEF, monthly).' },
+      { symbol: 'DSL',  name: 'DoubleLine Income Solutions',note: 'Fund — DoubleLine multi-sector income CEF, monthly.' },
+      { symbol: 'BGT',  name: 'BlackRock Floating Rate',    note: 'Fund — BlackRock Floating Rate Income Strategy CEF.' },
+      // Foreign-bank ADRs (cheap shares + real dividends):
+      { symbol: 'BBVA', name: 'Banco Bilbao Vizcaya Argentaria', note: 'Foreign bank — BBVA (Spanish multinational, semi-annual dividend).' },
+      { symbol: 'SAN',  name: 'Banco Santander',            note: 'Foreign bank — Santander (Spain, semi-annual dividend).' },
+      { symbol: 'LYG',  name: 'Lloyds Banking Group',       note: 'Foreign bank — Lloyds (UK retail bank, semi-annual dividend).' },
+      { symbol: 'ING',  name: 'ING Groep',                  note: 'Foreign bank — ING (Dutch retail and commercial bank).' },
+      { symbol: 'DB',   name: 'Deutsche Bank',              note: 'Foreign bank — Deutsche Bank (German, ADR).' },
+      { symbol: 'VOD',  name: 'Vodafone Group',             note: 'Telecom — Vodafone (UK wireless, semi-annual dividend).' },
+      { symbol: 'ITUB', name: 'Itaú Unibanco',              note: 'Foreign bank — Itaú (largest Brazilian bank).' },
+      // Dry-bulk shipping (cyclical, but pay big when freight rates rise):
+      { symbol: 'SBLK', name: 'Star Bulk Carriers',         note: 'Shipping — dry-bulk fleet, variable quarterly dividend.' },
+      { symbol: 'GOGL', name: 'Golden Ocean Group',         note: 'Shipping — dry-bulk fleet, quarterly distributions.' },
+      // More regional banks:
+      { symbol: 'FNB',  name: 'F.N.B. Corporation',         note: 'Bank — Pittsburgh-based regional bank.' },
+      { symbol: 'VLY',  name: 'Valley National Bancorp',    note: 'Bank — New Jersey-based regional bank.' },
+      // Other under-$20 dividend payers:
+      { symbol: 'VGR',  name: 'Vector Group',               note: 'Tobacco — Liggett (4th-largest US cigarette maker), high dividend.' },
+      { symbol: 'GNW',  name: 'Genworth Financial',         note: 'Insurance — life and long-term-care insurance.' },
     ],
   },
   {
@@ -1865,10 +1934,25 @@ const ETF_HOLDINGS: Record<string, string> = {
 // developed-market intl, mature dividend high-yielders. Aggressive = thematic,
 // emerging/single-country, commodity, crypto, high-yield bonds, NAV-decay
 // covered calls. Symbols not in the map render no badge.
+// Tiering rule (so future additions stay consistent):
+//   Conservative — broad/diversified, large-cap focus, investment-grade
+//     bonds, dividend quality, low-vol factor. Historical max-drawdown
+//     typically <30%; expected to hold up better in a recession.
+//   Moderate     — single-index large-caps with concentration (Nasdaq,
+//     Dow), sectors, developed-market intl, growth tilts, mid-caps.
+//     30–45% drawdowns possible.
+//   Aggressive   — small caps, emerging markets, single-country, thematic,
+//     leveraged income, commodities, crypto, high-yield credit. 45%+
+//     drawdowns expected at some point.
 const ETF_RISK: Record<string, 'Conservative' | 'Moderate' | 'Aggressive'> = {
-  // Conservative: broad index core
-  VOO: 'Conservative', IVV: 'Conservative', VTI: 'Conservative', ITOT: 'Conservative',
-  SPLG: 'Conservative',
+  // Conservative: S&P 500 (all four major trackers + low-cost SSGA)
+  SPY: 'Conservative', IVV: 'Conservative', VOO: 'Conservative', SPLG: 'Conservative',
+  RSP: 'Conservative',
+  // Conservative: total US market
+  VTI: 'Conservative', ITOT: 'Conservative', SCHB: 'Conservative',
+  // Conservative: Russell large-cap, Dow, mega-cap value
+  IWB: 'Conservative', IWV: 'Conservative', SCHX: 'Conservative', DIA: 'Conservative',
+  IWD: 'Conservative', VTV: 'Conservative', MGV: 'Conservative',
   // Conservative: quality dividend payers
   SCHD: 'Conservative', VYM: 'Conservative', VIG: 'Conservative', DGRO: 'Conservative',
   NOBL: 'Conservative', HDV: 'Conservative',
@@ -1878,22 +1962,26 @@ const ETF_RISK: Record<string, 'Conservative' | 'Moderate' | 'Aggressive'> = {
   BNDX: 'Conservative', IEF: 'Conservative',
   // Conservative: low-vol factor
   USMV: 'Conservative',
-  // Moderate: large-cap index variants
-  SPY: 'Moderate', QQQ: 'Moderate', QQQM: 'Moderate', DIA: 'Moderate',
-  IWB: 'Moderate', IWV: 'Moderate', RSP: 'Moderate',
+  // Moderate: tech/growth concentration (Nasdaq + growth tilts)
+  QQQ: 'Moderate', QQQM: 'Moderate', ONEQ: 'Moderate',
+  IWF: 'Moderate', VUG: 'Moderate', MGK: 'Moderate',
+  // Moderate: mid-caps (more vol than large but more diversified than small)
+  IWR: 'Moderate',
   // Moderate: sector ETFs
   XLK: 'Moderate', XLV: 'Moderate', XLF: 'Moderate', XLE: 'Moderate', XLI: 'Moderate',
   XLY: 'Moderate', XLP: 'Moderate', XLU: 'Moderate', XLB: 'Moderate', XLRE: 'Moderate',
   XLC: 'Moderate',
-  // Moderate: developed-market intl
-  VEA: 'Moderate', EFA: 'Moderate', IEFA: 'Moderate', VXUS: 'Moderate', ACWI: 'Moderate',
+  // Moderate: developed-market intl + global all-cap
+  VEA: 'Moderate', EFA: 'Moderate', IEFA: 'Moderate', SCHF: 'Moderate',
+  VXUS: 'Moderate', IXUS: 'Moderate', ACWI: 'Moderate', VT: 'Moderate',
   // Moderate: dividend high-yield (mature names) + long Treasuries (rate risk)
   SPHD: 'Moderate', SPYD: 'Moderate', DVY: 'Moderate', DIVO: 'Moderate', JEPI: 'Moderate',
   TLT: 'Moderate',
   // Moderate: factor / quality
   MOAT: 'Moderate', QUAL: 'Moderate', COWZ: 'Moderate', MTUM: 'Moderate',
-  // Aggressive: small/mid cap
-  IWM: 'Aggressive', MDY: 'Aggressive',
+  // Aggressive: small/mid cap (small caps swing 1.3–1.5x the S&P)
+  IWM: 'Aggressive', MDY: 'Aggressive', IJH: 'Aggressive', IJR: 'Aggressive',
+  VB: 'Aggressive', SCHA: 'Aggressive', SCHM: 'Aggressive',
   // Aggressive: concentrated sector
   SOXX: 'Aggressive', SMH: 'Aggressive', IGV: 'Aggressive', IBB: 'Aggressive',
   KRE: 'Aggressive', KBE: 'Aggressive', ITA: 'Aggressive', XAR: 'Aggressive',
@@ -2612,13 +2700,22 @@ window.dashApp = () => ({
   // Stocks the user wants to buy later — persisted in localStorage so
   // the list survives reloads. Modal opens from the "Wish List" button
   // under the Rewards Deposited tile.
-  wishList: ((): string[] => {
-    try {
-      const raw = localStorage.getItem('wishList');
-      const parsed = raw ? JSON.parse(raw) : [];
-      return Array.isArray(parsed) ? parsed.filter((s) => typeof s === 'string') : [];
-    } catch { return []; }
-  })(),
+  // Wishlist is DB-backed (per-user, multi-device). Templates still read
+  // `wishList` (symbols) and `wishListQty` (qty map); we keep both in
+  // sync from the canonical `_wishlistItems` array after each API
+  // response so the existing templates keep working unchanged.
+  wishList: [] as string[],
+  _wishlistItems: [] as Array<{
+    id: number;
+    symbol: string;
+    qty: string;
+    side: string;
+    order_type: string;
+    limit_price: string | null;
+    time_in_force: string;
+    position: number;
+    status: string;
+  }>,
   wishListOpen: false,
   wishListInput: '',
   // ── Personas — customer-persona authoring tool ───────────────────────
@@ -3275,15 +3372,10 @@ window.dashApp = () => ({
       this.renderMemoGenerationsChart();
     });
   },
-  // Per-symbol planned purchase quantity. Persisted in localStorage so
-  // the user can plan a shopping list across sessions.
-  wishListQty: ((): Record<string, string> => {
-    try {
-      const raw = localStorage.getItem('wishListQty');
-      const parsed = raw ? JSON.parse(raw) : {};
-      return parsed && typeof parsed === 'object' ? parsed : {};
-    } catch { return {}; }
-  })(),
+  // Per-symbol planned purchase quantity. Derived from `_wishlistItems`
+  // after each API response; kept as a flat record for the existing
+  // template lookups (`wishListQty[symbol]`).
+  wishListQty: {} as Record<string, string>,
   // Drag-and-drop reorder state — index of the row currently being
   // dragged. Drop handler swaps it into the target slot.
   wishListDragIndex: null as number | null,
@@ -3310,13 +3402,6 @@ window.dashApp = () => ({
   lowPriceRange: '' as '' | 'under1' | '1to5' | '5to10',
   lowSharePrice: '' as '' | '1to5' | '5to10' | '10to15',
   lowDivYield: '' as '' | '1to10' | '10to20' | '20to30' | '30plus',
-  // Top-tier filter for the Dividend payers tab. 'kings' restricts to
-  // Dividend Kings (50+ years), 'aristocrats' to S&P 500 Dividend
-  // Aristocrats (25+ years; superset that includes the Kings).
-  dividendTier: '' as '' | 'kings' | 'aristocrats',
-  // Sort order on the Dividend payers tab. '' = cheapest-first (default),
-  // 'yield' = highest dividend yield first.
-  dividendSort: '' as '' | 'yield',
   screenerQuotes: {} as Record<string, { price: number | null; change_pct: number | null }>,
   loadingScreenerQuotes: false,
   screenerDividends: {} as Record<string, { annual_rate: number; latest_rate: number | null; latest_ex_date: string | null; payment_count: number }>,
@@ -3410,6 +3495,7 @@ window.dashApp = () => ({
       // a Deposit button that just bounces them here.
       this.page = 'account-setup';
     }
+    this.loadWishlist();
 
     await this.loadPortfolios();
     if (this.portfolios.length) {
@@ -3440,10 +3526,6 @@ window.dashApp = () => ({
         this.lowPriceRange = '';
         this.lowSharePrice = '';
         this.lowDivYield = '';
-      }
-      if (catId !== 'dividend') {
-        this.dividendTier = '';
-        this.dividendSort = '';
       }
       if (this.page === 'brokerage') {
         if (catId === 'filters') {
@@ -4387,13 +4469,44 @@ window.dashApp = () => ({
 
   // Fetch the user's Alpaca account state (or null if no onboarding yet).
   // Called on init + after KYC submit. Drives the Add Funds gate.
+  //
+  // The backend refreshes from Alpaca on read when status is pending,
+  // so repeated polling here drives status forward without needing a
+  // separate refresh endpoint. Once we see kyc_state === 'active', we
+  // stop the poll loop and let the user click Add Funds.
   async loadBrokerageAccount(this: any) {
     try {
       const res = await apiFetch<{ account: any }>('/brokerage/account');
+      const prevState = this.brokerageAccount?.kyc_state;
       this.brokerageAccount = res.account;
+      // First time we see kyc=active (post-onboarding settlement),
+      // refresh the Alpaca trading snapshot so the brokerage/holdings
+      // pages stop showing empty/disabled state without a manual reload.
+      if (prevState !== 'active' && res.account?.kyc_state === 'active') {
+        if (this.page === 'brokerage' || this.page === 'holdings') {
+          this.loadBrokerage();
+        }
+      }
     } catch (e: any) {
       // 404 = no account yet; any other error = treat as missing.
       this.brokerageAccount = null;
+    }
+    this._scheduleAccountPoll();
+  },
+
+  // Internal: poll the account endpoint every 4s while status is
+  // pending. Sandbox approval typically completes in 5–15s; 4s strikes
+  // a balance between responsive UI and Alpaca API politeness. Cleared
+  // once kyc_state hits 'active' (or 'failed') so we don't poll forever.
+  _accountPollTimer: null as ReturnType<typeof setTimeout> | null,
+  _scheduleAccountPoll(this: any) {
+    if (this._accountPollTimer) {
+      clearTimeout(this._accountPollTimer);
+      this._accountPollTimer = null;
+    }
+    const state = this.brokerageAccount?.kyc_state;
+    if (state && state !== 'active' && state !== 'failed') {
+      this._accountPollTimer = setTimeout(() => this.loadBrokerageAccount(), 4000);
     }
   },
 
@@ -4443,6 +4556,10 @@ window.dashApp = () => ({
         body: JSON.stringify(payload),
       });
       this.brokerageAccount = res.account;
+      // Kick off the pending→active poller so the UI advances on its
+      // own; without this the user would need to refresh after Alpaca
+      // approval lands.
+      this._scheduleAccountPoll();
       // Clear sensitive fields immediately on success — don't leave SSN
       // sitting in component state any longer than necessary.
       this.kycForm.tax_id = '';
@@ -4505,18 +4622,19 @@ window.dashApp = () => ({
     return this.brokerageRewardsByPortfolio[id] || 0;
   },
 
-  // Positions for the active portfolio, pro-rated by allocated quantity.
-  // 'all' aggregates across the user's portfolios — only positions where
-  // the user has nonzero allocation in *any* of their portfolios show.
-  // (The shared Alpaca paper account contains everyone's positions in v1;
-  // this filter keeps each user's view scoped to their own activity.)
+  // Positions for the active portfolio.
+  // 'all' returns the user's full Alpaca position list as-is (the
+  // backend already scopes by user — Broker API per-customer endpoint).
+  // A specific portfolio prorates by the user's per-portfolio allocation
+  // for each symbol, so positions without an explicit allocation in
+  // that bucket are hidden.
   filteredAlpacaPositions(this: any) {
     const id = this.activeBrokeragePortfolioId;
+    if (id === 'all') return this.alpacaPositions || [];
+
     const out: any[] = [];
     for (const p of this.alpacaPositions || []) {
-      const allocQty = id === 'all'
-        ? this._totalAllocated(p.symbol)
-        : parseFloat(this.positionAllocation[p.symbol]?.[id]) || 0;
+      const allocQty = parseFloat(this.positionAllocation[p.symbol]?.[id]) || 0;
       if (allocQty <= 0) continue;
       const totalQty = parseFloat(p.qty) || 0;
       if (totalQty <= 0) continue;
@@ -4535,41 +4653,82 @@ window.dashApp = () => ({
     return out;
   },
 
-  // Open the per-row allocation editor for a symbol.
   // ── Wish list ─────────────────────────────────────────────────────────
-  _saveWishList(this: any) {
-    try { localStorage.setItem('wishList', JSON.stringify(this.wishList)); } catch {}
+  // Server is the source of truth; we mirror `_wishlistItems` after every
+  // API response and rebuild the template-facing `wishList` + `wishListQty`
+  // fields from it.
+
+  _hydrateWishlist(this: any, items: any[]) {
+    this._wishlistItems = (items || []).slice().sort(
+      (a: any, b: any) => a.position - b.position,
+    );
+    this.wishList = this._wishlistItems.map((i: any) => i.symbol);
+    const qty: Record<string, string> = {};
+    for (const i of this._wishlistItems) {
+      // Strip trailing zeros — server returns "5.00000000" for qty=5.
+      const n = parseFloat(i.qty);
+      if (Number.isFinite(n) && n > 0) qty[i.symbol] = String(n);
+    }
+    this.wishListQty = qty;
   },
 
-  addToWishList(this: any, raw: string) {
+  async loadWishlist(this: any) {
+    try {
+      const res = await apiFetch<{ items: any[] }>('/wishlist');
+      this._hydrateWishlist(res.items || []);
+    } catch {
+      this._hydrateWishlist([]);
+    }
+  },
+
+  async addToWishList(this: any, raw: string) {
     const sym = (raw || '').trim().toUpperCase();
     if (!sym) return;
     if (this.wishList.includes(sym)) {
       this.wishListInput = '';
       return;
     }
-    this.wishList = [...this.wishList, sym];
-    this.wishListInput = '';
-    this._saveWishList();
+    try {
+      const res = await apiFetch<{ item: any }>('/wishlist', {
+        method: 'POST',
+        body: JSON.stringify({ symbol: sym, qty: '1' }),
+      });
+      this._hydrateWishlist([...this._wishlistItems, res.item]);
+      this.wishListInput = '';
+    } catch (e: any) {
+      (Alpine.store('toast') as ToastStore).show(
+        e?.message || 'Could not add to wishlist',
+        'error',
+      );
+    }
   },
 
-  removeFromWishList(this: any, symbol: string) {
-    this.wishList = this.wishList.filter((s: string) => s !== symbol);
-    this._saveWishList();
+  async removeFromWishList(this: any, symbol: string) {
+    const sym = (symbol || '').toUpperCase();
+    const item = this._wishlistItems.find((i: any) => i.symbol === sym);
+    if (!item) return;
+    try {
+      await apiFetch(`/wishlist/${item.id}`, { method: 'DELETE' });
+      this._hydrateWishlist(this._wishlistItems.filter((i: any) => i.id !== item.id));
+    } catch (e: any) {
+      (Alpine.store('toast') as ToastStore).show(
+        e?.message || 'Could not remove from wishlist',
+        'error',
+      );
+    }
   },
 
   isInWishList(this: any, symbol: string): boolean {
     return this.wishList.includes((symbol || '').toUpperCase());
   },
 
-  toggleWishList(this: any, symbol: string) {
+  async toggleWishList(this: any, symbol: string) {
     const sym = (symbol || '').toUpperCase();
     if (!sym) return;
     if (this.wishList.includes(sym)) {
-      this.removeFromWishList(sym);
+      await this.removeFromWishList(sym);
     } else {
-      this.wishList = [...this.wishList, sym];
-      this._saveWishList();
+      await this.addToWishList(sym);
     }
   },
 
@@ -4578,34 +4737,68 @@ window.dashApp = () => ({
     this.wishListOpen = false;
   },
 
-  _saveWishListQty(this: any) {
-    try { localStorage.setItem('wishListQty', JSON.stringify(this.wishListQty)); } catch {}
-  },
-
+  // Debounced qty updates — the input is keystrokes; we don't want to
+  // POST on every digit. Persists 400ms after the last edit.
+  _wishListQtyTimers: {} as Record<string, ReturnType<typeof setTimeout>>,
   setWishListQty(this: any, symbol: string, val: string) {
     const sym = (symbol || '').toUpperCase();
     if (!sym) return;
+    // Optimistic local update so the input stays responsive.
     this.wishListQty = { ...this.wishListQty, [sym]: val };
-    this._saveWishListQty();
+    const n = parseFloat(val);
+    if (!Number.isFinite(n) || n <= 0) return;
+
+    if (this._wishListQtyTimers[sym]) clearTimeout(this._wishListQtyTimers[sym]);
+    this._wishListQtyTimers[sym] = setTimeout(async () => {
+      try {
+        const res = await apiFetch<{ item: any }>('/wishlist', {
+          method: 'POST',
+          body: JSON.stringify({ symbol: sym, qty: String(n) }),
+        });
+        // Merge the server's authoritative copy back in.
+        const next = this._wishlistItems.map((i: any) =>
+          i.symbol === sym ? res.item : i,
+        );
+        this._hydrateWishlist(next);
+      } catch (e: any) {
+        (Alpine.store('toast') as ToastStore).show(
+          e?.message || 'Could not save quantity',
+          'error',
+        );
+      }
+    }, 400);
   },
 
   // Drag-and-drop reorder: swap the dragged row into the target slot.
-  // Both indexes are positions inside `this.wishList`.
-  moveWishListItem(this: any, fromIdx: number, toIdx: number) {
+  async moveWishListItem(this: any, fromIdx: number, toIdx: number) {
     if (fromIdx == null || fromIdx === toIdx) {
       this.wishListDragIndex = null;
       return;
     }
-    if (fromIdx < 0 || toIdx < 0 || fromIdx >= this.wishList.length || toIdx >= this.wishList.length) {
+    if (fromIdx < 0 || toIdx < 0 || fromIdx >= this._wishlistItems.length || toIdx >= this._wishlistItems.length) {
       this.wishListDragIndex = null;
       return;
     }
-    const next = [...this.wishList];
+    const next = [...this._wishlistItems];
     const [item] = next.splice(fromIdx, 1);
     next.splice(toIdx, 0, item);
-    this.wishList = next;
+    // Optimistic UI update so the drag feels instant.
+    this._hydrateWishlist(next.map((i: any, idx: number) => ({ ...i, position: idx })));
     this.wishListDragIndex = null;
-    this._saveWishList();
+    try {
+      const res = await apiFetch<{ items: any[] }>('/wishlist/reorder', {
+        method: 'POST',
+        body: JSON.stringify({ ids: next.map((i: any) => i.id) }),
+      });
+      this._hydrateWishlist(res.items || []);
+    } catch (e: any) {
+      (Alpine.store('toast') as ToastStore).show(
+        e?.message || 'Could not save order',
+        'error',
+      );
+      // Re-fetch to recover from the failed reorder.
+      this.loadWishlist();
+    }
   },
 
   // Fetch live snapshot prices for any wish-list symbols not yet in
@@ -4623,6 +4816,35 @@ window.dashApp = () => ({
     } catch {
       // Silent — rows just show no price.
     }
+  },
+
+  // Sum of (qty × price) across the user's wishlist. Returns:
+  //   total       — dollars committed if every order fills at current price
+  //   priced      — count of symbols with both a qty and a live price
+  //   unpriced    — symbols with qty but no quote yet (price loading)
+  //   noQty       — symbols on the list but no qty entered
+  // UI shows the total as an estimate ("~$X") with the unpriced/noQty
+  // counts in muted text so the user understands when it's incomplete.
+  wishlistSubtotal(this: any) {
+    let total = 0;
+    let priced = 0;
+    let unpriced = 0;
+    let noQty = 0;
+    for (const sym of this.wishList) {
+      const qty = parseFloat(this.wishListQty[sym]);
+      if (!Number.isFinite(qty) || qty <= 0) {
+        noQty += 1;
+        continue;
+      }
+      const price = Number(this.screenerQuotes[sym]?.price);
+      if (!Number.isFinite(price) || price <= 0) {
+        unpriced += 1;
+        continue;
+      }
+      total += qty * price;
+      priced += 1;
+    }
+    return { total, priced, unpriced, noQty };
   },
 
   openAllocationEdit(this: any, symbol: string) {
@@ -5254,6 +5476,17 @@ window.dashApp = () => ({
     return ETF_RISK[symbol] || '';
   },
 
+  // Dividend-tier classification for individual stocks. Returns:
+  //   'King'        — 50+ consecutive years of dividend increases
+  //   'Aristocrat'  — 25-49 years (S&P 500 only); Kings are excluded so
+  //                   the two labels surface disjoint sets
+  //   ''            — neither
+  dividendStatusFor(this: any, symbol: string): string {
+    if (DIVIDEND_KINGS.has(symbol)) return 'King';
+    if (DIVIDEND_ARISTOCRATS.has(symbol)) return 'Aristocrat';
+    return '';
+  },
+
   // Logo.dev URL for a ticker — empty string when no logo can be served
   // (no token, crypto pair, etc.). Components fall back to no-image.
   logoUrlFor(this: any, symbol: string, size = 64): string {
@@ -5376,33 +5609,7 @@ window.dashApp = () => ({
         })
         .sort((a: any, b: any) => (this.screenerQuotes[a.symbol]?.price ?? 0) - (this.screenerQuotes[b.symbol]?.price ?? 0));
     }
-    // Dividend payers tab — optional "top tier" filter narrows to
-    // Dividend Kings (50+ years) or Aristocrats (25+ years).
     let stocks = cat.stocks;
-    if (cat.id === 'dividend') {
-      if (this.dividendTier === 'kings') {
-        stocks = stocks.filter((s: any) => DIVIDEND_KINGS.has(s.symbol));
-      } else if (this.dividendTier === 'aristocrats') {
-        // Aristocrats-only — exclude Kings so the two filters surface
-        // disjoint sets (Kings have their own chip).
-        stocks = stocks.filter((s: any) => DIVIDEND_ARISTOCRATS.has(s.symbol) && !DIVIDEND_KINGS.has(s.symbol));
-      }
-    }
-
-    // Dividend payers tab — optional sort by yield (highest first). Yield
-    // = annual dividend / current price. Symbols without yield data sink
-    // to the bottom so the top of the list always shows real picks.
-    if (cat.id === 'dividend' && this.dividendSort === 'yield') {
-      return [...stocks].filter(matchSearch).sort((a: any, b: any) => {
-        const pa = this.screenerQuotes[a.symbol]?.price;
-        const pb = this.screenerQuotes[b.symbol]?.price;
-        const da = this.screenerDividends[a.symbol]?.annual_rate;
-        const db = this.screenerDividends[b.symbol]?.annual_rate;
-        const ya = typeof pa === 'number' && pa > 0 && typeof da === 'number' && da > 0 ? (da / pa) : -1;
-        const yb = typeof pb === 'number' && pb > 0 && typeof db === 'number' && db > 0 ? (db / pb) : -1;
-        return yb - ya;
-      });
-    }
 
     // All other tabs — sort cheapest → most expensive. Symbols without a
     // loaded price sink to the bottom so the visible top of the list is
@@ -6087,19 +6294,13 @@ window.dashApp = () => ({
     }
   },
 
-  // Orders for *this user's* portfolios only. The shared Alpaca paper
-  // account in v1 contains everyone's orders, so we filter to symbols
-  // the user has nonzero allocation for (same pattern as
-  // filteredAlpacaPositions). Once each user has their own Alpaca
-  // account (Phase 2 / KYC), this filter is a no-op.
-  myAlpacaOrders(this: any): any[] {
-    return (this.alpacaOrders || []).filter((o: any) => this._totalAllocated(o.symbol) > 0);
-  },
-
   // Slice the user's orders by the selected Recent-orders tab.
+  // `alpacaOrders` is already scoped to the user's own Alpaca account
+  // server-side (Broker API per-customer endpoint), so no extra
+  // ownership filter needed here.
   recentOrdersFiltered(this: any) {
     const tab = this.recentOrdersTab;
-    const orders = this.myAlpacaOrders();
+    const orders = this.alpacaOrders || [];
     if (tab === 'filled') {
       return orders.filter((o: any) => o.status === 'filled' || o.status === 'partially_filled');
     }

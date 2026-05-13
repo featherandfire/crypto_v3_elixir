@@ -22,7 +22,7 @@ defmodule CryptoPortfolioV3.BrokerFunding do
 
   alias CryptoPortfolioV3.Repo
   alias CryptoPortfolioV3.BrokerFunding.{BrokerApi, Client, Deposit}
-  alias CryptoPortfolioV3.BrokerageAccounts
+  alias CryptoPortfolioV3.{BrokerageAccounts, WishlistItems}
 
   @methods ~w(ach wire instant)
 
@@ -188,6 +188,11 @@ defmodule CryptoPortfolioV3.BrokerFunding do
   we don't have a matching deposit row (transfer initiated outside
   our system, or status update for a transfer we never recorded).
 
+  When the deposit transitions to `completed`, kicks off wishlist
+  auto-execution for the depositing user. That's the connector that
+  turns a pending wishlist entry into a real order the moment funds
+  settle — the core "deposit → auto-buy" mechanic.
+
   The payload shape depends on event type, but Alpaca consistently
   nests the transfer object under `data` (or sometimes top-level on
   legacy events). We probe both.
@@ -196,8 +201,20 @@ defmodule CryptoPortfolioV3.BrokerFunding do
     transfer = payload["data"] || payload["transfer"] || payload
 
     with id when is_binary(id) <- transfer["id"],
-         %Deposit{} = deposit <- Repo.one(from d in Deposit, where: d.reference == ^id) do
-      patch_from_webhook(deposit, transfer)
+         %Deposit{} = deposit <- Repo.one(from d in Deposit, where: d.reference == ^id),
+         {:ok, updated} <- patch_from_webhook(deposit, transfer) do
+      if updated.status == "completed" and deposit.status != "completed" do
+        # Newly-settled deposit — try to fill the user's pending wishlist
+        # inline. Each fill is ~1-2 Alpaca calls; total <5s for typical
+        # wishlists. Doing it synchronously keeps the response window
+        # tied to the work — and means the webhook ack itself confirms
+        # the fills are durable, not just queued in a Task that could
+        # die. Move to async (Oban/Task.Supervisor) once we need higher
+        # throughput than one fill batch per webhook.
+        attempt_wishlist_fills(updated.user_id)
+      end
+
+      {:ok, updated}
     else
       _ -> :ok
     end
@@ -223,6 +240,86 @@ defmodule CryptoPortfolioV3.BrokerFunding do
     |> Deposit.changeset(attrs)
     |> Repo.update()
   end
+
+  @doc """
+  Walks the user's pending wishlist FIFO (`position`, then `id`) and
+  places each as a real order on their Alpaca customer account. Stops
+  on insufficient buying power; logs and skips individual rejections.
+
+  Called from the deposit-completed webhook handler. Safe to call
+  manually for backfill/retry — only `status: pending` items are
+  considered, and a successful placement flips the row to `filled`
+  so it won't be re-processed.
+  """
+  def attempt_wishlist_fills(user_id) when is_integer(user_id) do
+    with {:ok, account_id} <- BrokerageAccounts.active_alpaca_account_id(user_id),
+         items when items != [] <- WishlistItems.list_pending_for_user(user_id) do
+      Logger.info("Wishlist auto-execute: #{length(items)} pending for user #{user_id}")
+      Enum.reduce_while(items, :ok, fn item, _acc ->
+        case place_wishlist_order(account_id, item) do
+          {:ok, _} -> {:cont, :ok}
+          {:stop, reason} ->
+            Logger.info("Wishlist auto-execute stopping for user #{user_id}: #{reason}")
+            {:halt, :ok}
+          {:skip, _} -> {:cont, :ok}
+        end
+      end)
+    else
+      [] -> :ok
+      {:error, _} -> :ok
+    end
+  end
+
+  defp place_wishlist_order(account_id, item) do
+    body =
+      %{
+        symbol: item.symbol,
+        qty: Decimal.to_string(item.qty, :normal),
+        side: item.side,
+        type: item.order_type,
+        time_in_force: item.time_in_force
+      }
+      |> maybe_put_limit_price(item)
+
+    case Client.place_order(account_id, body) do
+      {:ok, %{"id" => order_id}} ->
+        WishlistItems.mark_filled(item, order_id)
+        {:ok, item}
+
+      {:error, {:http_error, _, body}} ->
+        cond do
+          insufficient_buying_power?(body) ->
+            # Don't mark the item failed — leave pending so the next
+            # deposit can pick it up.
+            {:stop, "insufficient_buying_power on #{item.symbol}"}
+
+          true ->
+            Logger.warning("Wishlist place failed for #{item.symbol}: #{inspect(body)}")
+            WishlistItems.mark_failed(item)
+            {:skip, body}
+        end
+
+      {:error, reason} ->
+        Logger.warning("Wishlist place errored for #{item.symbol}: #{inspect(reason)}")
+        WishlistItems.mark_failed(item)
+        {:skip, reason}
+    end
+  end
+
+  defp maybe_put_limit_price(body, %{order_type: "limit", limit_price: %Decimal{} = lp}),
+    do: Map.put(body, :limit_price, Decimal.to_string(lp, :normal))
+
+  defp maybe_put_limit_price(body, _), do: body
+
+  # Alpaca returns a JSON body with a `message` for trading errors.
+  # The exact phrasing has shifted over time ("insufficient buying
+  # power", "buying_power"), so match on substring rather than code.
+  defp insufficient_buying_power?(%{"message" => msg}) when is_binary(msg) do
+    s = String.downcase(msg)
+    String.contains?(s, "buying power") or String.contains?(s, "buying_power")
+  end
+
+  defp insufficient_buying_power?(_), do: false
 
   def list_deposits(user_id, opts \\ []) when is_integer(user_id) do
     limit = Keyword.get(opts, :limit, 50)

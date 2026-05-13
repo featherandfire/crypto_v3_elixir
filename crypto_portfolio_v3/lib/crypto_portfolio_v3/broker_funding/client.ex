@@ -3,14 +3,24 @@ defmodule CryptoPortfolioV3.BrokerFunding.Client do
   Authenticated HTTP client for Alpaca Broker API. Wraps Req with the
   Basic-auth header derived from B2B_API_KEY / B2B_API_SECRET.
 
-  Surface area is intentionally small — only the calls we actually use
-  in the funding + onboarding flow:
+  Surface area covers customer onboarding, funding, and per-account trading:
+
+    Customer accounts:
     - list_accounts/1               sanity check / partner-account discovery
     - get_account/1                 fetch a single customer account
     - post_account/1                create a new customer account (KYC)
+
+    Linked banks + transfers:
     - list_ach_relationships/1      list a customer's linked banks
     - post_ach_relationship/2       link a new bank to a customer account
     - create_transfer/2             initiate an ACH/wire/instant deposit
+
+    Trading (executes the customer's instruction on their own account):
+    - get_trading_account/1         cash, equity, buying power
+    - list_positions/1              open positions on this customer's account
+    - list_orders/2                 order history filtered by status
+    - place_order/2                 self-directed order; customer authorized via UI
+    - cancel_order/2                cancel an open order on this customer's account
 
   All functions return `{:ok, decoded_body}` or `{:error, reason}` where
   reason is one of:
@@ -70,6 +80,49 @@ defmodule CryptoPortfolioV3.BrokerFunding.Client do
     post("/v1/accounts/#{account_id}/transfers", params)
   end
 
+  # ── Trading endpoints (per-customer-account) ────────────────────────────
+
+  @doc """
+  Fetches the customer's trading account — cash, equity, buying power.
+  Per-user via the Broker API.
+  """
+  def get_trading_account(account_id) when is_binary(account_id) do
+    get("/v1/trading/accounts/#{account_id}/account")
+  end
+
+  @doc """
+  Lists open positions on the customer's account.
+  """
+  def list_positions(account_id) when is_binary(account_id) do
+    get("/v1/trading/accounts/#{account_id}/positions")
+  end
+
+  @doc """
+  Lists orders on the customer's account. `opts` accepts `:status`,
+  `:limit`, `:after`, etc. — passed through as query params.
+  """
+  def list_orders(account_id, opts \\ []) when is_binary(account_id) and is_list(opts) do
+    get("/v1/trading/accounts/#{account_id}/orders", params: opts)
+  end
+
+  @doc """
+  Places a self-directed order on the customer's account. The customer
+  authorized the order via the UI; we're just passing their instruction
+  to Alpaca. `params` mirrors Alpaca's order body (symbol, qty, side,
+  type, time_in_force, limit_price, etc.).
+  """
+  def place_order(account_id, params) when is_binary(account_id) and is_map(params) do
+    post("/v1/trading/accounts/#{account_id}/orders", params)
+  end
+
+  @doc """
+  Cancels an open order on the customer's account. No body required.
+  """
+  def cancel_order(account_id, order_id)
+      when is_binary(account_id) and is_binary(order_id) do
+    delete("/v1/trading/accounts/#{account_id}/orders/#{order_id}")
+  end
+
   # ── helpers ──────────────────────────────────────────────────────────
 
   defp get(path, opts \\ []) do
@@ -78,6 +131,10 @@ defmodule CryptoPortfolioV3.BrokerFunding.Client do
 
   defp post(path, body, opts \\ []) do
     request(:post, path, Keyword.put(opts, :json, body))
+  end
+
+  defp delete(path, opts \\ []) do
+    request(:delete, path, opts)
   end
 
   defp request(method, path, opts) do

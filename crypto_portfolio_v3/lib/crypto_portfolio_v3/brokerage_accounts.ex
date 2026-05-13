@@ -31,6 +31,23 @@ defmodule CryptoPortfolioV3.BrokerageAccounts do
   end
 
   @doc """
+  Returns the user's Alpaca account_id only if their account is in
+  `kyc_state: "active"`. Used by trading endpoints to require completed
+  onboarding before any order placement. Returns:
+
+    {:ok, alpaca_account_id}
+    {:error, :no_account}        — user hasn't onboarded yet
+    {:error, :not_active}        — onboarded but Alpaca still SUBMITTED/REJECTED
+  """
+  def active_alpaca_account_id(user_id) when is_integer(user_id) do
+    case get_for_user(user_id) do
+      nil -> {:error, :no_account}
+      %Account{kyc_state: "active", alpaca_account_id: id} -> {:ok, id}
+      %Account{} -> {:error, :not_active}
+    end
+  end
+
+  @doc """
   Returns the default ACH relationship for a brokerage account, or nil.
   """
   def get_default_relationship(%Account{id: aid}) do
@@ -291,6 +308,15 @@ defmodule CryptoPortfolioV3.BrokerageAccounts do
   end
 
   defp maybe_advance_kyc(%Account{} = a), do: poll_until_active(a)
+
+  @doc """
+  Flips `kyc_state` to "active". Used by the show endpoint after a
+  successful refresh detects Alpaca has approved the account, so the
+  read path can advance state without going through the full
+  `ensure_for_user/1` flow (which also creates an ACH relationship —
+  not what a polling status check should do).
+  """
+  def mark_active(%Account{} = a), do: update_kyc_state(a, "active")
 
   defp update_kyc_state(%Account{} = a, state) do
     a

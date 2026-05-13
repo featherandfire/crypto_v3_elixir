@@ -20,10 +20,38 @@ defmodule CryptoPortfolioV3Web.BrokerageAccountController do
 
   def show(conn, _params) do
     case BrokerageAccounts.get_for_user(conn.assigns.current_user.id) do
-      nil -> {:error, :not_found, "brokerage_account"}
-      %Account{} = a -> json(conn, %{account: serialize(a)})
+      nil ->
+        {:error, :not_found, "brokerage_account"}
+
+      %Account{kyc_state: "active"} = a ->
+        json(conn, %{account: serialize(a)})
+
+      %Account{} = a ->
+        # Status hasn't reached ACTIVE in our local cache — refresh from
+        # Alpaca on read so the UI can poll this endpoint without needing
+        # a separate "refresh" action. Falls back to the cached row if
+        # the refresh fails so we never 5xx on a transient Alpaca blip.
+        case BrokerageAccounts.refresh_status(a) do
+          {:ok, refreshed} ->
+            advanced = maybe_advance_kyc_state(refreshed)
+            json(conn, %{account: serialize(advanced)})
+
+          _ ->
+            json(conn, %{account: serialize(a)})
+        end
     end
   end
+
+  # Mirrors the kyc_state advancement that BrokerageAccounts does
+  # internally so a pure-read endpoint can move the row to "active"
+  # without needing the full ensure_for_user/ACH-relationship path.
+  defp maybe_advance_kyc_state(%Account{status: "ACTIVE", kyc_state: state} = a)
+       when state != "active" do
+    {:ok, updated} = BrokerageAccounts.mark_active(a)
+    updated
+  end
+
+  defp maybe_advance_kyc_state(%Account{} = a), do: a
 
   def create(conn, params) do
     case BrokerageAccounts.submit_kyc(conn.assigns.current_user.id, params) do
