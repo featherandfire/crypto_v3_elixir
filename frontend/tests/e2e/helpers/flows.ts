@@ -1,17 +1,52 @@
-// Reusable end-to-end flows composed of the lower-level helpers. Specs
-// stitch these together rather than rebuilding the same setup steps.
+// High-level UI flows reused across specs. These wrap Playwright's Page
+// API with project-specific knowledge (test-id naming, KYC sandbox
+// timing, Alpine-driven modal sequencing) so individual tests stay
+// focused on what they're asserting rather than how to get there.
+//
+// We rely heavily on Playwright's auto-waiting: locator actions retry
+// until the element is visible/actionable, so the manual scroll/retry
+// helpers from the Selenium era are no longer needed.
 
-import { until, type WebDriver } from 'selenium-webdriver';
-import {
-  BASE_URL,
-  clickByTestId,
-  fillByTestId,
-  setCheckboxByTestId,
-  setDateByTestId,
-  testid,
-  waitForTestId,
-} from './driver';
+import { expect, type Page } from '@playwright/test';
 import { waitForVerificationCode } from './mailbox';
+
+/**
+ * Neutralize Vite's HMR auto-reload. Under long Playwright runs the
+ * HMR WebSocket occasionally drops; on reconnect the client opens a
+ * second WebSocket with subprotocol `vite-ping`, and when that ping
+ * resolves it calls `location.reload()` to resync. The reload kicks
+ * the test browser back to the landing route mid-flow.
+ *
+ * We can't simply block `@vite/client` — Vite injects it into every
+ * served module so the app won't bootstrap without it. We also can't
+ * no-op `location.reload`, because the app uses it legitimately
+ * after verify-email and login.
+ *
+ * Targeted fix: intercept the `vite-ping` WebSocket and redirect it
+ * to a non-existent endpoint so the ping never succeeds. The HMR
+ * client logs "[vite] server connection lost" and keeps retrying,
+ * but never reloads. All other WebSockets (and the app's normal
+ * `location.reload` calls) pass through unaffected.
+ */
+async function neutralizeHmrReload(page: Page): Promise<void> {
+  await page.addInitScript(() => {
+    const OrigWS = window.WebSocket;
+    // Proxy preserves static fields (CONNECTING/OPEN/CLOSING/CLOSED)
+    // and prototype, but lets us intercept construction.
+    window.WebSocket = new Proxy(OrigWS, {
+      construct(target, args) {
+        const [url, protocols] = args as [string | URL, string | string[] | undefined];
+        const p = Array.isArray(protocols) ? protocols : protocols ? [protocols] : [];
+        if (p.includes('vite-ping')) {
+          // 127.0.0.1:1 is closed by convention; construction succeeds
+          // but the open handshake fails → ping rejects → no reload.
+          return new target('ws://127.0.0.1:1', protocols);
+        }
+        return new target(url, protocols);
+      },
+    });
+  });
+}
 
 export type SignupCreds = {
   username: string;
@@ -21,13 +56,15 @@ export type SignupCreds = {
 
 /**
  * Build a fresh set of signup credentials using the current timestamp,
- * so a test can rerun without colliding with prior runs.
+ * so a test can rerun without colliding with prior runs. The optional
+ * prefix lets multi-user tests distinguish users in mailbox lookups.
  */
 export function freshCreds(prefix = 'e2e'): SignupCreds {
   const stamp = Date.now();
+  const rand = Math.random().toString(36).slice(2, 6);
   return {
-    username: `${prefix}_${stamp}`,
-    email: `${prefix}_${stamp}@example.com`,
+    username: `${prefix}_${stamp}_${rand}`,
+    email: `${prefix}_${stamp}_${rand}@example.com`,
     password: 'TestPass123!',
   };
 }
@@ -35,27 +72,27 @@ export function freshCreds(prefix = 'e2e'): SignupCreds {
 /**
  * From the landing page, sign up a brand-new user, read the verification
  * code from the dev mailbox, submit it, and wait for the post-login
- * redirect to land the user on the KYC form. The driver is positioned
- * with the KYC `given_name` input ready to receive typing.
+ * redirect to land the user on the KYC form.
  */
-export async function signupAndLandOnKyc(driver: WebDriver, creds: SignupCreds): Promise<void> {
-  await driver.get(BASE_URL);
-  await clickByTestId(driver, 'landing-get-started');
-  await waitForTestId(driver, 'auth-form');
+export async function signupAndLandOnKyc(page: Page, creds: SignupCreds): Promise<void> {
+  await neutralizeHmrReload(page);
+  await page.goto('/');
+  await page.getByTestId('landing-get-started').click();
+  await expect(page.getByTestId('auth-form')).toBeVisible();
 
-  await fillByTestId(driver, 'auth-username', creds.username);
-  await fillByTestId(driver, 'auth-email', creds.email);
-  await fillByTestId(driver, 'auth-password', creds.password);
-  await clickByTestId(driver, 'auth-submit');
+  await page.getByTestId('auth-username').fill(creds.username);
+  await page.getByTestId('auth-email').fill(creds.email);
+  await page.getByTestId('auth-password').fill(creds.password);
+  await page.getByTestId('auth-submit').click();
 
-  await waitForTestId(driver, 'verify-form');
+  await expect(page.getByTestId('verify-form')).toBeVisible();
   const code = await waitForVerificationCode(creds.email);
-  await fillByTestId(driver, 'verify-code', code);
-  await clickByTestId(driver, 'verify-submit');
+  await page.getByTestId('verify-code').fill(code);
+  await page.getByTestId('verify-submit').click();
 
   // Page reloads on verify success → init() routes the un-onboarded
-  // user to the KYC form. Waiting on `kyc-given-name` confirms both.
-  await waitForTestId(driver, 'kyc-given-name', 30_000);
+  // user to the KYC form. The given_name input is the first KYC field.
+  await expect(page.getByTestId('kyc-given-name')).toBeVisible({ timeout: 30_000 });
 }
 
 /**
@@ -65,53 +102,52 @@ export async function signupAndLandOnKyc(driver: WebDriver, creds: SignupCreds):
  * Worst-case wait is ~30s for Alpaca's sandbox approval clock + our
  * client-side poller catching the transition.
  */
-export async function completeKyc(driver: WebDriver): Promise<void> {
-  await fillByTestId(driver, 'kyc-given-name', 'Test');
-  await fillByTestId(driver, 'kyc-family-name', 'Eee2eee');
-  await setDateByTestId(driver, 'kyc-dob', '1990-05-15');
-  await fillByTestId(driver, 'kyc-ssn', '432-19-8765');
-  await fillByTestId(driver, 'kyc-phone', '+14155551234');
-  await fillByTestId(driver, 'kyc-street', '123 Market Street');
-  await fillByTestId(driver, 'kyc-city', 'San Francisco');
-  await fillByTestId(driver, 'kyc-state', 'CA');
-  await fillByTestId(driver, 'kyc-zip', '94103');
-  await setCheckboxByTestId(driver, 'kyc-agree-customer', true);
-  await setCheckboxByTestId(driver, 'kyc-agree-account', true);
-  await setCheckboxByTestId(driver, 'kyc-agree-margin', true);
-  await clickByTestId(driver, 'kyc-submit');
+export async function completeKyc(page: Page): Promise<void> {
+  await page.getByTestId('kyc-given-name').fill('Test');
+  await page.getByTestId('kyc-family-name').fill('Eee2eee');
+  // Playwright's locator.fill() handles type=date with ISO format
+  // natively, regardless of session locale.
+  await page.getByTestId('kyc-dob').fill('1990-05-15');
+  await page.getByTestId('kyc-ssn').fill('432-19-8765');
+  await page.getByTestId('kyc-phone').fill('+14155551234');
+  await page.getByTestId('kyc-street').fill('123 Market Street');
+  await page.getByTestId('kyc-city').fill('San Francisco');
+  await page.getByTestId('kyc-state').fill('CA');
+  await page.getByTestId('kyc-zip').fill('94103');
+  await page.getByTestId('kyc-agree-customer').check();
+  await page.getByTestId('kyc-agree-account').check();
+  await page.getByTestId('kyc-agree-margin').check();
+  await page.getByTestId('kyc-submit').click();
 
-  // KYC form disappears after submit; wishlist-open appears once the
-  // Alpaca account flips ACTIVE and the trading snapshot loads. Sandbox
-  // approval time has variance — usually 5–30s, occasionally up to 60s.
-  // 90s here is overkill for the happy path but absorbs the long tail.
-  await driver.wait(
-    until.stalenessOf(await driver.findElement(testid('kyc-submit'))),
-    180_000,
-    'KYC submit button should disappear after successful submit',
-  );
-  await waitForTestId(driver, 'wishlist-open', 180_000);
+  // KYC submit disappears after POST succeeds; wishlist-open appears
+  // once the Alpaca account flips ACTIVE and the trading snapshot
+  // loads. Sandbox approval time has variance — usually 5–30s,
+  // occasionally up to 60s, so we keep the long ceiling.
+  await expect(page.getByTestId('kyc-submit')).toBeHidden({ timeout: 180_000 });
+  await expect(page.getByTestId('wishlist-open')).toBeVisible({ timeout: 180_000 });
 }
 
 /**
  * Opens the wishlist modal, adds `symbol`, waits for the count badge
- * to reflect the new row, and closes the modal.
+ * to reflect the new row, and closes the modal. Closing matters when
+ * a spec calls this twice — the second `wishlist-open` click would
+ * otherwise be intercepted by the still-open backdrop.
  */
-export async function addToWishlistViaUi(driver: WebDriver, symbol: string): Promise<void> {
-  await clickByTestId(driver, 'wishlist-open');
-  await fillByTestId(driver, 'wishlist-add-input', symbol);
-  await clickByTestId(driver, 'wishlist-add-submit');
-  // Wait for the count badge to populate; the modal close click below
-  // would race the optimistic-then-server-confirmed render otherwise.
-  await driver.wait(
-    async () => {
-      const els = await driver.findElements(testid('wishlist-count'));
-      if (els.length === 0) return false;
-      const t = (await els[0].getText()).trim();
-      return t !== '' && t !== '0';
-    },
-    10_000,
-    `wishlist count never updated after adding ${symbol}`,
-  );
+export async function addToWishlistViaUi(page: Page, symbol: string): Promise<void> {
+  await page.getByTestId('wishlist-open').click();
+  await page.getByTestId('wishlist-add-input').fill(symbol);
+  await page.getByTestId('wishlist-add-submit').click();
+  // Count badge shows the new total once the API roundtrip resolves.
+  // We just wait for it to be a non-zero number — exact value depends
+  // on call order in the test.
+  await expect(page.getByTestId('wishlist-count')).not.toHaveText(/^\s*0?\s*$/, {
+    timeout: 10_000,
+  });
+  // Close the modal so the next caller can open it cleanly. We assert
+  // the backdrop is hidden after — guards against Alpine transitions
+  // racing a follow-up action.
+  await page.getByTestId('wishlist-close').click();
+  await expect(page.getByTestId('wishlist-add-input')).toBeHidden({ timeout: 5_000 });
 }
 
 /**
@@ -121,11 +157,10 @@ export async function addToWishlistViaUi(driver: WebDriver, symbol: string): Pro
  * is brittle to local state quirks. Callers verify the deposit landed
  * via the deposits API instead.
  */
-export async function submitDepositViaUi(driver: WebDriver, amount: string): Promise<void> {
-  await clickByTestId(driver, 'addfunds-open');
-  await waitForTestId(driver, 'addfunds-amount');
-  await fillByTestId(driver, 'addfunds-amount', amount);
-  await clickByTestId(driver, 'addfunds-submit');
+export async function submitDepositViaUi(page: Page, amount: string): Promise<void> {
+  await page.getByTestId('addfunds-open').click();
+  await page.getByTestId('addfunds-amount').fill(amount);
+  await page.getByTestId('addfunds-submit').click();
 }
 
 /**
@@ -133,10 +168,8 @@ export async function submitDepositViaUi(driver: WebDriver, amount: string): Pro
  * specs that need to hit backend APIs directly (e.g. polling the
  * wishlist endpoint for status changes that aren't visible in the UI).
  */
-export async function getAuthToken(driver: WebDriver): Promise<string> {
-  const token = await driver.executeScript<string | null>(
-    `return localStorage.getItem('token');`,
-  );
+export async function getAuthToken(page: Page): Promise<string> {
+  const token = await page.evaluate(() => localStorage.getItem('token'));
   if (!token) throw new Error('no auth token in localStorage — user not logged in');
   return token;
 }

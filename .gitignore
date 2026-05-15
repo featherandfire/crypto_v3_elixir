@@ -13,6 +13,14 @@ node_modules/
 frontend/dist/
 *.log
 
+# Playwright artifacts (traces, screenshots, videos, HTML report)
+frontend/test-results/
+frontend/playwright-report/
+frontend/blob-report/
+frontend/.playwright/
+# Stray root test-results dir from running `npx playwright` outside frontend/
+/test-results/
+
 # Elixir / Phoenix
 crypto_portfolio_v3/_build/
 crypto_portfolio_v3/cover/

@@ -9,93 +9,70 @@
 //   2. Adding AAPL to the wishlist persists across a full page reload —
 //      the wishlist is DB-backed, not localStorage.
 //
-// Both tests share a single `before()` that does signup+verify so the
-// onboarding cost is paid once and each `it()` reports independently.
+// Tests share an onboarded `page` from `beforeAll` and run serially so
+// the (slow) signup + KYC step is paid once per file.
 
-import { expect } from 'chai';
-import { until, type WebDriver } from 'selenium-webdriver';
-import {
-  clickByTestId,
-  fillByTestId,
-  newDriver,
-  setCheckboxByTestId,
-  setDateByTestId,
-  testid,
-  waitForTestId,
-} from '../helpers/driver';
+import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { freshCreds, signupAndLandOnKyc } from '../helpers/flows';
 
-describe('post-signup: KYC + wishlist', function () {
-  this.timeout(300_000);
-  let driver: WebDriver;
+test.describe.configure({ mode: 'serial' });
 
-  before(async () => {
-    driver = await newDriver();
-    await signupAndLandOnKyc(driver, freshCreds());
+test.describe('post-signup: KYC + wishlist', () => {
+  let context: BrowserContext;
+  let page: Page;
+
+  test.beforeAll(async ({ browser }) => {
+    context = await browser.newContext();
+    page = await context.newPage();
+    await signupAndLandOnKyc(page, freshCreds());
   });
 
-  after(async () => {
-    if (driver) await driver.quit();
+  test.afterAll(async () => {
+    await context.close();
   });
 
-  it('completes KYC and provisions an active Alpaca account', async () => {
+  test('completes KYC and provisions an active Alpaca account', async () => {
     // Personal info.
-    await fillByTestId(driver, 'kyc-given-name', 'Test');
-    await fillByTestId(driver, 'kyc-family-name', 'Eee2eee');
-    // Date inputs are locale-sensitive under Selenium — use the JS path.
-    await setDateByTestId(driver, 'kyc-dob', '1990-05-15');
-    await fillByTestId(driver, 'kyc-ssn', '432-19-8765');
+    await page.getByTestId('kyc-given-name').fill('Test');
+    await page.getByTestId('kyc-family-name').fill('Eee2eee');
+    await page.getByTestId('kyc-dob').fill('1990-05-15');
+    await page.getByTestId('kyc-ssn').fill('432-19-8765');
 
     // Contact.
-    await fillByTestId(driver, 'kyc-phone', '+14155551234');
-    await fillByTestId(driver, 'kyc-street', '123 Market Street');
-    await fillByTestId(driver, 'kyc-city', 'San Francisco');
-    await fillByTestId(driver, 'kyc-state', 'CA');
-    await fillByTestId(driver, 'kyc-zip', '94103');
+    await page.getByTestId('kyc-phone').fill('+14155551234');
+    await page.getByTestId('kyc-street').fill('123 Market Street');
+    await page.getByTestId('kyc-city').fill('San Francisco');
+    await page.getByTestId('kyc-state').fill('CA');
+    await page.getByTestId('kyc-zip').fill('94103');
 
-    // Agreements — backed by Alpine x-model so we use the
-    // setCheckboxByTestId helper that asserts final state.
-    await setCheckboxByTestId(driver, 'kyc-agree-customer', true);
-    await setCheckboxByTestId(driver, 'kyc-agree-account', true);
-    await setCheckboxByTestId(driver, 'kyc-agree-margin', true);
+    // Agreements.
+    await page.getByTestId('kyc-agree-customer').check();
+    await page.getByTestId('kyc-agree-account').check();
+    await page.getByTestId('kyc-agree-margin').check();
 
-    await clickByTestId(driver, 'kyc-submit');
+    await page.getByTestId('kyc-submit').click();
 
     // The KYC form disappears once the POST succeeds and submitKyc
     // routes the user to the brokerage page. Wait for that, then for
     // wishlist-open which only renders when alpacaAccount populates
     // (gated on kyc_state=active, which the frontend polls for).
-    await driver.wait(
-      until.stalenessOf(await driver.findElement(testid('kyc-submit'))),
-      180_000,
-      'KYC form should disappear after submit',
-    );
-    await waitForTestId(driver, 'wishlist-open', 180_000);
+    await expect(page.getByTestId('kyc-submit')).toBeHidden({ timeout: 180_000 });
+    await expect(page.getByTestId('wishlist-open')).toBeVisible({ timeout: 180_000 });
   });
 
-  it('adds a stock to the wishlist and persists across reload', async () => {
+  test('adds a stock to the wishlist and persists across reload', async () => {
     // Open the wishlist modal and add AAPL.
-    await clickByTestId(driver, 'wishlist-open');
-    await fillByTestId(driver, 'wishlist-add-input', 'AAPL');
-    await clickByTestId(driver, 'wishlist-add-submit');
+    await page.getByTestId('wishlist-open').click();
+    await page.getByTestId('wishlist-add-input').fill('AAPL');
+    await page.getByTestId('wishlist-add-submit').click();
 
-    // The count badge appears once the API roundtrip lands.
-    await driver.wait(
-      async () => {
-        const els = await driver.findElements(testid('wishlist-count'));
-        if (els.length === 0) return false;
-        return (await els[0].getText()).trim() === '1';
-      },
-      10_000,
-      'expected wishlist-count to show "1" after add',
-    );
+    // Count badge populates once the server roundtrip lands.
+    await expect(page.getByTestId('wishlist-count')).toHaveText('1', { timeout: 10_000 });
 
-    // Full reload — drops localStorage state, forces a re-fetch from
+    // Full reload — drops in-memory state, forces a re-fetch from
     // /api/wishlist. If the count is still 1 after reload, the item
     // is DB-backed (which is what we shipped in Phase 2b).
-    await driver.navigate().refresh();
-    const countEl = await driver.wait(until.elementLocated(testid('wishlist-count')), 30_000);
-    await driver.wait(until.elementIsVisible(countEl), 5_000);
-    expect((await countEl.getText()).trim()).to.equal('1');
+    await page.reload();
+    await expect(page.getByTestId('wishlist-count')).toHaveText('1', { timeout: 30_000 });
   });
 });

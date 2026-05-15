@@ -6,7 +6,7 @@
 // fetch its body, and pluck the code via regex. This avoids needing a
 // test-only backend endpoint and works with the existing dev mailer.
 
-import { PHX_URL } from './driver';
+import { PHX_URL } from './env';
 
 const MAILBOX_LIST_URL = `${PHX_URL}/dev/mailbox`;
 

@@ -7,7 +7,7 @@
 // HMAC-SHA256 over the raw body the same way Alpaca would in prod.
 
 import { createHmac } from 'node:crypto';
-import { PHX_URL } from './driver';
+import { PHX_URL } from './env';
 
 const API = `${PHX_URL}/api`;
 const WEBHOOK_SECRET =
@@ -29,10 +29,20 @@ export type Deposit = {
 };
 
 export type AlpacaAccount = {
+  id?: string;
+  account_number?: string;
   cash: string | null;
   buying_power: string | null;
   status: string | null;
 } | null;
+
+export type BrokeragePortfolio = {
+  id: number;
+  user_id: number;
+  name: string;
+  color: string;
+  is_main: boolean;
+};
 
 async function authedFetch(token: string, path: string, init: RequestInit = {}) {
   const res = await fetch(`${API}${path}`, {
@@ -88,6 +98,25 @@ export async function pollWishlistStatus(
 export async function getAlpacaAccount(token: string): Promise<AlpacaAccount> {
   const res = await authedFetch(token, '/alpaca/account');
   return (await res.json()) as AlpacaAccount;
+}
+
+export async function listBrokeragePortfolios(token: string): Promise<BrokeragePortfolio[]> {
+  const res = await authedFetch(token, '/brokerage/portfolios');
+  const json = (await res.json()) as { portfolios: BrokeragePortfolio[] };
+  return json.portfolios ?? [];
+}
+
+export async function listAlpacaOrders(token: string): Promise<unknown[]> {
+  const res = await authedFetch(token, '/alpaca/orders');
+  const body = await res.json();
+  // Endpoint returns [] for un-onboarded users; an array for the rest.
+  return Array.isArray(body) ? body : [];
+}
+
+export async function listAlpacaPositions(token: string): Promise<unknown[]> {
+  const res = await authedFetch(token, '/alpaca/positions');
+  const body = await res.json();
+  return Array.isArray(body) ? body : [];
 }
 
 /**

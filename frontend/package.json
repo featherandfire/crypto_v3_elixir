@@ -7,21 +7,16 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "test:e2e": "mocha --import=tsx --extension ts --timeout 60000 'tests/e2e/**/*.test.ts'",
-    "test:e2e:headed": "HEADLESS=false npm run test:e2e"
+    "test:e2e": "playwright test",
+    "test:e2e:headed": "HEADLESS=false playwright test --headed",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:report": "playwright show-report"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/alpinejs": "^3.13.11",
-    "@types/chai": "^5.2.2",
-    "@types/mocha": "^10.0.10",
     "@types/node": "^22.10.0",
-    "@types/selenium-webdriver": "^4.1.28",
     "@types/three": "^0.184.0",
-    "chai": "^5.2.0",
-    "chromedriver": "^148.0.2",
-    "mocha": "^11.7.4",
-    "selenium-webdriver": "^4.27.0",
-    "tsx": "^4.20.0",
     "typescript": "~6.0.2",
     "vite": "^8.0.9",
     "vite-plugin-html-inject": "^1.1.2"
