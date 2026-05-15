@@ -137,6 +137,18 @@ defmodule CryptoPortfolioV3.BrokerFunding.Client do
     request(:delete, path, opts)
   end
 
+  # When the AlpacaMock GenServer is running (started by Application when
+  # ALPACA_MOCK=1), route every Req call through the in-process plug
+  # instead of hitting Alpaca. The HTTP layer (auth header, JSON
+  # parsing, status handling) still runs — only the network is bypassed.
+  defp maybe_use_mock_plug(req_opts) do
+    if CryptoPortfolioV3.AlpacaMock.Server.enabled?() do
+      Keyword.put(req_opts, :plug, CryptoPortfolioV3.AlpacaMock.Plug)
+    else
+      req_opts
+    end
+  end
+
   defp request(method, path, opts) do
     with {:ok, headers} <- BrokerApi.auth_header() do
       url = BrokerApi.base_url() <> path
@@ -147,6 +159,7 @@ defmodule CryptoPortfolioV3.BrokerFunding.Client do
         |> Keyword.put(:url, url)
         |> Keyword.put(:headers, headers ++ Keyword.get(opts, :headers, []))
         |> Keyword.put_new(:receive_timeout, @timeout_ms)
+        |> maybe_use_mock_plug()
 
       try do
         case Req.request(req_opts) do

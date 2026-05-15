@@ -62,6 +62,13 @@ config :crypto_portfolio_v3, :cryptocompare,
 config :crypto_portfolio_v3,
   enable_prefetchers: System.get_env("ENABLE_PREFETCHERS") in ["true", "1"]
 
+# Alpaca Broker API mock. When ALPACA_MOCK=1, the AlpacaMock.Server boots
+# and BrokerFunding.Client routes Req through an in-process Plug instead
+# of the real sandbox — collapses KYC approval latency, gives the test
+# suite deterministic responses. Off by default.
+config :crypto_portfolio_v3,
+  alpaca_mock?: System.get_env("ALPACA_MOCK") in ["true", "1"]
+
 config :crypto_portfolio_v3, :yearly_prefetcher,
   top_limit: String.to_integer(System.get_env("YEARLY_PREFETCH_TOP", "200")),
   call_delay_ms: String.to_integer(System.get_env("YEARLY_PREFETCH_DELAY_MS", "3000")),

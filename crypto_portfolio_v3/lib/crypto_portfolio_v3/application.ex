@@ -16,6 +16,7 @@ defmodule CryptoPortfolioV3.Application do
         {Cachex, name: :alpaca_cache},
         CryptoPortfolioV3.Market.PriceCache
       ] ++
+        alpaca_mock() ++
         prefetchers() ++
         [CryptoPortfolioV3Web.Endpoint]
 
@@ -39,6 +40,19 @@ defmodule CryptoPortfolioV3.Application do
         CryptoPortfolioV3.Market.YearlyPrefetcher,
         CryptoPortfolioV3.Market.PctChangePrefetcher
       ]
+    else
+      []
+    end
+  end
+
+  # AlpacaMock.Server runs only when ALPACA_MOCK=1 — its presence is the
+  # signal `BrokerFunding.Client.maybe_use_mock_plug/1` checks to route
+  # every Broker API call through the in-process stub instead of the
+  # real sandbox. Off by default so a normal `mix phx.server` still
+  # hits Alpaca.
+  defp alpaca_mock do
+    if Application.get_env(:crypto_portfolio_v3, :alpaca_mock?, false) do
+      [CryptoPortfolioV3.AlpacaMock.Server]
     else
       []
     end

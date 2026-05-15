@@ -204,6 +204,13 @@ defmodule CryptoPortfolioV3.BrokerFunding do
          %Deposit{} = deposit <- Repo.one(from d in Deposit, where: d.reference == ^id),
          {:ok, updated} <- patch_from_webhook(deposit, transfer) do
       if updated.status == "completed" and deposit.status != "completed" do
+        # In mock mode the real Alpaca isn't tracking this transfer, so
+        # the mock's view of cash would stay $0 unless we tell it the
+        # deposit settled. In prod this is a no-op (Server isn't running).
+        if CryptoPortfolioV3.AlpacaMock.Server.enabled?() do
+          CryptoPortfolioV3.AlpacaMock.Server.complete_transfer(id)
+        end
+
         # Newly-settled deposit — try to fill the user's pending wishlist
         # inline. Each fill is ~1-2 Alpaca calls; total <5s for typical
         # wishlists. Doing it synchronously keeps the response window
