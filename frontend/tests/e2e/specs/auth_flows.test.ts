@@ -1,19 +1,8 @@
-// Auth endpoint coverage that the UI happy paths don't exercise.
-//
-// Every other spec signs up a fresh user; none of them ever logs back
-// in. This spec fills that gap and also covers the deliberate-failure
-// branches that an attacker (or a fat-fingered customer) would hit:
-//
-//   - Login with the right password issues a fresh JWT that works on
-//     protected endpoints.
-//   - Login with the wrong password → 401, no token.
-//   - Login with missing fields → 400.
-//   - Login as an unverified user → 403 (we still register the user
-//     but withhold the token until the email code is submitted).
-//
-// All-HTTP except the registration prep, which uses the browser only
-// to drive the dev mailbox verification step (cheaper to reuse the
-// flow helper than reimplement it here).
+// Return-user login coverage — every other spec signs up but never
+// logs back in. Tests the happy path (right password → JWT that
+// authenticates) plus the deliberate failures (wrong password → 401,
+// missing fields → 400, unverified user → 403). All-HTTP except the
+// signup prep, which reuses the browser flow helper.
 
 import { expect, test, type BrowserContext } from '@playwright/test';
 import { freshCreds, signupAndLandOnKyc, type SignupCreds } from '../helpers/flows';

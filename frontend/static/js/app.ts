@@ -745,10 +745,17 @@ const CHIPS: Chip[] = [
 ];
 
 // Display order in the Filters tab. Excludes 'crypto' (own tab) and 'Other'.
+// `ETF` is intentionally omitted — the Filters tab lives under the
+// Stocks view, and ETFs have their own top-level toggle + per-theme
+// tabs already. Keeping ETF in the chip list duplicated that
+// surface and confused the "drill into individual companies" intent
+// of the Filters tab. The `ETF` chip definition itself stays in CHIPS
+// because chipForPosition / Holdings still use it to color-bucket ETF
+// positions in the user's portfolio.
 const FILTER_CHIP_ORDER = [
   'aerospace', 'AI', 'auto', 'bank', 'BDC', 'biotech',
   'chemicals', 'china', 'cybersecurity', 'defense', 'energy', 'entertainment',
-  'ETF', 'EV', 'farming', 'fintech', 'food', 'fund', 'healthcare', 'hotel',
+  'EV', 'farming', 'fintech', 'food', 'fund', 'healthcare', 'hotel',
   'industrial', 'insurance', 'Local', 'logistics', 'materials', 'mining',
   'monthly', 'pharma', 'quantum', 'REIT', 'REIT-Like', 'retail', 'semis',
   'shipping', 'software', 'space', 'staples', 'tech', 'telecom', 'tobacco',
@@ -846,7 +853,24 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'QYLD', name: 'Global X Nasdaq 100 Covered Call', note: 'ETF — covered calls on Nasdaq-100, monthly distributions.' },
       { symbol: 'XYLD', name: 'Global X S&P 500 Covered Call', note: 'ETF — covered calls on S&P 500, monthly distributions.' },
       { symbol: 'RYLD', name: 'Global X Russell 2000 Covered Call', note: 'ETF — covered calls on small caps, monthly.' },
+      // Single-stock covered-call income ETFs (YieldMax family). Very high
+      // headline yields (often 30–80%+ on a trailing basis) sourced from
+      // selling options on the underlying; principal can drift with the
+      // underlying's price. Monthly distributions.
+      { symbol: 'NVDY', name: 'YieldMax NVDA Option Income',     note: 'ETF — covered-call income on NVDA, monthly distributions.' },
+      { symbol: 'TSLY', name: 'YieldMax TSLA Option Income',     note: 'ETF — covered-call income on TSLA, monthly distributions.' },
+      { symbol: 'MSTY', name: 'YieldMax MSTR Option Income',     note: 'ETF — covered-call income on MSTR, monthly distributions.' },
+      { symbol: 'CONY', name: 'YieldMax COIN Option Income',     note: 'ETF — covered-call income on COIN, monthly distributions.' },
+      { symbol: 'AMZY', name: 'YieldMax AMZN Option Income',     note: 'ETF — covered-call income on AMZN, monthly distributions.' },
+      { symbol: 'APLY', name: 'YieldMax AAPL Option Income',     note: 'ETF — covered-call income on AAPL, monthly distributions.' },
+      { symbol: 'GOOY', name: 'YieldMax GOOGL Option Income',    note: 'ETF — covered-call income on GOOGL, monthly distributions.' },
+      { symbol: 'NFLY', name: 'YieldMax NFLX Option Income',     note: 'ETF — covered-call income on NFLX, monthly distributions.' },
+      { symbol: 'YMAX', name: 'YieldMax Universe Fund of Option Income', note: 'ETF — fund-of-funds across the YieldMax single-stock income lineup.' },
       { symbol: 'SPYD', name: 'SPDR S&P 500 High Dividend',    note: 'ETF — top-yielding S&P 500 stocks.' },
+      // Sub-$20 dividend / income funds — preferred shares and CEF wrappers.
+      { symbol: 'YYY',  name: 'Amplify High Income',           note: 'ETF — basket of closed-end funds, monthly distributions.' },
+      { symbol: 'PGX',  name: 'Invesco Preferred',             note: 'ETF — investment-grade US preferred stocks.' },
+      { symbol: 'PFXF', name: 'VanEck Preferred ex Financials',note: 'ETF — preferred shares outside the financial sector.' },
     ],
   },
   {
@@ -926,6 +950,16 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'EWG', name: 'iShares MSCI Germany',          note: 'ETF — German equities.' },
       { symbol: 'EWU', name: 'iShares MSCI United Kingdom',   note: 'ETF — UK equities.' },
       { symbol: 'EWC', name: 'iShares MSCI Canada',           note: 'ETF — Canadian equities.' },
+      // Sub-$20 single-country and small-cap regional ETFs.
+      { symbol: 'EWH', name: 'iShares MSCI Hong Kong',        note: 'ETF — Hong Kong equities.' },
+      { symbol: 'EWZS',name: 'iShares MSCI Brazil Small-Cap', note: 'ETF — Brazilian small-cap equities.' },
+      { symbol: 'VNM', name: 'VanEck Vietnam',                note: 'ETF — Vietnamese equities.' },
+      { symbol: 'PAK', name: 'Global X MSCI Pakistan',        note: 'ETF — Pakistani equities (frontier market).' },
+      { symbol: 'NORW',name: 'Global X MSCI Norway',          note: 'ETF — Norwegian equities (energy-heavy).' },
+      { symbol: 'PGAL',name: 'Global X MSCI Portugal',        note: 'ETF — Portuguese equities.' },
+      { symbol: 'EWO', name: 'iShares MSCI Austria',          note: 'ETF — Austrian equities.' },
+      { symbol: 'EWK', name: 'iShares MSCI Belgium',          note: 'ETF — Belgian equities.' },
+      { symbol: 'EIDO',name: 'iShares MSCI Indonesia',        note: 'ETF — Indonesian equities.' },
     ],
   },
   {
@@ -951,6 +985,12 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'PDBC',name: 'Invesco Optimum Yield Commodity', note: 'ETF — broad commodity basket, no K-1.' },
       { symbol: 'CPER',name: 'United States Copper Index',    note: 'ETF — copper futures.' },
       { symbol: 'URA', name: 'Global X Uranium',              note: 'ETF — uranium miners.' },
+      // Sub-$20 physical-metal and ag-futures funds.
+      { symbol: 'PSLV',name: 'Sprott Physical Silver Trust',  note: 'ETF — physical silver (Sprott-vaulted, redeemable).' },
+      { symbol: 'SILJ',name: 'Amplify Junior Silver Miners',  note: 'ETF — junior silver-mining companies.' },
+      { symbol: 'WEAT',name: 'Teucrium Wheat Fund',           note: 'ETF — wheat futures (no K-1).' },
+      { symbol: 'CANE',name: 'Teucrium Sugar Fund',           note: 'ETF — sugar futures.' },
+      { symbol: 'SOYB',name: 'Teucrium Soybean Fund',         note: 'ETF — soybean futures.' },
     ],
   },
   {
@@ -973,6 +1013,10 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'FETH',name: 'Fidelity Ethereum Fund',        note: 'ETF — spot Ether (Fidelity).' },
       { symbol: 'ETHE',name: 'Grayscale Ethereum Trust',      note: 'ETF — spot Ether (Grayscale).' },
       { symbol: 'ETHW',name: 'Bitwise Ethereum ETF',          note: 'ETF — spot Ether (Bitwise).' },
+      // Sub-$20 crypto-industry equity ETFs (not spot coin — these
+      // hold miners, exchanges, and infra companies).
+      { symbol: 'DAPP',name: 'VanEck Digital Transformation', note: 'ETF — crypto and blockchain companies (miners, exchanges).' },
+      { symbol: 'BITQ',name: 'Bitwise Crypto Industry',       note: 'ETF — top crypto-economy companies (miners, exchanges, infra).' },
     ],
   },
   {
@@ -1006,6 +1050,12 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'QUAL',name: 'iShares MSCI USA Quality',      note: 'ETF — high-quality US stocks (ROE, leverage, earnings stability).' },
       { symbol: 'MTUM',name: 'iShares MSCI USA Momentum',     note: 'ETF — high-momentum US stocks.' },
       { symbol: 'USMV',name: 'iShares MSCI USA Min Vol',      note: 'ETF — low-volatility US stocks.' },
+      // Sub-$20 thematics — clean energy, space, cannabis, infrastructure.
+      { symbol: 'FAN', name: 'First Trust Global Wind Energy',note: 'ETF — global wind-energy companies.' },
+      { symbol: 'ARKX',name: 'ARK Space Exploration & Innovation', note: 'ETF — orbital aerospace, satellites, suborbital.' },
+      { symbol: 'MJ',  name: 'ETFMG Alternative Harvest',     note: 'ETF — global cannabis companies (Canadian + US MSOs).' },
+      { symbol: 'MSOS',name: 'AdvisorShares Pure US Cannabis',note: 'ETF — pure-play US multi-state cannabis operators.' },
+      { symbol: 'YOLO',name: 'AdvisorShares Pure Cannabis',   note: 'ETF — actively-managed pure-play cannabis.' },
     ],
   },
   {
@@ -1220,6 +1270,21 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'TXT',  name: 'Textron',               note: 'Defense and aerospace — Bell helicopters, Cessna, military vehicles.' },
       { symbol: 'KTOS', name: 'Kratos Defense',        note: 'Defense — drones, satellite communications.' },
       { symbol: 'BWXT', name: 'BWX Technologies',      note: 'Defense — naval nuclear propulsion components.' },
+      // Defense IT / services / data — second-tier primes built on
+      // long-cycle DoD and intelligence-community contracts.
+      { symbol: 'PLTR', name: 'Palantir Technologies', note: 'Defense — Gotham (intel) and Foundry data platforms for DoD and three-letter agencies.' },
+      { symbol: 'CACI', name: 'CACI International',    note: 'Defense — IT, intelligence, and electronic-warfare services.' },
+      { symbol: 'SAIC', name: 'Science Applications International', note: 'Defense — engineering and integration services for DoD and federal civilian.' },
+      { symbol: 'BAH',  name: 'Booz Allen Hamilton',   note: 'Defense — consulting + tech integration for defense, intel, civil.' },
+      { symbol: 'PSN',  name: 'Parsons Corporation',   note: 'Defense and critical infrastructure — cyber, missile defense, smart cities.' },
+      // Defense components / specialty / international.
+      { symbol: 'MRCY', name: 'Mercury Systems',       note: 'Defense — mission-critical processing and RF subsystems.' },
+      { symbol: 'OSK',  name: 'Oshkosh',               note: 'Defense — military tactical vehicles (JLTV, MRAP) + commercial trucks.' },
+      { symbol: 'ATRO', name: 'Astronics',             note: 'Defense — aerospace and military test, lighting, power systems.' },
+      { symbol: 'WWD',  name: 'Woodward',              note: 'Defense — fuel, motion-control, and energy systems for military and commercial aviation.' },
+      { symbol: 'AIR',  name: 'AAR Corp',              note: 'Defense — aircraft MRO and parts supply for military fleets.' },
+      { symbol: 'NPK',  name: 'National Presto Industries', note: 'Defense — ammunition (40mm, 105mm) manufacturer.' },
+      { symbol: 'ESLT', name: 'Elbit Systems',         note: 'Defense — Israeli electronics, drones, and land systems (ADR).' },
       // Drones:
       { symbol: 'AVAV', name: 'AeroVironment',         note: 'Defense — Switchblade loitering munitions and military drones.' },
       { symbol: 'RCAT', name: 'Red Cat Holdings',      note: 'Defense — Teal small unmanned drones for military and government.' },
@@ -1237,6 +1302,20 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'HXL',  name: 'Hexcel',                note: 'Aerospace — carbon-fiber composite materials.' },
       { symbol: 'CW',   name: 'Curtiss-Wright',        note: 'Aerospace and defense engineering components.' },
       { symbol: 'ERJ',  name: 'Embraer',               note: 'Aerospace — regional jets and military aircraft.' },
+      // Under-$20 aerospace — emerging-segment names (eVTOL, satellite,
+      // small launch, components). Higher beta; many pre-revenue or
+      // early-revenue, with valuations driven by milestone news rather
+      // than financials. Speculative compared to BA / GE / HEI above.
+      { symbol: 'JOBY', name: 'Joby Aviation',        note: 'Aerospace — eVTOL air taxis (FAA certification in progress).' },
+      { symbol: 'ACHR', name: 'Archer Aviation',      note: 'Aerospace — eVTOL air taxis (Midnight aircraft).' },
+      { symbol: 'EH',   name: 'EHang Holdings',       note: 'Aerospace — autonomous flying vehicles, China (ADR).' },
+      { symbol: 'BLDE', name: 'Blade Air Mobility',   note: 'Aerospace — urban helicopter and short-haul air transit.' },
+      { symbol: 'VSAT', name: 'Viasat',               note: 'Aerospace — satellite broadband for in-flight and government.' },
+      { symbol: 'RDW',  name: 'Redwire',              note: 'Aerospace — in-space manufacturing and infrastructure.' },
+      { symbol: 'SPIR', name: 'Spire Global',         note: 'Aerospace — radio-frequency satellites + space-data subscriptions.' },
+      { symbol: 'TGI',  name: 'Triumph Group',        note: 'Aerospace — aircraft components and systems (commercial and defense).' },
+      { symbol: 'MNTS', name: 'Momentus',             note: 'Aerospace — in-space transport (last-mile orbital delivery).' },
+      { symbol: 'BKSY', name: 'BlackSky Technology',  note: 'Aerospace — real-time satellite imagery for governments.' },
       // Telecom:
       { symbol: 'TMUS', name: 'T-Mobile US',           note: 'Telecom — wireless carrier.' },
       { symbol: 'LUMN', name: 'Lumen Technologies',    note: 'Telecom — fiber and enterprise networking.' },
@@ -1316,6 +1395,21 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'HAL',  name: 'Halliburton',           note: 'Energy — oilfield services.' },
       { symbol: 'BKR',  name: 'Baker Hughes',          note: 'Energy — oilfield services and equipment.' },
       { symbol: 'DVN',  name: 'Devon Energy',          note: 'Energy — US shale producer.' },
+      // Under-$25 energy — smaller E&Ps, secondary refiners, drilling
+      // and pressure-pumping services, and coal/gas miners. Higher
+      // operational leverage to commodity prices than the majors above.
+      { symbol: 'CTRA', name: 'Coterra Energy',        note: 'Energy — natural-gas-weighted E&P (Permian + Marcellus + Anadarko).' },
+      { symbol: 'PR',   name: 'Permian Resources',     note: 'Energy — pure-play Permian Basin E&P.' },
+      { symbol: 'CRGY', name: 'Crescent Energy',       note: 'Energy — Eagle Ford and Uinta Basin E&P (KKR-affiliated).' },
+      { symbol: 'CNX',  name: 'CNX Resources',         note: 'Energy — Appalachian natural-gas producer.' },
+      { symbol: 'BTU',  name: 'Peabody Energy',        note: 'Energy — US coal miner (thermal + metallurgical).' },
+      { symbol: 'DK',   name: 'Delek US Holdings',     note: 'Energy — independent refiner (Texas, Arkansas, Tennessee).' },
+      { symbol: 'PARR', name: 'Par Pacific Holdings',  note: 'Energy — Hawaii, Pacific Northwest, Wyoming refiner + retail.' },
+      { symbol: 'RIG',  name: 'Transocean',            note: 'Energy — offshore drilling rigs (ultra-deepwater).' },
+      { symbol: 'PTEN', name: 'Patterson-UTI Energy',  note: 'Energy — onshore contract drilling and pressure pumping.' },
+      { symbol: 'LBRT', name: 'Liberty Energy',        note: 'Energy — hydraulic fracturing and completion services.' },
+      { symbol: 'AESI', name: 'Atlas Energy Solutions', note: 'Energy — frac sand and last-mile logistics in the Permian.' },
+      { symbol: 'VTLE', name: 'Vital Energy',          note: 'Energy — small-cap Permian Basin oil producer.' },
       // Utilities:
       { symbol: 'NEE',  name: 'NextEra Energy',        note: 'Utility — Florida Power & Light + largest US renewables.' },
       { symbol: 'DUK',  name: 'Duke Energy',           note: 'Utility — Southeast US electric and gas.' },
@@ -1337,7 +1431,50 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'LRCX', name: 'Lam Research',          note: 'Semis — chip-fab equipment (etch / deposition).' },
       { symbol: 'KLAC', name: 'KLA Corporation',       note: 'Semis — chip-fab metrology and inspection.' },
       { symbol: 'MRVL', name: 'Marvell Technology',    note: 'Semis — data-center networking and storage chips.' },
-      // China:
+      { symbol: 'TXN',  name: 'Texas Instruments',     note: 'Semis — analog and embedded; long-standing dividend aristocrat.' },
+      { symbol: 'ADI',  name: 'Analog Devices',        note: 'Semis — high-performance analog ICs (signal chain, power).' },
+      { symbol: 'NXPI', name: 'NXP Semiconductors',    note: 'Semis — automotive, secure ID, and industrial chips.' },
+      { symbol: 'MCHP', name: 'Microchip Technology',  note: 'Semis — microcontrollers and analog for industrial / auto.' },
+      { symbol: 'ON',   name: 'ON Semiconductor',      note: 'Semis — power and silicon-carbide for EVs and industrial.' },
+      { symbol: 'ARM',  name: 'Arm Holdings',          note: 'Semis — chip-architecture IP (mobile, data center, AI).' },
+      { symbol: 'TER',  name: 'Teradyne',              note: 'Semis — automated chip-test equipment.' },
+      { symbol: 'STM',  name: 'STMicroelectronics',    note: 'Semis — European mixed-signal, automotive, MCUs (ADR).' },
+      { symbol: 'SWKS', name: 'Skyworks Solutions',    note: 'Semis — RF front-end for smartphones and IoT.' },
+      { symbol: 'QRVO', name: 'Qorvo',                 note: 'Semis — RF chips for 5G, defense, infrastructure.' },
+      { symbol: 'ENTG', name: 'Entegris',              note: 'Semis — materials, filtration, and handling for chip fabs.' },
+      { symbol: 'MKSI', name: 'MKS Instruments',       note: 'Semis — fab subsystems (vacuum, gas, photonics).' },
+      { symbol: 'WOLF', name: 'Wolfspeed',             note: 'Semis — silicon-carbide power chips for EVs and grid.' },
+      { symbol: 'CRDO', name: 'Credo Technology',      note: 'Semis — high-speed connectivity for AI data centers.' },
+      { symbol: 'AMBA', name: 'Ambarella',             note: 'Semis — vision-AI chips for cameras, automotive, robotics.' },
+      // Smaller-cap / lower-priced semis (typically under $60 / share) —
+      // packaging, smaller foundries, analog & discrete, and equipment.
+      { symbol: 'ASX',  name: 'ASE Technology Holding', note: 'Semis — world\'s largest OSAT (chip assembly and test, ADR).' },
+      { symbol: 'AMKR', name: 'Amkor Technology',       note: 'Semis — chip packaging and test (OSAT) for major foundries.' },
+      { symbol: 'UMC',  name: 'United Microelectronics', note: 'Semis — Taiwan foundry, mature-node alternative to TSMC.' },
+      { symbol: 'TSEM', name: 'Tower Semiconductor',    note: 'Semis — Israeli specialty foundry (analog, RF, automotive).' },
+      { symbol: 'HIMX', name: 'Himax Technologies',     note: 'Semis — display driver ICs for OLED, LCD, and AR/VR (ADR).' },
+      { symbol: 'VSH',  name: 'Vishay Intertechnology', note: 'Semis — discrete semis, MOSFETs, and passive components.' },
+      { symbol: 'ALGM', name: 'Allegro MicroSystems',   note: 'Semis — magnetic sensors and power chips for autos and industrial.' },
+      { symbol: 'AOSL', name: 'Alpha and Omega Semiconductor', note: 'Semis — power MOSFETs and ICs for consumer and industrial.' },
+      { symbol: 'AEHR', name: 'Aehr Test Systems',      note: 'Semis — burn-in test systems, esp. silicon-carbide power chips.' },
+      { symbol: 'ICHR', name: 'Ichor Holdings',         note: 'Semis — fluid delivery subsystems for chip-fab tools.' },
+      { symbol: 'VECO', name: 'Veeco Instruments',      note: 'Semis — deposition and lithography equipment.' },
+      { symbol: 'ACMR', name: 'ACM Research',           note: 'Semis — wafer cleaning equipment (China-exposed).' },
+      // Ultra-low-priced semis (typically under $25 / share) — auto ADAS,
+      // GaN power, niche memory, photonics, and small-cap packaging.
+      // Higher beta than the names above; volatile single-product stories.
+      { symbol: 'MBLY', name: 'Mobileye Global',        note: 'Semis — ADAS / autonomous-driving chips (Intel spin-off).' },
+      { symbol: 'INDI', name: 'indie Semiconductor',    note: 'Semis — mixed-signal automotive chips (radar, cabin, ADAS).' },
+      { symbol: 'NVTS', name: 'Navitas Semiconductor',  note: 'Semis — gallium-nitride (GaN) power chips for EVs and data centers.' },
+      { symbol: 'TGAN', name: 'Transphorm',             note: 'Semis — GaN power semis (Renesas-owned).' },
+      { symbol: 'CEVA', name: 'Ceva',                   note: 'Semis — chip IP for AI, DSP, 5G, and Wi-Fi.' },
+      { symbol: 'MRAM', name: 'Everspin Technologies',  note: 'Semis — MRAM (magnetic memory) for industrial and aerospace.' },
+      { symbol: 'MX',   name: 'Magnachip Semiconductor',note: 'Semis — display driver ICs and power chips (Korean).' },
+      { symbol: 'AXTI', name: 'AXT',                    note: 'Semis — compound semi substrates (InP, GaAs, germanium).' },
+      { symbol: 'IMOS', name: 'ChipMOS Technologies',   note: 'Semis — Taiwan-based assembly and test (ADR).' },
+      { symbol: 'POET', name: 'POET Technologies',      note: 'Semis — silicon photonics for AI data-center interconnects.' },
+      { symbol: 'EMKR', name: 'EMCORE',                 note: 'Semis — RF photonics and inertial navigation chips.' },
+      { symbol: 'PXLW', name: 'Pixelworks',             note: 'Semis — video processors for mobile and projectors.' },
       { symbol: 'BABA', name: 'Alibaba',               note: 'China — e-commerce (Taobao, Tmall) and cloud.' },
       { symbol: 'JD',   name: 'JD.com',                note: 'China — e-commerce and logistics.' },
       { symbol: 'PDD',  name: 'PDD Holdings',          note: 'China — Pinduoduo / Temu parent.' },
@@ -1691,6 +1828,153 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       // Other under-$20 dividend payers:
       { symbol: 'VGR',  name: 'Vector Group',               note: 'Tobacco — Liggett (4th-largest US cigarette maker), high dividend.' },
       { symbol: 'GNW',  name: 'Genworth Financial',         note: 'Insurance — life and long-term-care insurance.' },
+      // Under-$20 non-dividend / speculative — apparel, telecom, hydrogen,
+      // meme retail, crypto miners, cannabis, real-estate tech, biotech,
+      // airlines, solar. Higher beta than the names above; many pre-profit
+      // or cyclical. Tagged by their natural chip via the `Xxx —` prefix.
+      { symbol: 'HBI',  name: 'Hanesbrands',                note: 'Retail — basics and innerwear (Hanes, Champion).' },
+      { symbol: 'AEO',  name: 'American Eagle Outfitters',  note: 'Retail — apparel (American Eagle, Aerie).' },
+      { symbol: 'GAP',  name: 'Gap Inc',                    note: 'Retail — Gap, Old Navy, Banana Republic, Athleta.' },
+      { symbol: 'GME',  name: 'GameStop',                   note: 'Retail — video-game retailer, meme-stock template.' },
+      { symbol: 'ERIC', name: 'Ericsson',                   note: 'Telecom — 5G network equipment (Swedish, ADR).' },
+      { symbol: 'NOK',  name: 'Nokia',                      note: 'Telecom — network equipment, fixed and mobile broadband.' },
+      { symbol: 'PLUG', name: 'Plug Power',                 note: 'Energy — hydrogen fuel cells and electrolyzers.' },
+      { symbol: 'RIOT', name: 'Riot Platforms',             note: 'Crypto — Bitcoin mining (Texas-based hashrate).' },
+      { symbol: 'MARA', name: 'Marathon Digital',           note: 'Crypto — Bitcoin mining operations.' },
+      { symbol: 'TLRY', name: 'Tilray Brands',              note: 'Cannabis — Canadian cannabis + beverages.' },
+      { symbol: 'CGC',  name: 'Canopy Growth',              note: 'Cannabis — Canadian cannabis producer.' },
+      { symbol: 'OPEN', name: 'Opendoor Technologies',      note: 'REIT-Like — algorithmic residential home buying.' },
+      { symbol: 'NVAX', name: 'Novavax',                    note: 'Biotech — protein-based COVID and seasonal-flu vaccines.' },
+      { symbol: 'JBLU', name: 'JetBlue Airways',            note: 'Travel — US low-cost airline.' },
+      { symbol: 'CSIQ', name: 'Canadian Solar',             note: 'Energy — solar modules and project development.' },
+      { symbol: 'SHLS', name: 'Shoals Technologies',        note: 'Energy — electrical balance-of-system for utility-scale solar.' },
+      // Another under-$20 wave — telehealth, China-listed consumer
+      // names, gold/silver, BTC miners, fuel cells, shipping, classic
+      // consumer brands. Tagged by their chip via the `Xxx —` prefix.
+      { symbol: 'HIMS', name: 'Hims & Hers Health',         note: 'Healthcare — direct-to-consumer telehealth (sexual health, weight loss, mental).' },
+      { symbol: 'TDOC', name: 'Teladoc Health',             note: 'Healthcare — virtual-care platform (primary care, mental health, chronic).' },
+      { symbol: 'AMWL', name: 'American Well',              note: 'Healthcare — enterprise telehealth platform for health systems.' },
+      { symbol: 'TAK',  name: 'Takeda Pharmaceutical',      note: 'Pharma — Japanese big-pharma, oncology and rare diseases (ADR).' },
+      { symbol: 'BHC',  name: 'Bausch Health',              note: 'Pharma — diversified specialty pharma (eye care, GI, dermatology).' },
+      { symbol: 'GRAB', name: 'Grab Holdings',              note: 'Tech — Southeast-Asia super-app (ride-hailing, delivery, fintech).' },
+      { symbol: 'SNAP', name: 'Snap Inc',                   note: 'Entertainment — Snapchat camera and AR platform.' },
+      { symbol: 'PTON', name: 'Peloton Interactive',        note: 'Retail — connected fitness hardware and subscription content.' },
+      { symbol: 'VIPS', name: 'Vipshop Holdings',           note: 'China — online discount apparel and beauty retailer.' },
+      { symbol: 'TME',  name: 'Tencent Music Entertainment',note: 'Entertainment — China music streaming (QQ, Kugou, Kuwo).' },
+      { symbol: 'COTY', name: 'Coty Inc',                   note: 'Retail — cosmetics and fragrance brands (CoverGirl, Rimmel, licensed luxury).' },
+      { symbol: 'GOLD', name: 'Barrick Gold',               note: 'Mining — global gold miner (one of the world\'s largest by output).' },
+      { symbol: 'FCEL', name: 'FuelCell Energy',            note: 'Energy — stationary fuel-cell power plants.' },
+      { symbol: 'BE',   name: 'Bloom Energy',               note: 'Energy — solid-oxide fuel cells for on-site distributed power.' },
+      { symbol: 'AMRC', name: 'Ameresco',                   note: 'Energy — energy-efficiency services and on-site renewables.' },
+      { symbol: 'CLSK', name: 'CleanSpark',                 note: 'Crypto — Bitcoin mining (US-based, low-cost hashrate).' },
+      { symbol: 'WULF', name: 'TeraWulf',                   note: 'Crypto — Bitcoin mining + AI-compute hosting.' },
+      { symbol: 'ZIM',  name: 'ZIM Integrated Shipping',    note: 'Shipping — Israeli container shipping (asset-light, charter model).' },
+      { symbol: 'TRIP', name: 'Tripadvisor',                note: 'Travel — travel-planning marketplace and reviews.' },
+      { symbol: 'MAT',  name: 'Mattel',                     note: 'Retail — toy and brand IP company (Barbie, Hot Wheels, Fisher-Price).' },
+      // ── Under-$20 coverage by chip ────────────────────────────────────
+      // Filling gaps where the chip filter had <5 sub-$20 names. Some
+      // chips (utility, tobacco, cybersecurity, logistics) are inherently
+      // large-cap dominated; we add what's available and accept the
+      // shortfall rather than reaching for illiquid micro-caps.
+
+      // AI — voice / vision / defense AI smaller caps.
+      { symbol: 'SOUN', name: 'SoundHound AI',              note: 'AI — voice and conversational AI for autos, restaurants, IoT.' },
+      { symbol: 'BBAI', name: 'BigBear.ai',                 note: 'AI — defense and intelligence analytics.' },
+      { symbol: 'VERI', name: 'Veritone',                   note: 'AI — applied AI for media, public sector, energy.' },
+      { symbol: 'WIMI', name: 'WiMi Hologram Cloud',        note: 'AI — Chinese AR / hologram and AI vision (ADR).' },
+
+      // Auto — legacy ADRs and motorcycles (sub-$20 spectrum thin; most
+      // names are EV/in-EV chip).
+      { symbol: 'STLA', name: 'Stellantis',                 note: 'Auto — Chrysler/Peugeot/Fiat parent (Dutch ADR).' },
+      { symbol: 'VWAGY',name: 'Volkswagen',                 note: 'Auto — German automaker (ADR).' },
+      { symbol: 'NSANY',name: 'Nissan Motor',               note: 'Auto — Japanese automaker (ADR).' },
+      { symbol: 'POAHY',name: 'Porsche Automobil Holding',  note: 'Auto — Porsche / VW holding company (ADR).' },
+
+      // Chemicals — specialty and basic chemicals smaller caps.
+      { symbol: 'TROX', name: 'Tronox Holdings',            note: 'Chemicals — titanium-dioxide pigment producer.' },
+      { symbol: 'ASIX', name: 'AdvanSix',                   note: 'Chemicals — nylon, ammonium sulfate, chemical intermediates.' },
+      { symbol: 'OLN',  name: 'Olin',                       note: 'Chemicals — chlor-alkali + Winchester ammunition.' },
+      { symbol: 'MEOH', name: 'Methanex',                   note: 'Chemicals — world\'s largest methanol producer.' },
+
+      // Cybersecurity — most cyber names trade $30+; here are the
+      // legitimate sub-$20 options.
+      { symbol: 'OSPN', name: 'OneSpan',                    note: 'Cybersecurity — identity authentication and anti-fraud.' },
+      { symbol: 'ATEN', name: 'A10 Networks',               note: 'Cybersecurity — application delivery and DDoS protection.' },
+      { symbol: 'KSCP', name: 'Knightscope',                note: 'Cybersecurity — autonomous physical-security robots.' },
+
+      // Farming — small-cap producers and food-supply names.
+      { symbol: 'LND',  name: 'BrasilAgro',                 note: 'Farming — Brazilian sugarcane, grains, and cattle (ADR).' },
+      { symbol: 'AVO',  name: 'Mission Produce',            note: 'Farming — global avocado grower and distributor.' },
+      { symbol: 'DOLE', name: 'Dole plc',                   note: 'Farming — global fresh fruit and vegetables.' },
+      { symbol: 'LMNR', name: 'Limoneira',                  note: 'Farming — California citrus grower (lemons, oranges).' },
+      { symbol: 'VFF',  name: 'Village Farms International',note: 'Farming — greenhouse vegetable and cannabis grower.' },
+
+      // Fintech — payments, lending, and consumer fintech smaller caps.
+      { symbol: 'WU',   name: 'Western Union',              note: 'Fintech — cross-border money transfer.' },
+      { symbol: 'LU',   name: 'Lufax Holding',              note: 'Fintech — Chinese personal lending platform (ADR).' },
+      { symbol: 'OPRT', name: 'Oportun Financial',          note: 'Fintech — small-dollar lending for underbanked consumers.' },
+      { symbol: 'LMND', name: 'Lemonade',                   note: 'Fintech — AI-driven insurance platform (renters, pet, home).' },
+
+      // Food — restaurants and packaged-food smaller caps.
+      { symbol: 'WEN',  name: 'Wendy\'s',                   note: 'Food — fast-food burger chain.' },
+      { symbol: 'DENN', name: 'Denny\'s',                   note: 'Food — family-dining restaurant chain.' },
+      { symbol: 'DNUT', name: 'Krispy Kreme',               note: 'Food — donut retail and wholesale.' },
+      { symbol: 'NOMD', name: 'Nomad Foods',                note: 'Food — European frozen-food brands (Birds Eye, Findus).' },
+      { symbol: 'BLMN', name: 'Bloomin\' Brands',           note: 'Food — Outback Steakhouse, Carrabba\'s, Bonefish Grill.' },
+
+      // Insurance — life, P&C, and insurtech sub-$20.
+      { symbol: 'AMBC', name: 'Ambac Financial',            note: 'Insurance — financial guarantee and specialty P&C.' },
+      { symbol: 'IGIC', name: 'International General Insurance', note: 'Insurance — specialty commercial insurance and reinsurance.' },
+      { symbol: 'NODK', name: 'NI Holdings',                note: 'Insurance — Midwest P&C (auto, crop, non-standard).' },
+
+      // Logistics — sub-$20 is genuinely thin; here are the real options.
+      { symbol: 'HTLD', name: 'Heartland Express',          note: 'Logistics — short-to-medium-haul truckload carrier.' },
+      { symbol: 'ATSG', name: 'Air Transport Services Group', note: 'Logistics — air-cargo aircraft leasing and operations.' },
+      { symbol: 'PANL', name: 'Pangaea Logistics Solutions',note: 'Logistics — ice-class dry-bulk shipping.' },
+
+      // REIT-Like — real-estate operating companies and tech platforms.
+      { symbol: 'RDFN', name: 'Redfin',                     note: 'REIT-Like — tech-driven residential brokerage.' },
+      { symbol: 'COMP', name: 'Compass',                    note: 'REIT-Like — residential brokerage tech platform.' },
+      { symbol: 'EXPI', name: 'eXp World Holdings',         note: 'REIT-Like — cloud-based residential brokerage.' },
+
+      // Software — most software is $30+; here are sub-$20 names.
+      { symbol: 'DOMO', name: 'Domo',                       note: 'Software — business intelligence and data analytics.' },
+      { symbol: 'NRDS', name: 'NerdWallet',                 note: 'Software — personal-finance comparison platform.' },
+      { symbol: 'MGNI', name: 'Magnite',                    note: 'Software — sell-side ad tech for CTV and digital.' },
+
+      // Staples — household and packaged-goods sub-$20.
+      { symbol: 'NWL',  name: 'Newell Brands',              note: 'Staples — Rubbermaid, Sharpie, Yankee Candle, Coleman.' },
+      { symbol: 'HLF',  name: 'Herbalife',                  note: 'Staples — nutrition shakes and supplements (MLM model).' },
+      { symbol: 'HAIN', name: 'Hain Celestial',             note: 'Staples — organic packaged food (Celestial Seasonings, Terra).' },
+      { symbol: 'MED',  name: 'Medifast',                   note: 'Staples — meal-replacement weight-management products.' },
+      { symbol: 'WW',   name: 'WW International',           note: 'Staples — WeightWatchers digital + GLP-1 services.' },
+
+      // Tech — sub-$20 tech is mostly ADRs and Chinese names.
+      { symbol: 'WIT',  name: 'Wipro',                      note: 'Tech — Indian IT services (ADR).' },
+      { symbol: 'IQ',   name: 'iQIYI',                      note: 'Tech — Chinese video streaming, Baidu-affiliated (ADR).' },
+      { symbol: 'WB',   name: 'Weibo',                      note: 'Tech — Chinese microblogging social network (ADR).' },
+      { symbol: 'HUYA', name: 'HUYA',                       note: 'Tech — Chinese live-streaming video platform (ADR).' },
+      { symbol: 'CNDT', name: 'Conduent',                   note: 'Tech — business-process services and digital platforms.' },
+
+      // Tobacco — sub-$20 is rare; legitimate options:
+      { symbol: 'TPB',  name: 'Turning Point Brands',       note: 'Tobacco — Zig-Zag papers, Stoker\'s smokeless, vapor.' },
+      { symbol: 'XXII', name: '22nd Century Group',         note: 'Tobacco — reduced-nicotine cigarettes (FDA-authorized).' },
+
+      // Utility — most US utilities are $30+; sub-$20 picks:
+      { symbol: 'PCG',  name: 'PG&E',                       note: 'Utility — California electric and gas (post-bankruptcy recovery).' },
+      { symbol: 'AES',  name: 'AES Corporation',            note: 'Utility — global electric utility with heavy renewables transition.' },
+      { symbol: 'AT',   name: 'Atlantica Sustainable Infrastructure', note: 'Utility — renewables, transmission, water YieldCo.' },
+      { symbol: 'GNE',  name: 'Genie Energy',               note: 'Utility — retail electricity and natural gas reseller.' },
+
+      // Pharma — additional sub-$20 names beyond VTRS/BHC/TAK.
+      { symbol: 'AKBA', name: 'Akebia Therapeutics',        note: 'Pharma — anemia therapies for chronic kidney disease.' },
+      { symbol: 'MNKD', name: 'MannKind',                   note: 'Pharma — inhaled insulin (Afrezza) and pulmonary platform.' },
+      { symbol: 'IRWD', name: 'Ironwood Pharmaceuticals',   note: 'Pharma — GI franchise (Linzess for IBS-C).' },
+
+      // Industrial — sub-$20 industrials.
+      { symbol: 'GTES', name: 'Gates Industrial',           note: 'Industrial — power-transmission belts and fluid-power hoses.' },
+      { symbol: 'EVTC', name: 'Evertec',                    note: 'Industrial — Puerto Rico payment processing and IT services.' },
+      { symbol: 'ATKR', name: 'Atkore',                     note: 'Industrial — electrical conduit, cables, and metal framing.' },
     ],
   },
   {
@@ -2569,9 +2853,20 @@ window.dashApp = () => ({
     side: 'buy' as 'buy' | 'sell',
     qty: '1',
     limit_price: '',
-    type: 'limit' as 'limit' | 'market',
+    // Stop-price for stop + stop_limit; trail_price OR trail_percent
+    // (mutually exclusive) for trailing_stop. All empty unless the user
+    // picks a type that needs them.
+    stop_price: '',
+    trail_price: '',
+    trail_percent: '',
+    type: 'limit' as 'limit' | 'market' | 'stop' | 'stop_limit' | 'trailing_stop',
+    // Trailing stops require GTC because they can't fit in a single
+    // trading day's session predictably. We auto-flip TIF when the
+    // type changes; user can still override.
     time_in_force: 'day' as 'gtc' | 'day' | 'ioc' | 'fok',
   },
+  // Help-modal toggle for the "what are these order types?" popover.
+  orderTypesHelpOpen: false,
   // Tracks the last auto-filled limit price so we can keep refreshing it
   // as the live quote moves — but stop the moment the user manually edits
   // the field (so we don't overwrite their target).
@@ -2586,7 +2881,30 @@ window.dashApp = () => ({
   addFundsBankLabel: 'Chase ••••1234',
   addFundsSubmitting: false,
   addFundsError: '' as string,
-  brokerDeposits: [] as Array<{ id: number; amount: string; method: string; bank_label: string; reference: string; status: string; created_at: string }>,
+  brokerDeposits: [] as Array<{ id: number; amount: string; method: string; bank_label: string; reference: string; status: string; created_at: string; direction?: string }>,
+  // Withdraw modal — same flow as Add Funds but OUTGOING direction.
+  withdrawOpen: false,
+  withdrawAmount: '',
+  withdrawMethod: 'ach' as 'ach' | 'instant' | 'wire',
+  withdrawBankLabel: 'Chase ••••1234',
+  withdrawSubmitting: false,
+  withdrawError: '' as string,
+  brokerWithdrawals: [] as Array<{ id: number; amount: string; method: string; bank_label: string; reference: string; status: string; created_at: string; direction?: string }>,
+  // Recurring-investment management — list + form state for the new
+  // "set and forget" section on the brokerage page.
+  recurringInvestments: [] as any[],
+  loadingRecurring: false,
+  recurringForm: {
+    symbol: '',
+    qty: '1',
+    frequency: 'weekly' as 'daily' | 'weekly' | 'biweekly' | 'monthly',
+    side: 'buy' as 'buy' | 'sell',
+    order_type: 'market' as 'market' | 'limit',
+    limit_price: '',
+    starts_at: '' as string,
+  },
+  recurringSubmitting: false,
+  recurringError: '' as string,
   // Recent-orders status filter — 'active' (open / working orders), 'filled', 'expired'.
   recentOrdersTab: 'active' as 'active' | 'filled' | 'expired',
   // Brokerage account (KYC) — null when the user hasn't onboarded yet.
@@ -3386,6 +3704,34 @@ window.dashApp = () => ({
   screenerOpen: false,
   // 'stocks' shows the curated stock categories; 'etfs' shows ETF baskets.
   screenerView: 'stocks' as 'stocks' | 'etfs',
+  // Articles keyed to the symbol they were fetched for, so toggling
+  // between symbols doesn't show stale headlines from the prior one.
+  // The news panel sits under the order form (Alpaca News API).
+  alpacaNews: { symbol: '', articles: [] as any[] },
+  loadingAlpacaNews: false,
+  alpacaNewsError: null as string | null,
+  // Company-profile card (headquarters, industry, IPO age, etc.).
+  // Symbol-keyed like the news so we don't show stale data on toggle.
+  // Backed by /api/alpaca/profile/:symbol → Finnhub /stock/profile2.
+  companyProfile: { symbol: '', data: null as any },
+  loadingCompanyProfile: false,
+
+  // Account ledger from Alpaca — fills, dividends, transfers, fees. Loaded
+  // alongside the trading account in loadBrokerage so the activity card
+  // refreshes whenever the user pulls the brokerage page.
+  alpacaActivities: [] as any[],
+  loadingAlpacaActivities: false,
+  // Equity / P&L curve for the performance chart. Shape mirrors Alpaca's
+  // response: parallel arrays keyed by timestamp index.
+  alpacaPortfolioHistory: {
+    timestamp: [] as number[],
+    equity: [] as number[],
+    profit_loss: [] as number[],
+    profit_loss_pct: [] as number[],
+    base_value: 0,
+    timeframe: '',
+  } as any,
+  loadingAlpacaPortfolioHistory: false,
   screenerCategory: 'mag-7' as string,
   screenerSearch: '',
   filterSearchText: '',
@@ -3598,6 +3944,56 @@ window.dashApp = () => ({
         view === 'etfs' ? c.view === 'etfs' : c.view !== 'etfs'
       );
       if (cats.length > 0) this.screenerCategory = cats[0].id;
+    });
+
+    // News panel under the order form follows the symbol field. The
+    // panel is always rendered (just empty when there's no symbol),
+    // so we fetch unconditionally on every symbol change. loadAlpacaNews
+    // debounces 250ms and short-circuits when the symbol is identical
+    // to the one already loaded.
+    this.$watch('orderForm.symbol', (sym: string) => {
+      this.loadAlpacaNews(sym);
+      this.loadCompanyProfile(sym);
+    });
+
+    // Filter chip changes need to fetch quotes + performance pairs for
+    // whatever the chip resolves to. Without this, stocks living in
+    // categories the user hasn't visited (e.g. biotech rows in the
+    // Dividend category) render without prices and without the
+    // green/red performance-vs-benchmark arrow on the Filters tab.
+    this.$watch('filterSearchText', () => {
+      if (this.screenerCategory !== 'filters') return;
+      this._hydrateFilterCandidates();
+    });
+
+    // Same pattern when the user toggles into the Filters tab itself —
+    // make sure the currently-active chip's stocks have quotes loaded.
+    this.$watch('screenerCategory', (catId: string) => {
+      if (catId !== 'filters') return;
+      this._hydrateFilterCandidates();
+    });
+
+    // Screener search auto-pivot: the filter is per-category, so a
+    // ticker that lives under a different tab (e.g. NVDY in Dividend
+    // ETFs while the user is on Mag 7) would silently return nothing.
+    // If the query has no matches in the current category but does in
+    // another, switch to the first tab that contains it.
+    this.$watch('screenerSearch', (q: string) => {
+      const query = (q || '').trim().toLowerCase();
+      if (!query) return;
+      const matches = (cat: any) =>
+        (cat.stocks || []).some(
+          (s: any) =>
+            (s.symbol || '').toLowerCase().includes(query) ||
+            (s.name || '').toLowerCase().includes(query),
+        );
+      const current = this.stockScreener.find((c: any) => c.id === this.screenerCategory);
+      if (current && matches(current)) return;
+      const target = this.stockScreener.find(matches);
+      if (target) {
+        this.screenerView = target.view === 'etfs' ? 'etfs' : 'stocks';
+        this.screenerCategory = target.id;
+      }
     });
 
     // When the filter chip / query changes, reset the tier-2 sub-filter
@@ -4152,6 +4548,14 @@ window.dashApp = () => ({
       this.alpacaAccount = account;
       this.alpacaPositions = Array.isArray(positions) ? positions : [];
       this.alpacaOrders = Array.isArray(orders) ? orders : [];
+      // Fire these in parallel but don't block the rest of loadBrokerage
+      // on them — failure here is non-fatal (just leaves the cards
+      // empty), and we don't want a slow activities response to delay
+      // the account stats from rendering.
+      this.loadAlpacaActivities();
+      this.loadAlpacaPortfolioHistory();
+      this.loadBrokerWithdrawals();
+      this.loadRecurringInvestments();
       if (this.page === 'holdings') {
         // Pick up dividend data for any symbol that doesn't have it yet
         // (handles new buys mid-session — symbols absent from
@@ -4173,6 +4577,99 @@ window.dashApp = () => ({
     }
   },
 
+  // Fills, dividends, transfers, fees — the per-account ledger Alpaca
+  // exposes. Sorted newest-first; we cap at 50 rows in the UI so the
+  // activity card stays scannable.
+  async loadAlpacaActivities(this: any) {
+    if (this.loadingAlpacaActivities) return;
+    this.loadingAlpacaActivities = true;
+    try {
+      const list = await apiFetch<any[]>('/alpaca/activities?page_size=50');
+      this.alpacaActivities = Array.isArray(list) ? list : [];
+    } catch {
+      // Non-fatal — leave the prior list in place (or empty on first load).
+      this.alpacaActivities = [];
+    } finally {
+      this.loadingAlpacaActivities = false;
+    }
+  },
+
+  async loadAlpacaPortfolioHistory(this: any) {
+    if (this.loadingAlpacaPortfolioHistory) return;
+    this.loadingAlpacaPortfolioHistory = true;
+    try {
+      // Default: 1-month window with daily resolution. Tighten or widen
+      // via query params later if we add period/timeframe controls.
+      const h = await apiFetch<any>('/alpaca/portfolio-history?period=1M&timeframe=1D');
+      this.alpacaPortfolioHistory = h || this.alpacaPortfolioHistory;
+      this.$nextTick(() => this.renderPortfolioHistoryChart());
+    } catch {
+      // Leave the prior history in place — chart just won't re-render.
+    } finally {
+      this.loadingAlpacaPortfolioHistory = false;
+    }
+  },
+
+  // Chart.js line for the equity series. Re-renders on every
+  // loadAlpacaPortfolioHistory call so refreshes look immediate.
+  _portfolioHistoryChart: null as any,
+  renderPortfolioHistoryChart(this: any) {
+    const canvas = document.getElementById('portfolio-history-chart') as HTMLCanvasElement | null;
+    if (!canvas) return;
+    const h = this.alpacaPortfolioHistory || {};
+    const stamps: number[] = Array.isArray(h.timestamp) ? h.timestamp : [];
+    const equity: number[] = Array.isArray(h.equity) ? h.equity : [];
+    if (stamps.length === 0 || equity.length === 0) {
+      if (this._portfolioHistoryChart) {
+        this._portfolioHistoryChart.destroy();
+        this._portfolioHistoryChart = null;
+      }
+      return;
+    }
+    const labels = stamps.map((t) =>
+      new Date(t * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
+    );
+    if (this._portfolioHistoryChart) this._portfolioHistoryChart.destroy();
+    // @ts-ignore — Chart is loaded globally via chart.js
+    this._portfolioHistoryChart = new Chart(canvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Equity',
+            data: equity,
+            borderColor: '#a855f7',
+            backgroundColor: 'rgba(168, 85, 247, 0.10)',
+            fill: true,
+            tension: 0.25,
+            pointRadius: 0,
+            borderWidth: 2,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx: any) => ' ' + fmtUSD(ctx.raw),
+            },
+          },
+        },
+        scales: {
+          x: { ticks: { color: '#5c5280', maxTicksLimit: 6 }, grid: { display: false } },
+          y: {
+            ticks: { color: '#5c5280', callback: (v: any) => fmtUSD(v) },
+            grid: { color: 'rgba(255,255,255,0.04)' },
+          },
+        },
+      },
+    });
+  },
+
   async loadAlpacaQuote(this: any, symbol: string) {
     if (this._quoteFetchTimer) clearTimeout(this._quoteFetchTimer);
     const sym = (symbol || '').trim().toUpperCase();
@@ -4184,6 +4681,66 @@ window.dashApp = () => ({
     this._quoteFetchTimer = setTimeout(async () => {
       await this._fetchAndApplyQuote(sym);
       this._startLimitPriceRefresh();
+    }, 250);
+  },
+
+  // Company-profile fetcher — same debounce strategy as the news
+  // loader. Backend caches 24h server-side so multi-user traffic is
+  // a single Finnhub hit per ticker per day.
+  _profileFetchTimer: null as number | null,
+  async loadCompanyProfile(this: any, symbol: string) {
+    if (this._profileFetchTimer) clearTimeout(this._profileFetchTimer);
+    const sym = (symbol || '').trim().toUpperCase();
+    if (!sym) {
+      this.companyProfile = { symbol: '', data: null };
+      return;
+    }
+    if (this.companyProfile.symbol === sym && this.companyProfile.data) return;
+
+    this._profileFetchTimer = window.setTimeout(async () => {
+      this.loadingCompanyProfile = true;
+      try {
+        const data = await apiFetch<any>(`/alpaca/profile/${encodeURIComponent(sym)}`);
+        this.companyProfile = { symbol: sym, data };
+      } catch {
+        this.companyProfile = { symbol: sym, data: null };
+      } finally {
+        this.loadingCompanyProfile = false;
+      }
+    }, 250);
+  },
+
+  // Debounced news fetch — typing a ticker fires this on every input
+  // event, so we wait for the keystrokes to settle before hitting
+  // Alpaca. Same symbol back-to-back is a no-op (state already holds
+  // the prior result).
+  _newsFetchTimer: null as number | null,
+  async loadAlpacaNews(this: any, symbol: string) {
+    if (this._newsFetchTimer) clearTimeout(this._newsFetchTimer);
+    const sym = (symbol || '').trim().toUpperCase();
+    if (!sym) {
+      this.alpacaNews = { symbol: '', articles: [] };
+      this.alpacaNewsError = null;
+      return;
+    }
+    // Cheap memo — clicking the same symbol that we're already showing
+    // doesn't refetch.
+    if (this.alpacaNews.symbol === sym && this.alpacaNews.articles.length > 0) return;
+
+    this._newsFetchTimer = window.setTimeout(async () => {
+      this.loadingAlpacaNews = true;
+      this.alpacaNewsError = null;
+      try {
+        const resp = await apiFetch<any>(`/alpaca/news/${encodeURIComponent(sym)}`);
+        // Alpaca wraps articles under `news`; absent on error/empty.
+        const articles = Array.isArray(resp?.news) ? resp.news : [];
+        this.alpacaNews = { symbol: sym, articles };
+      } catch (e: any) {
+        this.alpacaNews = { symbol: sym, articles: [] };
+        this.alpacaNewsError = e?.message || 'Could not load news';
+      } finally {
+        this.loadingAlpacaNews = false;
+      }
     }, 250);
   },
 
@@ -4455,6 +5012,166 @@ window.dashApp = () => ({
       this.addFundsError = e?.message || 'Deposit failed. Please try again.';
     } finally {
       this.addFundsSubmitting = false;
+    }
+  },
+
+  // Mirror of submitAddFunds for the OUTGOING side. Optimistically debits
+  // local portfolio cash so the UI feels instant; the next loadBrokerage
+  // tick reconciles against server state.
+  async submitWithdrawal(this: any) {
+    if (this.withdrawSubmitting) return;
+    const amt = parseFloat(this.withdrawAmount);
+    if (!amt || amt <= 0) return;
+
+    this.withdrawSubmitting = true;
+    this.withdrawError = '';
+    try {
+      const withdrawal = await apiFetch<any>('/broker/funding/withdrawals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: amt.toFixed(2),
+          method: this.withdrawMethod,
+          bank_label: this.withdrawBankLabel,
+        }),
+      });
+      this.brokerWithdrawals = [withdrawal, ...this.brokerWithdrawals];
+
+      if (withdrawal.status === 'failed') {
+        this.withdrawError = withdrawal.note || 'Withdrawal failed at Alpaca.';
+        return;
+      }
+
+      // Optimistic debit on the user's main portfolio. Reconciled by
+      // the next loadBrokerage / portfolioCash refresh.
+      const mainId = this.mainPortfolioId();
+      if (mainId != null) {
+        this.portfolioCash = {
+          ...this.portfolioCash,
+          [mainId]: Math.max(0, (parseFloat(this.portfolioCash[mainId]) || 0) - amt),
+        };
+        this._savePortfolioCash();
+      }
+
+      this.withdrawOpen = false;
+      this.withdrawAmount = '';
+      (Alpine.store('toast') as ToastStore).show(
+        `${this.fmtUSD(amt)} withdrawal initiated · ${withdrawal.reference}`,
+        'success'
+      );
+      // Refresh activity log + history to reflect the new transfer.
+      this.loadAlpacaActivities();
+      this.loadAlpacaPortfolioHistory();
+    } catch (e: any) {
+      this.withdrawError = e?.message || 'Withdrawal failed. Please try again.';
+    } finally {
+      this.withdrawSubmitting = false;
+    }
+  },
+
+  async loadBrokerWithdrawals(this: any) {
+    try {
+      const res = await apiFetch<{ withdrawals: any[] }>('/broker/funding/withdrawals');
+      this.brokerWithdrawals = res.withdrawals || [];
+    } catch {
+      this.brokerWithdrawals = [];
+    }
+  },
+
+  // ── Recurring investments ─────────────────────────────────────────────
+
+  async loadRecurringInvestments(this: any) {
+    if (this.loadingRecurring) return;
+    this.loadingRecurring = true;
+    try {
+      const res = await apiFetch<{ items: any[] }>('/recurring-investments');
+      this.recurringInvestments = res.items || [];
+    } catch {
+      this.recurringInvestments = [];
+    } finally {
+      this.loadingRecurring = false;
+    }
+  },
+
+  async createRecurringInvestment(this: any) {
+    if (this.recurringSubmitting) return;
+    const sym = (this.recurringForm.symbol || '').trim().toUpperCase();
+    const qty = parseFloat(this.recurringForm.qty);
+    if (!sym || !Number.isFinite(qty) || qty <= 0) {
+      this.recurringError = 'Symbol and quantity are required.';
+      return;
+    }
+
+    this.recurringSubmitting = true;
+    this.recurringError = '';
+    try {
+      const body: any = {
+        symbol: sym,
+        qty: qty.toString(),
+        side: this.recurringForm.side,
+        order_type: this.recurringForm.order_type,
+        time_in_force: 'day',
+        frequency: this.recurringForm.frequency,
+      };
+      if (this.recurringForm.order_type === 'limit' && this.recurringForm.limit_price) {
+        body.limit_price = parseFloat(this.recurringForm.limit_price).toString();
+      }
+      if (this.recurringForm.starts_at) {
+        // datetime-local input gives "YYYY-MM-DDTHH:mm" with no zone —
+        // attach a Z so the server parses it as UTC. Local-vs-UTC
+        // mismatch is acceptable for this v0; we can add a TZ picker later.
+        body.starts_at = this.recurringForm.starts_at + ':00Z';
+      }
+
+      const res = await apiFetch<{ item: any }>('/recurring-investments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      this.recurringInvestments = [res.item, ...this.recurringInvestments];
+      this.recurringForm.symbol = '';
+      this.recurringForm.qty = '1';
+      this.recurringForm.limit_price = '';
+      this.recurringForm.starts_at = '';
+      (Alpine.store('toast') as ToastStore).show(
+        `Recurring ${this.recurringForm.frequency} buy created for ${sym}`,
+        'success'
+      );
+    } catch (e: any) {
+      this.recurringError = e?.message || 'Could not create recurring investment.';
+    } finally {
+      this.recurringSubmitting = false;
+    }
+  },
+
+  async toggleRecurringInvestment(this: any, item: any) {
+    try {
+      const res = await apiFetch<{ item: any }>(`/recurring-investments/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !item.is_active }),
+      });
+      this.recurringInvestments = this.recurringInvestments.map((i: any) =>
+        i.id === item.id ? res.item : i,
+      );
+    } catch (e: any) {
+      (Alpine.store('toast') as ToastStore).show(
+        e?.message || 'Could not update recurring investment',
+        'error'
+      );
+    }
+  },
+
+  async deleteRecurringInvestment(this: any, item: any) {
+    if (!confirm(`Delete recurring ${item.frequency} ${item.side} for ${item.symbol}?`)) return;
+    try {
+      await apiFetch(`/recurring-investments/${item.id}`, { method: 'DELETE' });
+      this.recurringInvestments = this.recurringInvestments.filter((i: any) => i.id !== item.id);
+    } catch (e: any) {
+      (Alpine.store('toast') as ToastStore).show(
+        e?.message || 'Could not delete recurring investment',
+        'error'
+      );
     }
   },
 
@@ -4955,7 +5672,22 @@ window.dashApp = () => ({
         type: f.type,
         time_in_force: f.time_in_force,
       };
-      if (f.type === 'limit') body.limit_price = f.limit_price;
+      // Per-type body fields. Alpaca rejects extraneous price params on
+      // types that don't use them, so only attach what's relevant.
+      if (f.type === 'limit') {
+        body.limit_price = f.limit_price;
+      } else if (f.type === 'stop') {
+        body.stop_price = f.stop_price;
+      } else if (f.type === 'stop_limit') {
+        body.stop_price = f.stop_price;
+        body.limit_price = f.limit_price;
+      } else if (f.type === 'trailing_stop') {
+        // trail_price OR trail_percent — never both. Prefer percent
+        // if the user filled it in, since that's the more common
+        // "lock in N% from peak" usage.
+        if (f.trail_percent) body.trail_percent = f.trail_percent;
+        else if (f.trail_price) body.trail_price = f.trail_price;
+      }
 
       // Resolve destination portfolio: when 'all' is active, fall back to
       // the user's main portfolio.
@@ -4967,12 +5699,20 @@ window.dashApp = () => ({
         return;
       }
 
-      // Estimate order cost: limit price for limit orders, latest ask for
-      // market orders. Used to deduct from per-portfolio cash on a buy.
+      // Estimate order cost for the per-portfolio cash check. Different
+      // order types pin the worst-case price at different inputs:
+      //   limit / stop_limit → limit_price (won't fill above this)
+      //   stop                → stop_price (executes at market once
+      //                         triggered; stop_price is the rough mark)
+      //   trailing_stop / market → live quote (worst case == ask)
       const qty = parseFloat(f.qty) || 0;
-      const estPrice = f.type === 'limit'
-        ? (parseFloat(f.limit_price) || 0)
-        : (parseFloat(this.alpacaQuote?.quote?.ap) || parseFloat(this.alpacaQuote?.quote?.bp) || 0);
+      const liveAsk = parseFloat(this.alpacaQuote?.quote?.ap) || parseFloat(this.alpacaQuote?.quote?.bp) || 0;
+      const estPrice =
+        f.type === 'limit' || f.type === 'stop_limit'
+          ? parseFloat(f.limit_price) || 0
+          : f.type === 'stop'
+            ? parseFloat(f.stop_price) || 0
+            : liveAsk;
       const estCost = qty * estPrice;
 
       // Cash check on buys — block before hitting Alpaca if portfolio is short.
@@ -5021,6 +5761,9 @@ window.dashApp = () => ({
       this.orderConfirmOpen = false;
       this.orderForm.qty = '';
       this.orderForm.limit_price = '';
+      this.orderForm.stop_price = '';
+      this.orderForm.trail_price = '';
+      this.orderForm.trail_percent = '';
       (Alpine.store('toast') as ToastStore).show(`${f.side === 'buy' ? 'Buy' : 'Sell'} order placed`, 'success');
       await this.loadBrokerage();
     } catch (e) {
@@ -5032,6 +5775,14 @@ window.dashApp = () => ({
 
   pickScreenerSymbol(this: any, sym: string) {
     this.orderForm.symbol = sym;
+    // After a successful order, submitAlpacaOrder clears qty + limit_price
+    // so the form looks "fresh" for the next entry. Restore the qty
+    // default here so picking another stock prefills the full row again,
+    // not just the symbol. Only fill when blank — if the user typed a
+    // qty before clicking the row, leave their value alone.
+    if ((this.orderForm.qty || '').trim() === '') {
+      this.orderForm.qty = '1';
+    }
     // Pre-fill the limit field instantly from the cached screener price so
     // the user sees a number before the live-quote round-trip completes.
     // loadAlpacaQuote will refresh it once the up-to-the-second quote lands.
@@ -5244,16 +5995,47 @@ window.dashApp = () => ({
     if (!cat) return;
     const all = [...cat.stocks.map((s: any) => s.symbol)];
     if (cat.benchmark) all.push(cat.benchmark);
-    const symbols = all.filter((s: string) => !this.screenerQuotes[s]);
-    if (symbols.length === 0) return;
+    await this.loadScreenerQuotesForSymbols(all);
+  },
+
+  // Loads quotes + performance-vs-benchmark pairs for the currently-
+  // visible filter results. Each candidate is paired with its
+  // source-category benchmark (e.g. NVDA → XLK) so the green/red arrow
+  // renders correctly on the Filters tab — same arrow you see on the
+  // Mag-7 / Dividend / Sector tabs, just resolved per-symbol.
+  _hydrateFilterCandidates(this: any) {
+    const candidates = this.filteredScreenerCandidates();
+    if (candidates.length === 0) return;
+    const symbols = candidates.map((s: any) => s.symbol);
+    this.loadScreenerQuotesForSymbols(symbols);
+
+    // Pair each symbol with the benchmark from whichever category it
+    // belongs to. benchmarkForSymbol already walks stockScreener for us.
+    const pairs: Array<[string, string | null]> = candidates.map((s: any) => [
+      s.symbol,
+      this.benchmarkForSymbol(s.symbol),
+    ]);
+    this.loadScreenerChanges(pairs);
+  },
+
+  // Fetch snapshots for an arbitrary symbol list, skipping any already
+  // in `screenerQuotes`. Used by the Filters tab so a chip can populate
+  // price + arrow widgets for stocks whose category the user hasn't
+  // visited (e.g. biotech symbols live under Dividend; clicking the
+  // biotech chip without first hitting Dividend would otherwise leave
+  // the rows priceless).
+  async loadScreenerQuotesForSymbols(this: any, symbols: string[]) {
+    if (!Array.isArray(symbols) || symbols.length === 0) return;
+    const missing = symbols.filter((s: string) => !this.screenerQuotes[s]);
+    if (missing.length === 0) return;
     this.loadingScreenerQuotes = true;
     try {
       const data = await apiFetch<Record<string, { price: number | null; change_pct: number | null }>>(
-        `/alpaca/snapshots?symbols=${encodeURIComponent(symbols.join(','))}`
+        `/alpaca/snapshots?symbols=${encodeURIComponent(missing.join(','))}`
       );
       this.screenerQuotes = { ...this.screenerQuotes, ...data };
     } catch {
-      // Silent — screener still works, just no live numbers.
+      // Silent — screener still renders, just without live numbers.
     } finally {
       this.loadingScreenerQuotes = false;
     }

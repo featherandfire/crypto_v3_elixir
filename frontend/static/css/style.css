@@ -2,6 +2,16 @@
 
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
 
+/* Alpine.js FOUC guard. Without this rule the x-cloak attribute is inert,
+   so on every page load the browser briefly paints both the login and
+   dashboard roots (both default to x-show=true in raw HTML) before
+   Alpine.js evaluates the directives and hides whichever should be
+   hidden. The resulting flash looks like "a white page with a few
+   stray elements" because most content inside the roots is x-show'd
+   conditional and hasn't been evaluated yet. !important to win against
+   any later layout rule. Alpine strips the attribute once init() runs. */
+[x-cloak] { display: none !important; }
+
 :root {
   --bg:           #07050f;
   --surface:      #0d0a1e;
@@ -982,6 +992,52 @@ a:hover { color: var(--accent-hover); }
   border-color: rgba(245, 180, 60, 0.40);
   color: #facc15;
 }
+/* Activity log type pills — color-coded so fills / transfers / dividends
+   are scannable at a glance. Same pill shape as wishlist priority tags. */
+.activity-type-pill {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid;
+  text-align: center;
+  white-space: nowrap;
+  background: rgba(180, 77, 255, 0.10);
+  border-color: rgba(180, 77, 255, 0.30);
+  color: #c084fc;
+}
+.activity-type-pill.activity-fill {
+  background: rgba(60, 200, 120, 0.14);
+  border-color: rgba(60, 200, 120, 0.40);
+  color: #4ade80;
+}
+.activity-type-pill.activity-trans {
+  background: rgba(56, 189, 248, 0.14);
+  border-color: rgba(56, 189, 248, 0.40);
+  color: #38bdf8;
+}
+.activity-type-pill.activity-div {
+  background: rgba(245, 180, 60, 0.14);
+  border-color: rgba(245, 180, 60, 0.40);
+  color: #facc15;
+}
+
+/* News article paywall badge — soft amber pill, set apart from the
+   source/author line. Paired with newsRequiresSubscription() in app.ts. */
+.news-paywall-badge {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(245, 180, 60, 0.14);
+  border: 1px solid rgba(245, 180, 60, 0.40);
+  color: #facc15;
+  white-space: nowrap;
+}
 .wishlist-qty {
   display: flex;
   flex-direction: column;
@@ -1078,6 +1134,10 @@ a:hover { color: var(--accent-hover); }
   position: relative;
   display: flex;
   align-items: center;
+  /* The left column's first form-group has a ~20px tall .form-label
+     ("Portfolio") above its select. The search bar has no label, so we
+     match that height with a top margin to keep the inputs aligned. */
+  margin-top: 20px;
   margin-bottom: 12px;
 }
 .screener-search-icon {

@@ -1,18 +1,8 @@
-// Order placement — rejection and happy-path. Both exercise the
-// POST /api/alpaca/orders controller; the difference is whether the
-// user has buying_power.
-//
-// Two tests share one onboarded user (signup + KYC is the slow part).
-// The rejection test runs first while the account is still at $0; the
-// happy-path test then funds via the deposit webhook and places a
-// successful order.
-//
-// What we deliberately don't cover here (covered by manual smoke):
-//   - Confirm-modal UI flow. The inline frontend error logic is
-//     straightforward and reading the relevant code is faster than
-//     stabilizing the click sequence.
-//   - Live market data — the mock doesn't model prices, so any
-//     asserts on equity/portfolio_value would be artificial.
+// POST /api/alpaca/orders — rejection (no buying power) then happy
+// path (funded). Both tests share one onboarded user: rejection runs
+// first at $0, then the deposit webhook funds the account and the
+// happy-path test fires. Confirm-modal UI and price-value asserts are
+// deliberately skipped (manual smoke).
 
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import {
@@ -41,14 +31,14 @@ const ORDER_BODY = {
   time_in_force: 'day',
 };
 
-async function postOrder(token: string) {
+async function postOrder(token: string, override: Record<string, unknown> = {}) {
   return fetch(`${PHX_URL}/api/alpaca/orders`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify(ORDER_BODY),
+    body: JSON.stringify({ ...ORDER_BODY, ...override }),
   });
 }
 
@@ -134,5 +124,59 @@ test.describe('order placement', () => {
 
     const orders = (await listAlpacaOrders(token)) as Array<{ symbol?: string; side?: string }>;
     expect(orders.find((o) => o.symbol === 'SCHB' && o.side === 'buy')).toBeDefined();
+  });
+
+  // ── New order types (stop / stop-limit / trailing-stop) ────────────
+  //
+  // These exercise the controller's @order_keys allowlist (which now
+  // passes stop_price / trail_price / trail_percent through to Alpaca)
+  // and confirm the body is well-formed end-to-end. The mock doesn't
+  // model conditional trigger logic — it just accepts and "fills"
+  // any order whose payload is valid — so we assert on 2xx + the
+  // type echoing back. Real Alpaca validates more deeply, but our
+  // contract test is whether OUR controller refuses to forward bad
+  // bodies. The order_keys allowlist is the only gate.
+
+  test('accepts a stop order (sell-stop) with stop_price', async () => {
+    const res = await postOrder(token, {
+      symbol: 'SCHB',
+      side: 'sell',
+      type: 'stop',
+      stop_price: '1000',
+      time_in_force: 'gtc',
+    });
+    expect(res.ok, `stop order should 2xx; got ${res.status}`).toBe(true);
+    const order = (await res.json()) as { type?: string };
+    expect(order.type, 'response should echo stop type').toBe('stop');
+  });
+
+  test('accepts a stop-limit order with both stop_price and limit_price', async () => {
+    const res = await postOrder(token, {
+      symbol: 'SCHB',
+      side: 'sell',
+      type: 'stop_limit',
+      stop_price: '1000',
+      limit_price: '999',
+      time_in_force: 'gtc',
+    });
+    expect(res.ok, `stop_limit should 2xx; got ${res.status}`).toBe(true);
+    const order = (await res.json()) as { type?: string };
+    expect(order.type).toBe('stop_limit');
+  });
+
+  test('accepts a trailing-stop order with trail_percent', async () => {
+    // trail_percent and trail_price are mutually exclusive — the
+    // frontend prefers trail_percent (more common UX). Here we exercise
+    // that path explicitly.
+    const res = await postOrder(token, {
+      symbol: 'SCHB',
+      side: 'sell',
+      type: 'trailing_stop',
+      trail_percent: '5',
+      time_in_force: 'gtc',
+    });
+    expect(res.ok, `trailing_stop should 2xx; got ${res.status}`).toBe(true);
+    const order = (await res.json()) as { type?: string };
+    expect(order.type).toBe('trailing_stop');
   });
 });

@@ -1,13 +1,9 @@
-// Unauthenticated API access must be rejected. The auth plug
-// (lib/.../plugs/auth.ex) is the single gate in front of every per-user
-// endpoint; if it ever silently falls through, every isolation
-// guarantee in multi_user_isolation.test.ts goes with it.
-//
-// This spec is pure-HTTP (no browser) so it's fast — Playwright's just
-// the runner here. We hit a representative endpoint from each
-// per-user controller surface, with both no token and a bogus token,
-// and assert 401 with the same error envelope every time. If a new
-// surface gets added to the authenticated scope, add an entry below.
+// Locks down the auth plug — the single gate in front of every
+// per-user endpoint. If it ever silently falls through, the
+// multi_user_isolation guarantees go with it. Pure-HTTP (no browser):
+// hits each protected surface with no token and a bogus token and
+// asserts 401 + the same error envelope. Add new authenticated
+// endpoints to PROTECTED_ENDPOINTS below.
 
 import { expect, test } from '@playwright/test';
 import { PHX_URL } from '../helpers/env';

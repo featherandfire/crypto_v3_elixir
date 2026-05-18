@@ -1,22 +1,8 @@
-// Full auto-execute chain. This is the core product mechanic — a user
-// stars stocks before they have funds, and the moment a deposit settles
-// those parked orders auto-fire. The chain:
-//
-//   1. User completes KYC; mock returns ACTIVE immediately.
-//   2. User adds SCHB to their wishlist (pending row).
-//   3. User initiates a $40 deposit → mock creates transfer QUEUED.
-//   4. Test signs + POSTs the COMPLETE webhook the way Alpaca would.
-//   5. Webhook handler:
-//        - flips the deposit to `completed`
-//        - tells the mock to credit cash on the trading account
-//        - calls `attempt_wishlist_fills` synchronously, which places
-//          the pending order on the user's account
-//   6. Both DB state (wishlist row → `filled` with executed_order_id)
-//      and Alpaca state (order on the books, cash debited) reflect it.
-//
-// Before the mock landed this test stopped at step 5a — sandbox cash
-// crediting was non-deterministic. With AlpacaMock.Server tracking
-// cash, the full chain is now deterministic.
+// Core product mechanic: KYC → wishlist add → deposit → signed
+// COMPLETE webhook → handler credits cash + auto-fills the pending
+// wishlist entry → order on the books. Pre-mock this stopped at the
+// settlement step (sandbox cash-credit clock was non-deterministic);
+// AlpacaMock.Server now tracks cash, making the full chain testable.
 
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import {
@@ -34,6 +20,7 @@ import {
   listDeposits,
   pollWishlistStatus,
 } from '../helpers/api';
+import { PHX_URL } from '../helpers/env';
 
 test.describe.configure({ mode: 'serial' });
 
@@ -122,6 +109,45 @@ test.describe('wishlist auto-execute', () => {
     const orders = (await listAlpacaOrders(token)) as Array<{ symbol?: string; side?: string }>;
     const schb = orders.find((o) => o.symbol === 'SCHB' && o.side === 'buy');
     expect(schb, 'expected a buy order for SCHB on the account').toBeDefined();
+  });
+
+  test('activity log surfaces the deposit + auto-fill events', async () => {
+    // The activity endpoint synthesizes events from the mock's state:
+    // every COMPLETE transfer becomes a TRANS activity, every order
+    // becomes a FILL. After the webhook chain we should see both
+    // shapes — without either, the brokerage page's activity card
+    // would render empty.
+    const res = await fetch(`${PHX_URL}/api/alpaca/activities`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const activities = (await res.json()) as Array<{ activity_type?: string }>;
+    expect(Array.isArray(activities), 'activities endpoint returns an array').toBe(true);
+
+    const types = new Set(activities.map((a) => a.activity_type));
+    expect(types.has('TRANS'), 'deposit should appear as TRANS').toBe(true);
+    expect(types.has('FILL'), 'auto-fill should appear as FILL').toBe(true);
+  });
+
+  test('portfolio-history endpoint returns a populated equity curve', async () => {
+    // Mock returns a flat 30-point series at current cash; real Alpaca
+    // returns whatever it has on file. Either way the shape must match
+    // what the chart renderer expects (parallel arrays keyed by index).
+    const res = await fetch(`${PHX_URL}/api/alpaca/portfolio-history`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    expect(res.status).toBe(200);
+    const history = (await res.json()) as {
+      timestamp?: number[];
+      equity?: number[];
+    };
+    expect(Array.isArray(history.timestamp), 'timestamp must be an array').toBe(true);
+    expect(Array.isArray(history.equity), 'equity must be an array').toBe(true);
+    expect(history.timestamp!.length, 'series should have points').toBeGreaterThan(0);
+    expect(
+      history.timestamp!.length,
+      'timestamp and equity must be parallel arrays',
+    ).toBe(history.equity!.length);
   });
 
   test('redelivering the same transfer COMPLETE webhook is idempotent', async () => {

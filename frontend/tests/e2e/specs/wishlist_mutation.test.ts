@@ -1,14 +1,8 @@
-// Wishlist mutation paths the other specs don't touch. The persistence
-// test in kyc_and_wishlist proves *create* works end-to-end; the
-// auto-execute spec proves *fill* works; this fills in *remove* and
-// *reorder* — both core to how a user prunes and prioritises their
-// list before a deposit settles.
-//
-// Delete runs via the UI (clicks the per-row × button) because the
-// frontend's removeFromWishList path is what bugs would actually
-// regress. Reorder runs via the API — drag-and-drop is brittle to
-// automate and POST /wishlist/reorder is what the drag handler
-// ultimately calls anyway, so the API is the real contract.
+// Wishlist *remove* + *reorder* — the mutation paths kyc_and_wishlist
+// (create) and wishlist_auto_execute (fill) don't touch. Remove drives
+// the UI (the × button is where bugs land); reorder hits POST
+// /wishlist/reorder directly since drag-and-drop is brittle to
+// automate and the API is what the drag handler ultimately calls.
 
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import {

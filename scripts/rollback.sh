@@ -1,16 +1,10 @@
 #!/usr/bin/env bash
 #
-# Flip /opt/crypto/current back to /opt/crypto/previous and restart.
-#
-# /opt/crypto/previous is updated by scripts/deploy-remote.sh on every
-# deploy — it points at whatever `current` pointed at before the new
-# release took over. That makes rollback deterministic: always goes to
-# the release that was actually running before the last deploy, instead
-# of guessing "second newest directory by mtime" which could land on a
-# broken artifact from a prior failed build.
-#
-# Run on the EC2: `bash ~/src/crypto_v3_elixir/scripts/rollback.sh`
-# Or via the manual .github/workflows/rollback.yml workflow_dispatch.
+# Flips /opt/crypto/current back to /opt/crypto/previous and restarts.
+# deploy-remote.sh updates `previous` on every deploy to whatever
+# `current` pointed at — so this always lands on the release that was
+# actually running, not "newest-but-one" by mtime (which can be a
+# failed build). Run on EC2 directly, or via rollback.yml workflow_dispatch.
 
 set -euo pipefail
 

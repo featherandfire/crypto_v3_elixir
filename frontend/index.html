@@ -2617,6 +2617,10 @@ animate();
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               Add Funds
             </button>
+            <button type="button" class="btn btn-sm btn-outline brokerage-add-funds" @click="canDeposit() ? withdrawOpen = true : page = 'account-setup'" data-testid="withdraw-open">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Withdraw
+            </button>
             <button type="button" class="portfolio-chip portfolio-chip-add" @click="newBrokeragePortfolioOpen = true">+ New Portfolio</button>
             <span x-show="alpacaAccount?.pattern_day_trader" style="color:#ff8a8a">PDT flagged</span>
           </div>
@@ -2679,6 +2683,113 @@ animate();
             </div>
           </div>
 
+          <!-- Order-type explainer. Opened from the "?" pill next to the Type
+               label. Plain English with one-line "use when" for each
+               type — non-technical user audience. -->
+          <div class="modal-backdrop" x-show="orderTypesHelpOpen" @click.self="orderTypesHelpOpen = false" x-cloak data-testid="order-types-help">
+            <div class="modal" style="max-width:560px">
+              <button class="modal-close" @click="orderTypesHelpOpen = false" type="button">&times;</button>
+              <div class="modal-title">Order types — what each one does</div>
+              <div style="display:flex; flex-direction:column; gap:14px; margin-top:8px; font-size:13px; line-height:1.55">
+                <div>
+                  <strong style="color:var(--text)">Limit</strong>
+                  <p class="text-muted" style="margin:4px 0 0">
+                    Buy/sell only at the price you set or better. Won't execute if the market doesn't reach it.
+                    <em style="display:block; margin-top:4px; color:var(--muted)">Use when: you have a target price and don't mind waiting.</em>
+                  </p>
+                </div>
+                <div>
+                  <strong style="color:var(--text)">Market</strong>
+                  <p class="text-muted" style="margin:4px 0 0">
+                    Buy/sell immediately at the best available price. Fast but you can't control the exact fill price.
+                    <em style="display:block; margin-top:4px; color:var(--muted)">Use when: you want in/out now and the bid-ask spread is tight.</em>
+                  </p>
+                </div>
+                <div>
+                  <strong style="color:var(--text)">Stop</strong>
+                  <p class="text-muted" style="margin:4px 0 0">
+                    Sits idle until the market hits your <em>stop price</em>, then converts into a market order. Used as a stop-loss to cap downside if a stock drops.
+                    <em style="display:block; margin-top:4px; color:var(--muted)">Use when: protecting against a fall — e.g. "sell if NVDA hits $120".</em>
+                  </p>
+                </div>
+                <div>
+                  <strong style="color:var(--text)">Stop-Limit</strong>
+                  <p class="text-muted" style="margin:4px 0 0">
+                    Like Stop, but on trigger it places a <em>limit</em> order instead of a market order. Guarantees price but not execution — if the market gaps past your limit, the order may not fill.
+                    <em style="display:block; margin-top:4px; color:var(--muted)">Use when: you want stop-loss protection but refuse to sell below a specific price.</em>
+                  </p>
+                </div>
+                <div>
+                  <strong style="color:var(--text)">Trailing Stop</strong>
+                  <p class="text-muted" style="margin:4px 0 0">
+                    A stop that follows the market up (or down for a sell-stop). You set a trail amount or percent, and the stop price auto-adjusts as the stock moves favorably — locking in gains without you watching the chart.
+                    <em style="display:block; margin-top:4px; color:var(--muted)">Use when: a position is profitable and you want to ride further gains while protecting most of what you've made.</em>
+                  </p>
+                </div>
+              </div>
+              <p class="text-muted" style="margin:14px 0 0; font-size:11.5px; font-style:italic">
+                Defaults to Limit — the safest single choice. Switch only when you have a specific reason.
+              </p>
+              <div class="modal-actions">
+                <button type="button" class="btn btn-primary" @click="orderTypesHelpOpen = false">Got it</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Withdraw modal — same /transfers endpoint with direction=OUTGOING.
+               Mock auto-completes withdrawals and debits cash instantly;
+               real Alpaca will batch through ACH and webhook back. -->
+          <div class="modal-backdrop" x-show="withdrawOpen" @click.self="withdrawOpen = false" x-cloak>
+            <div class="modal">
+              <button class="modal-close" @click="withdrawOpen = false" type="button">&times;</button>
+              <div class="modal-title">Withdraw Funds</div>
+              <p style="margin:0 0 14px; color: var(--muted); font-size: 13px">
+                Cash leaves your <strong style="color:var(--text)">main portfolio</strong> back to your linked bank. ACH takes 1–3 business days at Alpaca; sandbox processes it instantly.
+              </p>
+
+              <div class="form-group">
+                <label class="form-label">Destination bank</label>
+                <div class="add-funds-bank">
+                  <span class="add-funds-bank-dot"></span>
+                  <span x-text="withdrawBankLabel"></span>
+                  <span class="add-funds-bank-tag">Linked · stub</span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Method</label>
+                <div class="add-funds-methods">
+                  <button type="button" class="add-funds-method" :class="{active: withdrawMethod === 'ach'}" @click="withdrawMethod = 'ach'">
+                    <span class="add-funds-method-name">ACH</span>
+                    <span class="add-funds-method-meta">1–3 business days · free</span>
+                  </button>
+                  <button type="button" class="add-funds-method" :class="{active: withdrawMethod === 'wire'}" @click="withdrawMethod = 'wire'">
+                    <span class="add-funds-method-name">Wire</span>
+                    <span class="add-funds-method-meta">Same-day · bank fees may apply</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Amount (USD)</label>
+                <input class="form-input" type="number" min="0" step="0.01" x-model="withdrawAmount" placeholder="0.00" @keydown.enter="submitWithdrawal()" data-testid="withdraw-amount" />
+                <p class="text-muted" style="margin:6px 0 0; font-size:11px">
+                  Available: <strong x-text="fmtUSD(parseFloat(alpacaAccount?.cash) || 0)"></strong>
+                </p>
+              </div>
+
+              <p x-show="withdrawError" class="add-funds-error" x-text="withdrawError"></p>
+
+              <div class="modal-actions">
+                <button type="button" class="btn btn-outline" @click="withdrawOpen = false" :disabled="withdrawSubmitting">Cancel</button>
+                <button type="button" class="btn btn-primary" :disabled="withdrawSubmitting || !parseFloat(withdrawAmount) || parseFloat(withdrawAmount) <= 0" @click="submitWithdrawal()" data-testid="withdraw-submit">
+                  <span x-show="!withdrawSubmitting">Initiate withdrawal</span>
+                  <span x-show="withdrawSubmitting">Submitting…</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div class="card brokerage-order-card" style="margin-top:24px">
             <div class="brokerage-order-grid">
             <div class="brokerage-order-col">
@@ -2716,15 +2827,38 @@ animate();
                 <label class="form-label">Quantity</label>
                 <input class="form-input" type="number" step="0.0001" min="0" x-model="orderForm.qty" placeholder="1" required data-testid="order-qty" />
               </div>
-              <div class="form-group" x-show="orderForm.type==='limit'">
+              <!-- Limit price — used by Limit and Stop-Limit order types -->
+              <div class="form-group" x-show="orderForm.type==='limit' || orderForm.type==='stop_limit'">
                 <label class="form-label">Limit price</label>
-                <input class="form-input" type="number" step="0.01" min="0" x-model="orderForm.limit_price" placeholder="0.00" :required="orderForm.type==='limit'" />
+                <input class="form-input" type="number" step="0.01" min="0" x-model="orderForm.limit_price" placeholder="0.00" :required="orderForm.type==='limit' || orderForm.type==='stop_limit'" />
+              </div>
+              <!-- Stop price — used by Stop and Stop-Limit -->
+              <div class="form-group" x-show="orderForm.type==='stop' || orderForm.type==='stop_limit'">
+                <label class="form-label">Stop price</label>
+                <input class="form-input" type="number" step="0.01" min="0" x-model="orderForm.stop_price" placeholder="0.00" :required="orderForm.type==='stop' || orderForm.type==='stop_limit'" />
+              </div>
+              <!-- Trail — Trailing Stop uses one of these; percent is the
+                   more common UX so we put it first. -->
+              <div class="form-group" x-show="orderForm.type==='trailing_stop'">
+                <label class="form-label">Trail (percent)</label>
+                <input class="form-input" type="number" step="0.1" min="0" x-model="orderForm.trail_percent" placeholder="5" />
+                <p class="text-muted" style="margin:4px 0 0; font-size:11px">…or set Trail price below. Use one, not both.</p>
+              </div>
+              <div class="form-group" x-show="orderForm.type==='trailing_stop'">
+                <label class="form-label">Trail (price, $)</label>
+                <input class="form-input" type="number" step="0.01" min="0" x-model="orderForm.trail_price" placeholder="0.00" />
               </div>
               <div class="form-group">
-                <label class="form-label">Type</label>
-                <select class="form-input" x-model="orderForm.type" @change="if (orderForm.type === 'limit' && !orderForm.limit_price) { const p = Number(alpacaQuote?.price); if (p > 0) orderForm.limit_price = p.toFixed(2); }">
+                <label class="form-label" style="display:flex; align-items:center; gap:8px">
+                  Type
+                  <button type="button" class="order-type-help" @click="orderTypesHelpOpen = true" title="What do these mean?" aria-label="Order type explanations" style="background:transparent; border:1px solid var(--border); border-radius:999px; width:18px; height:18px; padding:0; color:var(--muted); font-size:11px; font-weight:700; cursor:pointer; line-height:1">?</button>
+                </label>
+                <select class="form-input" x-model="orderForm.type" @change="if (orderForm.type === 'limit' && !orderForm.limit_price) { const p = Number(alpacaQuote?.price); if (p > 0) orderForm.limit_price = p.toFixed(2); }; if (orderForm.type === 'trailing_stop' && orderForm.time_in_force === 'day') orderForm.time_in_force = 'gtc';">
                   <option value="limit">Limit</option>
                   <option value="market">Market</option>
+                  <option value="stop">Stop</option>
+                  <option value="stop_limit">Stop-Limit</option>
+                  <option value="trailing_stop">Trailing Stop</option>
                 </select>
               </div>
               <div class="form-group">
@@ -2744,24 +2878,117 @@ animate();
                 </div>
               </div>
               <div class="brokerage-order-submit">
-                <button type="submit" class="btn btn-primary brokerage-review-submit" :disabled="!orderForm.symbol || !orderForm.qty || (orderForm.type==='limit' && !orderForm.limit_price)" data-testid="order-review">
+                <button type="submit" class="btn btn-primary brokerage-review-submit" :disabled="
+                  !orderForm.symbol || !orderForm.qty ||
+                  ((orderForm.type==='limit' || orderForm.type==='stop_limit') && !orderForm.limit_price) ||
+                  ((orderForm.type==='stop' || orderForm.type==='stop_limit') && !orderForm.stop_price) ||
+                  (orderForm.type==='trailing_stop' && !orderForm.trail_price && !orderForm.trail_percent)
+                " data-testid="order-review">
                   Review &amp; submit
                 </button>
               </div>
             </form>
+
+            <!-- News & Communications — sits under the order form so headlines
+                 for the selected ticker are right next to the trade decision.
+                 Populated by the orderForm.symbol watcher in app.ts; cached
+                 server-side for 60s so toggling between tickers is cheap. -->
+            <!-- Company Information — quick facts on the selected ticker.
+                 Populated by the orderForm.symbol watcher. Free Finnhub
+                 tier doesn't expose HQ city or employee count, so those
+                 fields render "Not disclosed" cleanly. -->
+            <section class="brokerage-company-info" style="margin-top:20px; display:flex; flex-direction:column; gap:8px" data-testid="purchase-company-info">
+              <div class="brokerage-screener-head">
+                <strong>Company Information</strong>
+                <span class="screener-subtitle-inline" x-text="orderForm.symbol ? `Snapshot for ${(orderForm.symbol || '').toUpperCase()}.` : 'Pick a ticker above to load company details.'"></span>
+              </div>
+              <div x-show="orderForm.symbol && loadingCompanyProfile" class="text-muted" style="padding:12px 4px; font-size:12px">
+                Loading company info for <strong x-text="(orderForm.symbol || '').toUpperCase()"></strong>…
+              </div>
+              <div x-show="orderForm.symbol && !loadingCompanyProfile && (!companyProfile.data || !companyProfile.data.name)" class="text-muted" style="padding:12px 4px; font-size:12px">
+                No profile data available for <strong x-text="(orderForm.symbol || '').toUpperCase()"></strong>.
+              </div>
+              <div x-show="orderForm.symbol && !loadingCompanyProfile && companyProfile.data && companyProfile.data.name" class="card" style="padding:14px; border:1px solid var(--border); border-radius:8px">
+                <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px">
+                  <img x-show="companyProfile.data?.logo" :src="companyProfile.data?.logo" :alt="`${companyProfile.data?.name} logo`" style="width:36px; height:36px; border-radius:6px; background:#0f0a25; object-fit:contain" onerror="this.style.display='none'" />
+                  <div style="flex:1; min-width:0">
+                    <div style="font-weight:600; font-size:14px; line-height:1.2" x-text="companyProfile.data?.name || (orderForm.symbol || '').toUpperCase()"></div>
+                    <div class="text-muted" style="font-size:11px; line-height:1.3" x-show="companyProfile.data?.website">
+                      <a :href="companyProfile.data?.website" target="_blank" rel="noopener noreferrer" style="color:inherit; text-decoration:underline" x-text="companyProfile.data?.website?.replace(/^https?:\/\/(www\.)?/, '')"></a>
+                    </div>
+                  </div>
+                </div>
+                <dl style="display:grid; grid-template-columns:max-content 1fr; gap:6px 14px; font-size:12px; margin:0">
+                  <dt class="text-muted">Headquarters</dt>
+                  <dd style="margin:0" x-text="
+                    companyProfile.data?.headquarters_city && companyProfile.data?.headquarters_country
+                      ? `${companyProfile.data.headquarters_city}, ${companyProfile.data.headquarters_country}`
+                      : (companyProfile.data?.headquarters_city || companyProfile.data?.headquarters_country || 'Not disclosed')
+                  "></dd>
+                  <dt class="text-muted">Industry</dt>
+                  <dd style="margin:0" x-text="companyProfile.data?.industry || 'Not disclosed'"></dd>
+                  <dt class="text-muted">Employees</dt>
+                  <dd style="margin:0" x-text="companyProfile.data?.employees != null ? companyProfile.data.employees.toLocaleString() : 'Not disclosed'"></dd>
+                  <dt class="text-muted">Years public</dt>
+                  <dd style="margin:0">
+                    <span x-show="companyProfile.data?.years_public != null" x-text="companyProfile.data?.years_public + (companyProfile.data?.ipo ? ` (since ${companyProfile.data.ipo})` : '')"></span>
+                    <span x-show="companyProfile.data?.years_public == null" class="text-muted">Not disclosed</span>
+                  </dd>
+                  <dt class="text-muted" x-show="companyProfile.data?.exchange">Exchange</dt>
+                  <dd style="margin:0" x-show="companyProfile.data?.exchange" x-text="companyProfile.data?.exchange"></dd>
+                </dl>
+              </div>
+              <div x-show="!orderForm.symbol" class="text-muted" style="padding:12px 4px; font-size:12px">
+                Pick a ticker above to load company details.
+              </div>
+            </section>
+
+            <section class="brokerage-news" style="margin-top:20px; display:flex; flex-direction:column; gap:8px" data-testid="purchase-news">
+              <div class="brokerage-screener-head">
+                <strong>News &amp; Communications</strong>
+                <span class="screener-subtitle-inline" x-text="orderForm.symbol ? `Recent headlines for ${(orderForm.symbol || '').toUpperCase()}.` : 'Pick a ticker above to load headlines.'"></span>
+              </div>
+              <div x-show="orderForm.symbol && loadingAlpacaNews" class="text-muted" style="padding:12px 4px; font-size:12px">
+                Loading news for <strong x-text="(orderForm.symbol || '').toUpperCase()"></strong>…
+              </div>
+              <div x-show="orderForm.symbol && !loadingAlpacaNews && alpacaNewsError" style="padding:12px 4px; color:#ff8a8a; font-size:12px" x-text="alpacaNewsError"></div>
+              <div x-show="orderForm.symbol && !loadingAlpacaNews && !alpacaNewsError && alpacaNews.symbol === orderForm.symbol.toUpperCase() && alpacaNews.articles.length === 0" class="text-muted" style="padding:12px 4px; font-size:12px">
+                No recent news for <strong x-text="(orderForm.symbol || '').toUpperCase()"></strong>.
+              </div>
+              <div x-show="orderForm.symbol && alpacaNews.articles.length > 0" style="display:flex; flex-direction:column; gap:8px; max-height:480px; overflow-y:auto">
+                <template x-for="article in alpacaNews.articles" :key="article.id">
+                  <a class="card" :href="article.url" target="_blank" rel="noopener noreferrer" style="padding:12px 14px; display:block; text-decoration:none; color:inherit; border:1px solid var(--border); border-radius:8px">
+                    <div style="display:flex; justify-content:space-between; gap:10px; align-items:baseline; margin-bottom:4px">
+                      <strong style="font-size:13px; line-height:1.35" x-text="article.headline"></strong>
+                      <span class="text-muted" style="font-size:10px; white-space:nowrap" x-text="new Date(article.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })"></span>
+                    </div>
+                    <p x-show="article.summary" class="text-muted" style="margin:0 0 4px; font-size:11.5px; line-height:1.45" x-text="article.summary"></p>
+                    <div class="text-muted" style="font-size:10.5px; display:flex; align-items:center; gap:6px; flex-wrap:wrap">
+                      <span x-show="article.source" x-text="article.source"></span>
+                      <span x-show="article.author && article.author !== article.source">· <span x-text="article.author"></span></span>
+                      <!-- Generic subscription advisory — Alpaca News links to
+                           external publishers, many of which gate full content
+                           behind a subscription. Show on every card rather than
+                           guessing per-source (the heuristic was too narrow). -->
+                      <span class="news-paywall-badge" title="External article — may require a subscription to read in full">Subscription</span>
+                    </div>
+                  </a>
+                </template>
+              </div>
+            </section>
             </div><!-- /brokerage-order-col -->
 
             <div class="brokerage-screener-col">
-              <div class="screener-search">
-                <svg class="screener-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                <input type="search" class="screener-search-input" placeholder="Search a ticker or company (e.g. AAPL, Vanguard)" x-model="screenerSearch" />
-                <button type="button" class="screener-search-clear" x-show="screenerSearch" @click="screenerSearch = ''" aria-label="Clear search">×</button>
-              </div>
               <div class="brokerage-screener-head">
                 <strong x-text="screenerView === 'etfs' ? 'ETFs' : 'Stock Screener'"></strong>
                 <span class="screener-subtitle-inline" x-show="!loadingScreenerQuotes" x-text="screenerView === 'etfs' ? 'Purchase ETFs / click a row to fill the Symbol field. Prices are live.' : 'Purchase individual stocks / click a row to fill the Symbol field. Prices are live.'"></span>
                 <span class="screener-subtitle-inline" x-show="loadingScreenerQuotes">Loading live prices…</span>
                 <span class="screener-count-badge"><span x-text="visibleScreenerCount()"></span> shown</span>
+              </div>
+              <div class="screener-search">
+                <svg class="screener-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="search" class="screener-search-input" placeholder="Search a ticker or company (e.g. AAPL, Vanguard)" x-model="screenerSearch" />
+                <button type="button" class="screener-search-clear" x-show="screenerSearch" @click="screenerSearch = ''" aria-label="Clear search">×</button>
               </div>
               <div class="etf-explainer" x-show="screenerView === 'etfs'">
                 <strong>What's an ETF?</strong> An <em>Exchange-Traded Fund</em> is a pre-made basket of stocks (or bonds, commodities, or crypto) that trades on the stock market just like a single share. Buying one share of <strong>SPY</strong>, for example, gives you exposure to all 500 companies in the S&amp;P 500 — instant diversification without buying each one yourself. ETFs are professionally managed, charge a small annual fee (the <em>expense ratio</em>), and many pay out dividends/distributions. Use the tabs below to browse by theme — broad index, sector, dividend income, bonds, international, commodities, crypto, or thematic strategies.
@@ -3139,6 +3366,123 @@ animate();
                   </template>
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          <!-- Portfolio history + activity log. Both load alongside the
+               trading account in loadBrokerage; failures are non-fatal so
+               the rest of the page renders unaffected. -->
+          <div class="card brokerage-portfolio-history" style="margin-top:24px; padding:20px">
+            <div class="brokerage-screener-head" style="margin-bottom:14px">
+              <strong>Portfolio Performance</strong>
+              <span class="screener-subtitle-inline">Equity over the past month.</span>
+            </div>
+            <div x-show="!loadingAlpacaPortfolioHistory && (!alpacaPortfolioHistory || !alpacaPortfolioHistory.timestamp || alpacaPortfolioHistory.timestamp.length === 0)" class="text-muted" style="padding:24px 0; text-align:center; font-size:13px">
+              No history yet — fund the account or place a trade to start the curve.
+            </div>
+            <div x-show="loadingAlpacaPortfolioHistory" class="text-muted" style="padding:24px 0; text-align:center; font-size:13px">
+              Loading performance…
+            </div>
+            <div x-show="alpacaPortfolioHistory && alpacaPortfolioHistory.timestamp && alpacaPortfolioHistory.timestamp.length > 0" style="position:relative; height:220px">
+              <canvas id="portfolio-history-chart"></canvas>
+            </div>
+          </div>
+
+          <!-- Recurring investments — user-authorized scheduled buys.
+               Scheduler GenServer ticks every minute and fires due rows. -->
+          <div class="card brokerage-recurring" style="margin-top:24px; padding:20px" data-testid="recurring-card">
+            <div class="brokerage-screener-head" style="margin-bottom:14px">
+              <strong>Recurring Investments</strong>
+              <span class="screener-subtitle-inline">Set-and-forget orders on a cadence. Backed by your linked Alpaca account.</span>
+            </div>
+
+            <!-- Create form -->
+            <form class="brokerage-recurring-form" @submit.prevent="createRecurringInvestment()" style="display:grid; grid-template-columns:1.2fr 0.8fr 1fr 1fr 0.9fr auto; gap:10px; align-items:end; margin-bottom:14px">
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Symbol</label>
+                <input class="form-input" type="text" x-model="recurringForm.symbol" placeholder="VOO" autocomplete="off" style="text-transform:uppercase" data-testid="recurring-symbol" />
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Qty</label>
+                <input class="form-input" type="number" step="0.0001" min="0" x-model="recurringForm.qty" placeholder="1" />
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Cadence</label>
+                <select class="form-input" x-model="recurringForm.frequency">
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="biweekly">Every 2 weeks</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Starts</label>
+                <input class="form-input" type="datetime-local" x-model="recurringForm.starts_at" />
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Side</label>
+                <select class="form-input" x-model="recurringForm.side">
+                  <option value="buy">Buy</option>
+                  <option value="sell">Sell</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary" :disabled="recurringSubmitting || !recurringForm.symbol || !parseFloat(recurringForm.qty)" data-testid="recurring-create">
+                <span x-show="!recurringSubmitting">+ Schedule</span>
+                <span x-show="recurringSubmitting">Saving…</span>
+              </button>
+            </form>
+            <p x-show="recurringError" class="add-funds-error" x-text="recurringError"></p>
+
+            <!-- List -->
+            <div x-show="!loadingRecurring && recurringInvestments.length === 0" class="text-muted" style="padding:14px 0; text-align:center; font-size:13px">
+              No recurring buys yet. Add one above to start dollar-cost-averaging on a schedule.
+            </div>
+            <div x-show="recurringInvestments.length > 0" style="display:flex; flex-direction:column; gap:8px">
+              <template x-for="ri in recurringInvestments" :key="ri.id">
+                <div style="display:grid; grid-template-columns:80px 1fr 1fr 1fr auto auto; gap:10px; align-items:center; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px" :style="ri.is_active ? '' : 'opacity:0.55'">
+                  <span class="activity-type-pill" :class="ri.side === 'sell' ? 'activity-fill' : 'activity-trans'" x-text="ri.side"></span>
+                  <div>
+                    <div style="font-weight:600" x-text="`${ri.qty} ${ri.symbol}`"></div>
+                    <div class="text-muted" style="font-size:11px" x-text="`${ri.order_type}${ri.limit_price ? ' @ $' + ri.limit_price : ''}`"></div>
+                  </div>
+                  <div>
+                    <div style="font-weight:500; text-transform:capitalize" x-text="ri.frequency"></div>
+                    <div class="text-muted" style="font-size:11px">Cadence</div>
+                  </div>
+                  <div>
+                    <div style="font-weight:500" x-text="ri.next_run_at ? new Date(ri.next_run_at).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '—'"></div>
+                    <div class="text-muted" style="font-size:11px" x-text="ri.is_active ? 'Next run' : 'Paused'"></div>
+                  </div>
+                  <button type="button" class="btn btn-sm btn-outline" @click="toggleRecurringInvestment(ri)" style="font-size:11px; padding:5px 10px" x-text="ri.is_active ? 'Pause' : 'Resume'"></button>
+                  <button type="button" class="btn btn-sm btn-outline" @click="deleteRecurringInvestment(ri)" style="font-size:11px; padding:5px 10px; color:#ff8a8a; border-color:rgba(255,138,138,0.3)">Delete</button>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <div class="card brokerage-activities" style="margin-top:24px; padding:20px">
+            <div class="brokerage-screener-head" style="margin-bottom:14px">
+              <strong>Account Activity</strong>
+              <span class="screener-subtitle-inline">Fills, deposits, dividends, fees. Newest first.</span>
+              <button type="button" class="btn btn-outline" style="margin-left:auto; font-size:11px; padding:4px 10px" @click="loadAlpacaActivities()" :disabled="loadingAlpacaActivities">Refresh</button>
+            </div>
+            <div x-show="!loadingAlpacaActivities && alpacaActivities.length === 0" class="text-muted" style="padding:24px 0; text-align:center; font-size:13px">
+              No activity yet. Place an order or make a deposit to see events here.
+            </div>
+            <div x-show="loadingAlpacaActivities && alpacaActivities.length === 0" class="text-muted" style="padding:24px 0; text-align:center; font-size:13px">
+              Loading activity…
+            </div>
+            <div x-show="alpacaActivities.length > 0" class="brokerage-activity-list" style="display:flex; flex-direction:column; gap:8px">
+              <template x-for="act in alpacaActivities.slice(0, 50)" :key="act.id">
+                <div style="display:grid; grid-template-columns:90px 1fr auto; gap:12px; align-items:center; padding:10px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px">
+                  <span class="activity-type-pill" :class="`activity-${(act.activity_type || '').toLowerCase()}`" x-text="act.activity_type"></span>
+                  <div>
+                    <div style="font-weight:500" x-text="act.description || (act.symbol ? `${act.side === 'sell' ? 'Sell' : 'Buy'} ${act.qty} ${act.symbol}` : act.activity_type)"></div>
+                    <div class="text-muted" style="font-size:11px" x-text="act.transaction_time ? new Date(act.transaction_time).toLocaleString() : ''"></div>
+                  </div>
+                  <span x-show="act.net_amount" :class="parseFloat(act.net_amount) >= 0 ? 'pos' : 'neg'" style="font-variant-numeric:tabular-nums; font-weight:500" x-text="(parseFloat(act.net_amount) >= 0 ? '+' : '') + fmtUSD(parseFloat(act.net_amount))"></span>
+                </div>
+              </template>
             </div>
           </div>
 
@@ -3525,6 +3869,23 @@ animate();
               </dl>
               <p x-show="brokerageAccount?.kyc_state==='pending'" style="color:var(--muted); margin-top:16px; font-size:13px">Sandbox accounts typically approve within ~15 seconds. Refresh or try a deposit to advance the status.</p>
               <p x-show="brokerageAccount?.kyc_state==='failed'" style="color:#ff8a8a; margin-top:16px; font-size:13px">Alpaca rejected this submission. Contact support to retry.</p>
+
+              <section style="margin-top:24px; padding-top:16px; border-top:1px solid var(--border)">
+                <h4 style="margin:0 0 10px; font-size:11px; color:var(--muted); font-weight:600; letter-spacing:0.06em; text-transform:uppercase">Agreements on file</h4>
+                <p style="color:var(--muted); font-size:12px; margin:0 0 10px">You accepted these at account setup. Keep them for your records.</p>
+                <ul style="list-style:none; padding:0; margin:0; display:grid; gap:6px; font-size:13px">
+                  <li>
+                    <a href="https://files.alpaca.markets/disclosures/library/CustAcctAgmt.pdf" target="_blank" rel="noopener noreferrer" data-testid="docs-customer-agreement">Customer Agreement</a>
+                  </li>
+                  <li>
+                    <a href="https://files.alpaca.markets/disclosures/library/AcctAppDisc.pdf" target="_blank" rel="noopener noreferrer" data-testid="docs-account-disclosure">Account Application Disclosure</a>
+                  </li>
+                  <li>
+                    <a href="https://files.alpaca.markets/disclosures/library/MarginAgmt.pdf" target="_blank" rel="noopener noreferrer" data-testid="docs-margin-agreement">Margin Agreement</a>
+                  </li>
+                </ul>
+              </section>
+
               <div style="margin-top:20px; display:flex; gap:8px">
                 <button type="button" class="btn btn-outline" @click="loadBrokerageAccount()">Refresh status</button>
                 <button type="button" class="btn btn-primary" x-show="brokerageAccount?.kyc_state==='active'" @click="page='brokerage'">Back to Brokerage</button>

@@ -1,19 +1,8 @@
-// Webhook receiver hardening. The /api/webhooks/alpaca endpoint is
-// unauthenticated by JWT — it has to be, since Alpaca won't carry our
-// token — and is gated only by HMAC-SHA256 over the raw body using
-// ALPACA_WEBHOOK_SECRET. That makes its edges the kind of thing
-// security regressions love to slip through:
-//
-//   - A missing signature header → 401 (no auth at all).
-//   - A wrong signature → 401 (HMAC mismatch).
-//   - A valid signature with an event_type we don't dispatch → 200
-//     no-op (the row is persisted for audit but no side effects).
-//
-// Idempotency on the event_id is covered by wishlist_auto_execute,
-// where double-firing the same transfer COMPLETE doesn't double-credit
-// the trading account.
-//
-// All-HTTP — no browser needed.
+// /api/webhooks/alpaca is JWT-unauthenticated (Alpaca can't carry our
+// token), gated only by HMAC-SHA256 over the raw body — so the edges
+// matter. Asserts missing-sig → 401, forged-sig → 401, valid-sig +
+// unknown event_type → 200 no-op, non-JSON body → 400. Event-id
+// idempotency is covered separately by wishlist_auto_execute.
 
 import { expect, test } from '@playwright/test';
 import { createHmac } from 'node:crypto';

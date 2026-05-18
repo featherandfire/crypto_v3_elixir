@@ -1,25 +1,10 @@
-// Multi-user isolation. The kind of bug that doesn't surface in
-// single-user manual testing but is catastrophic if it ships: a
-// missed `user_id` filter that leaks Alice's data into Bob's view —
-// or worse, lets Bob *modify* Alice's data.
-//
-// Two users go through the full signup + KYC flow in independent
-// browser contexts (Playwright's contexts are fully isolated —
-// separate cookies, localStorage, IndexedDB — so no shared session).
-// Alice seeds activity (wishlist + brokerage_account + portfolio).
-// Then we hit every per-user endpoint with Bob's auth token and
-// assert he sees only his own data, never Alice's.
-//
-// Coverage:
-//   - Read paths: each user's data is invisible to the other.
-//   - Write paths: each user's records can't be mutated by the other
-//     (passing Alice's resource id with Bob's token must 404, since
-//     the controllers scope `get_for_user` to `current_user.id`).
-//
-// We deliberately don't exercise position_allocations or orders here
-// for read isolation — those need settled cash, covered by
-// wishlist_auto_execute. Wishlist + accounts + portfolios are
-// deterministic and cover the same query-scoping concern.
+// Per-user data isolation — catches missing `user_id` filters that
+// would leak Alice's data into Bob's view, or let Bob mutate it.
+// Two users in isolated browser contexts; Alice seeds (wishlist +
+// portfolio), then Bob's token hits every per-user endpoint (reads)
+// and passes Alice's resource ids to PATCH/DELETE (writes → 404).
+// Positions/orders skipped here — covered deterministically by
+// wishlist_auto_execute.
 
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import {

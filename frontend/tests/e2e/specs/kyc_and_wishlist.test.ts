@@ -1,16 +1,8 @@
-// KYC completion + wishlist persistence. Picks up where critical_path
-// leaves off (un-onboarded user landed on the KYC form) and exercises:
-//
-//   1. Filling and submitting KYC creates an Alpaca customer account
-//      and routes the user back to brokerage (proven by the wishlist
-//      open button becoming visible — gated on alpacaAccount being
-//      loaded, which requires kyc_state=active server-side).
-//
-//   2. Adding AAPL to the wishlist persists across a full page reload —
-//      the wishlist is DB-backed, not localStorage.
-//
-// Tests share an onboarded `page` from `beforeAll` and run serially so
-// the (slow) signup + KYC step is paid once per file.
+// Picks up from critical_path: (1) submitting KYC provisions an Alpaca
+// customer account and gates the wishlist-open button on
+// kyc_state=active, and (2) an added wishlist entry survives a full
+// page reload (DB-backed, not localStorage). Tests share one onboarded
+// page via beforeAll + serial mode so the slow signup+KYC is paid once.
 
 import { expect, test, type BrowserContext, type Page } from '@playwright/test';
 import { freshCreds, signupAndLandOnKyc } from '../helpers/flows';

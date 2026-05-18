@@ -1,13 +1,7 @@
 #!/usr/bin/env bash
-# Run any mix task with .env.staging loaded and MIX_ENV=prod set.
-# Usage:
-#   bin/staging.sh ecto.migrate
-#   bin/staging.sh ecto.rollback --step 1
-#   bin/staging.sh phx.server
-#
-# Reads .env.staging (gitignored) for DATABASE_URL, SECRET_KEY_BASE, and the
-# other prod-required env vars. Bails if the file is missing or DATABASE_URL
-# still contains the placeholder text.
+# Runs a mix task with .env.staging loaded + MIX_ENV=prod.
+# Usage: bin/staging.sh ecto.migrate | ecto.rollback --step 1 | phx.server
+# Bails if .env.staging is missing or DATABASE_URL is still the placeholder.
 
 set -euo pipefail
 
