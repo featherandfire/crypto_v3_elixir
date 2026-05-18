@@ -8,11 +8,23 @@
   <link rel="apple-touch-icon" href="./static/favicon/chain-icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Pre-paint theme apply. Runs synchronously before CSS evaluates
+       :root rules so light-mode reloads don't flash dark. The FX
+       panel's toggle re-applies + persists this same key later. -->
+  <script>
+    try {
+      var t = localStorage.getItem('app-theme');
+      if (t === 'light' || t === 'dark') {
+        document.documentElement.dataset.theme = t;
+      }
+    } catch (e) {}
+  </script>
   <script type="module" src="./static/js/app.ts"></script>
 </head>
 <body>
 
 <canvas id="neural-bg-canvas"></canvas>
+
 
 <script type="importmap">
 {"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.162.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.162.0/examples/jsm/"}}
@@ -98,6 +110,12 @@ const pulseUniforms = {
   uPulseColors:    { value: [new THREE.Color(1,1,1), new THREE.Color(1,1,1), new THREE.Color(1,1,1)] },
   uPulseSpeed:     { value: 18.0 },
   uBaseNodeSize:   { value: 0.6 },
+  // User-tunable color grading. 1.0 = neutral; the slider in the
+  // bottom-right corner writes these from a small control panel. Both
+  // node and connection materials share this uniform map so a single
+  // slider drag updates everything.
+  uSaturation:     { value: 1.0 },
+  uContrast:       { value: 1.0 },
 };
 
 const noiseFn = `
@@ -151,6 +169,7 @@ const nodeVert = `${noiseFn}
 
 const nodeFrag = `
   uniform float uTime;uniform vec3 uPulseColors[3];
+  uniform float uSaturation;uniform float uContrast;
   varying vec3 vColor;varying float vNodeType;varying vec3 vPosition;varying float vPulseIntensity;varying float vDistanceFromRoot;varying float vGlow;
   void main(){
     vec2 c=2.0*gl_PointCoord-1.0;float d=length(c);if(d>1.0)discard;
@@ -160,7 +179,15 @@ const nodeFrag = `
     if(vPulseIntensity>0.0){col=mix(col,mix(vec3(1.0),uPulseColors[0],0.4),vPulseIntensity*0.8);col*=(1.0+vPulseIntensity*1.2);gs*=(1.0+vPulseIntensity);}
     col+=vec3(1.0)*smoothstep(0.4,0.0,d)*0.3;
     float a=gs*(0.95-0.3*d)*smoothstep(100.0,15.0,length(vPosition-cameraPosition));
-    col*=(1.0+vGlow*0.1);gl_FragColor=vec4(col,a);
+    col*=(1.0+vGlow*0.1);
+    // ── Final color grade (user-tunable via the bottom-right panel) ──
+    // Saturation: lerp from luminance-grey at uSaturation=0 to full at
+    // 1, and overshoot >1 amplifies further. Contrast: center on 0.5
+    // and scale the delta. uSaturation=1, uContrast=1 → neutral.
+    float lum=dot(col,vec3(0.2126,0.7152,0.0722));
+    col=mix(vec3(lum),col,uSaturation);
+    col=(col-0.5)*uContrast+0.5;
+    gl_FragColor=vec4(col,a);
   }`;
 
 const connVert = `${noiseFn}
@@ -188,6 +215,7 @@ const connVert = `${noiseFn}
 
 const connFrag = `
   uniform float uTime;uniform vec3 uPulseColors[3];
+  uniform float uSaturation;uniform float uContrast;
   varying vec3 vColor;varying float vCS;varying float vPI;varying float vPP;varying float vDFC;
   void main(){
     float f1=sin(vPP*25.0-uTime*4.0)*0.5+0.5;float f2=sin(vPP*15.0-uTime*2.5+1.57)*0.5+0.5;
@@ -198,6 +226,10 @@ const connFrag = `
     col*=(0.7+fi+vCS*0.5);
     float a=(0.7*vCS+cf*0.3)*smoothstep(100.0,15.0,vDFC);
     a=mix(a,min(1.0,a*2.5),vPI);
+    // Same final color grade as nodes — keeps both materials in sync.
+    float lum=dot(col,vec3(0.2126,0.7152,0.0722));
+    col=mix(vec3(lum),col,uSaturation);
+    col=(col-0.5)*uContrast+0.5;
     gl_FragColor=vec4(col,a);
   }`;
 
@@ -384,6 +416,93 @@ window.addEventListener('resize',()=>{
 
 build(currentFormation);
 animate();
+
+// ── Color-grade panel wiring ─────────────────────────────────────────
+// Sliders write into every node + connection material's uSaturation /
+// uContrast uniforms. We walk the scene on each input event instead of
+// keeping a material registry — formation swaps create new materials,
+// and traversal stays correct without bookkeeping.
+function applyGrade(saturation, contrast) {
+  scene.traverse((obj) => {
+    const u = obj?.material?.uniforms;
+    if (!u) return;
+    if (u.uSaturation) u.uSaturation.value = saturation;
+    if (u.uContrast) u.uContrast.value = contrast;
+  });
+}
+
+const fxRoot = document.getElementById('canvas-fx');
+const fxToggle = document.getElementById('canvas-fx-toggle');
+const fxSat = document.getElementById('canvas-fx-sat');
+const fxCon = document.getElementById('canvas-fx-con');
+const fxSatVal = document.getElementById('canvas-fx-sat-val');
+const fxConVal = document.getElementById('canvas-fx-con-val');
+const fxReset = document.getElementById('canvas-fx-reset');
+const fxClose = document.getElementById('canvas-fx-close');
+
+// Restore last setting from localStorage if present. Bounds-check so
+// a corrupt value can't push the shader into something unreadable.
+const FX_KEY = 'neural-fx-grade';
+try {
+  const saved = JSON.parse(localStorage.getItem(FX_KEY) || 'null');
+  if (saved && typeof saved.sat === 'number' && typeof saved.con === 'number') {
+    fxSat.value = Math.max(0, Math.min(20, saved.sat));
+    fxCon.value = Math.max(0.5, Math.min(20, saved.con));
+  }
+} catch {}
+
+function syncGrade() {
+  const s = parseFloat(fxSat.value);
+  const c = parseFloat(fxCon.value);
+  fxSatVal.textContent = s.toFixed(2);
+  fxConVal.textContent = c.toFixed(2);
+  applyGrade(s, c);
+  try { localStorage.setItem(FX_KEY, JSON.stringify({ sat: s, con: c })); } catch {}
+}
+
+fxSat.addEventListener('input', syncGrade);
+fxCon.addEventListener('input', syncGrade);
+fxReset.addEventListener('click', () => {
+  fxSat.value = 1;
+  fxCon.value = 1;
+  syncGrade();
+});
+fxToggle.addEventListener('click', () => {
+  const open = fxRoot.dataset.open === 'true';
+  fxRoot.dataset.open = open ? 'false' : 'true';
+});
+fxClose.addEventListener('click', () => { fxRoot.dataset.open = 'false'; });
+
+// ── Theme toggle (Dark / Light) ───────────────────────────────────
+// Writes `data-theme` on <html>; CSS variable overrides in
+// :root[data-theme="light"] swap the palette. Persists alongside the
+// FX grade so the next page load picks it up before any paint.
+const THEME_KEY = 'app-theme';
+const fxThemeDark = document.getElementById('canvas-fx-theme-dark');
+const fxThemeLight = document.getElementById('canvas-fx-theme-light');
+
+function applyTheme(theme) {
+  const t = theme === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t;
+  fxThemeDark.classList.toggle('active', t === 'dark');
+  fxThemeLight.classList.toggle('active', t === 'light');
+  try { localStorage.setItem(THEME_KEY, t); } catch {}
+  // Charts read legend label color off `data-theme` at build time, so any
+  // active chart needs a re-render when the theme flips — the listener
+  // lives inside the Alpine component (see init in app.ts).
+  window.dispatchEvent(new CustomEvent('themechange', { detail: { theme: t } }));
+}
+
+// Restore. We read straight off documentElement.dataset.theme because
+// a tiny inline script (added below) pre-applies it before this module
+// loads — that prevents a brief dark-flash on light-mode page loads.
+applyTheme(document.documentElement.dataset.theme || 'dark');
+
+fxThemeDark.addEventListener('click', () => applyTheme('dark'));
+fxThemeLight.addEventListener('click', () => applyTheme('light'));
+
+// Initial apply (in case localStorage held a non-default value).
+syncGrade();
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════
@@ -2556,6 +2675,35 @@ animate();
             <button type="button" class="page-back-btn icon-only" @click="loadBrokerage()" title="Refresh" aria-label="Refresh" :disabled="loadingBrokerage">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="loadingBrokerage ? 'animation: spin 1s linear infinite' : ''"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             </button>
+            <!-- Neural-canvas color-grade control. Sits next to the
+                 refresh button so it groups with the other page-level
+                 chrome. Panel pops out below; persists to localStorage. -->
+            <div id="canvas-fx" class="canvas-fx" data-open="false">
+              <button type="button" id="canvas-fx-toggle" class="canvas-fx-toggle page-back-btn icon-only" aria-label="Adjust canvas colors" title="Adjust canvas colors">FX</button>
+              <div class="canvas-fx-panel" role="group" aria-label="Canvas color grade">
+                <button type="button" id="canvas-fx-close" class="canvas-fx-close" aria-label="Close FX panel" title="Close">&times;</button>
+                <!-- Theme toggle — sets data-theme on <html>; CSS variable
+                     overrides in :root[data-theme="light"] do the work. -->
+                <div class="canvas-fx-theme">
+                  <span class="canvas-fx-theme-label">Theme</span>
+                  <div class="canvas-fx-theme-pills" role="group" aria-label="Theme">
+                    <button type="button" class="canvas-fx-theme-pill" data-theme="dark" id="canvas-fx-theme-dark">Dark</button>
+                    <button type="button" class="canvas-fx-theme-pill" data-theme="light" id="canvas-fx-theme-light">Light</button>
+                  </div>
+                </div>
+                <div class="canvas-fx-row">
+                  <label for="canvas-fx-sat">Saturation</label>
+                  <input id="canvas-fx-sat" type="range" min="0" max="20" step="0.1" value="1" />
+                  <span class="canvas-fx-val" id="canvas-fx-sat-val">1.00</span>
+                </div>
+                <div class="canvas-fx-row">
+                  <label for="canvas-fx-con">Contrast</label>
+                  <input id="canvas-fx-con" type="range" min="0.5" max="20" step="0.1" value="1" />
+                  <span class="canvas-fx-val" id="canvas-fx-con-val">1.00</span>
+                </div>
+                <button type="button" id="canvas-fx-reset" class="canvas-fx-reset">Reset</button>
+              </div>
+            </div>
             <div x-show="alpacaAccount" class="wishlist-btn-row">
               <button type="button" class="btn btn-outline wishlist-btn" @click="wishListOpen = true" data-testid="wishlist-open">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="#facc15" stroke="#eab308" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:8px"><path d="M12 2 L15.09 8.26 L22 9.27 L17 14.14 L18.18 21.02 L12 17.77 L5.82 21.02 L7 14.14 L2 9.27 L8.91 8.26 Z"/></svg>

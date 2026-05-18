@@ -30,6 +30,60 @@
   --mono:         'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 }
 
+/* Light-mode palette. Engaged by the FX panel's Light pill; pre-applied
+   by the inline <head> script so reloads don't flash dark. Keeps the
+   purple accent for brand continuity; everything else flips to a
+   light surface + dark text. The neural canvas is hidden in this mode —
+   the cyberpunk gradient doesn't read on white. */
+:root[data-theme="light"] {
+  --bg:           #ffffff;
+  --surface:      #ffffff;
+  --surface2:     #f3f4f6;
+  --border:       #d4d4d8;
+  --green:        #16a34a;
+  --red:          #dc2626;
+  --text:         #18181b;
+  --muted:        #6b7280;
+}
+/* Light mode keeps the neural canvas running, just retuned for a
+   white background. mix-blend-mode: multiply lets the network's
+   bright additive-shader colors darken the white where they overlap
+   (and stay white where the canvas is transparent), so the animation
+   reads as colored particles on white rather than a barely-visible
+   wash. Opacity bumped from the dark-mode 0.22 because additive
+   colors against white naturally fade unless we let more through. */
+:root[data-theme="light"] #neural-bg-canvas {
+  opacity: 0.6;
+  mix-blend-mode: multiply;
+}
+/* Chain SVGs use white strokes for the link rings — invisible on a white
+   background. invert(1) flips white→black so the links read as dark detail;
+   hue-rotate(180deg) keeps the purple sliver roughly the same hue after
+   inversion. */
+:root[data-theme="light"] .landing-brand-logo,
+:root[data-theme="light"] .landing-chain-img,
+:root[data-theme="light"] .sidebar-chain-img {
+  filter: invert(1) hue-rotate(180deg);
+}
+/* Light mode: black outlines on the header chrome (Back, FX) and the
+   screener view-pills (ETFs, Stocks) — the dark-mode purple/grey borders
+   wash out against white. */
+:root[data-theme="light"] .page-back-btn {
+  color: #18181b;
+  border-color: #18181b;
+}
+:root[data-theme="light"] .page-back-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+:root[data-theme="light"] .screener-tab-view {
+  border-color: #18181b;
+}
+:root[data-theme="light"] .screener-tab-view.active {
+  border-color: #18181b;
+  color: var(--accent);
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
@@ -72,6 +126,126 @@ a:hover { color: var(--accent-hover); }
   opacity: 0.22;
   pointer-events: none;
 }
+
+/* Neural-canvas color-grade panel. Lives inline next to the page-back-btn
+   on the brokerage header; the toggle button reuses .page-back-btn.icon-only
+   styling so it visually groups with the refresh button. Panel pops out
+   below as an absolutely-positioned overlay. */
+.canvas-fx {
+  position: relative;
+  display: inline-block;
+  font-family: inherit;
+}
+.canvas-fx-toggle {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.canvas-fx-panel {
+  position: absolute;
+  right: 0;
+  top: 44px;
+  width: 220px;
+  z-index: 50;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+/* Theme-toggle row inside the FX panel — sits above the sliders. */
+.canvas-fx-theme {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.canvas-fx-theme-label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.canvas-fx-theme-pills {
+  display: inline-flex;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px;
+}
+.canvas-fx-theme-pill {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.canvas-fx-theme-pill:hover { color: var(--text); }
+.canvas-fx-theme-pill.active {
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+.canvas-fx-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1;
+  padding: 2px 6px;
+  cursor: pointer;
+}
+.canvas-fx-close:hover { color: var(--accent); }
+.canvas-fx[data-open="true"] .canvas-fx-panel { display: flex; }
+.canvas-fx-row {
+  display: grid;
+  grid-template-columns: 64px 1fr 36px;
+  align-items: center;
+  gap: 8px;
+}
+.canvas-fx-row label {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.canvas-fx-row input[type="range"] {
+  width: 100%;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.canvas-fx-val {
+  font-size: 10px;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+.canvas-fx-reset {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  cursor: pointer;
+  align-self: flex-end;
+}
+.canvas-fx-reset:hover { color: var(--accent); border-color: var(--accent); }
 
 .app { display: flex; min-height: 100vh; position: relative; z-index: 1; }
 

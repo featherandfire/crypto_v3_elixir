@@ -98,10 +98,18 @@ defmodule CryptoPortfolioV3.AlpacaMock.Server do
       transfers: %{},
       # alpaca_id => [order_map, ...]
       orders: %{},
-      # alpaca_id => Decimal
-      cash: %{}
+      # alpaca_id => Decimal — cash / buying_power
+      cash: %{},
+      # alpaca_id => %{symbol => position_map} — running net positions
+      positions: %{}
     }
   end
+
+  # Default per-share price for symbols whose order didn't carry a
+  # limit_price. Real market prices live behind Alpaca's data API and
+  # aren't exposed to the mock; $10 keeps the math predictable and
+  # lets a $350 deposit cover ~35 share-units across orders.
+  @default_mock_price Decimal.new("10")
 
   # Reads existing brokerage_accounts + completed broker_deposits rows
   # and replays them into the mock so the dev session "remembers" prior
@@ -148,6 +156,7 @@ defmodule CryptoPortfolioV3.AlpacaMock.Server do
         |> put_in([:cash, a.alpaca_account_id], cash)
         |> put_in([:orders, a.alpaca_account_id], [])
         |> put_in([:ach, a.alpaca_account_id], [])
+        |> put_in([:positions, a.alpaca_account_id], %{})
       end)
     rescue
       _ -> state
@@ -178,7 +187,8 @@ defmodule CryptoPortfolioV3.AlpacaMock.Server do
      |> put_in([:accounts, id], account)
      |> put_in([:cash, id], @decimal_zero)
      |> put_in([:orders, id], [])
-     |> put_in([:ach, id], [])}
+     |> put_in([:ach, id], [])
+     |> put_in([:positions, id], %{})}
   end
 
   def handle_call({:get_account, id}, _from, state) do
@@ -328,54 +338,185 @@ defmodule CryptoPortfolioV3.AlpacaMock.Server do
     {:reply, {:ok, Map.get(state.orders, account_id, [])}, state}
   end
 
-  def handle_call({:list_positions, _account_id}, _from, state) do
-    # Positions ledger isn't modelled — orders flip "filled" but we don't
-    # collapse them into per-symbol holdings here. Empty list is the
-    # right shape for the controllers and our tests don't assert on it.
-    {:reply, {:ok, []}, state}
+  def handle_call({:list_positions, account_id}, _from, state) do
+    # Returns net long positions in the (minimal) Alpaca shape the
+    # Holdings page expects. Zero-qty rows are filtered out so closed
+    # positions don't ghost-render. The mock uses the same `avg_entry_price`
+    # placeholder for `current_price` since we don't have a live mark.
+    positions =
+      state.positions
+      |> Map.get(account_id, %{})
+      |> Enum.reject(fn {_sym, p} -> Decimal.compare(p["qty"], @decimal_zero) == :eq end)
+      |> Enum.map(fn {_sym, p} -> serialize_position(p) end)
+
+    {:reply, {:ok, positions}, state}
+  end
+
+  defp serialize_position(p) do
+    qty_str = Decimal.to_string(p["qty"], :normal)
+    avg = p["avg_entry_price"]
+    avg_str = Decimal.to_string(avg, :normal)
+    market_value = Decimal.mult(p["qty"], avg)
+
+    %{
+      "asset_id" => p["symbol"],
+      "symbol" => p["symbol"],
+      "exchange" => "MOCK",
+      "asset_class" => "us_equity",
+      "qty" => qty_str,
+      "qty_available" => qty_str,
+      "side" => if(Decimal.compare(p["qty"], @decimal_zero) == :gt, do: "long", else: "short"),
+      "avg_entry_price" => avg_str,
+      "current_price" => avg_str,
+      "market_value" => Decimal.to_string(market_value, :normal),
+      "cost_basis" => Decimal.to_string(market_value, :normal),
+      "unrealized_pl" => "0",
+      "unrealized_plpc" => "0",
+      "change_today" => "0"
+    }
   end
 
   def handle_call({:place_order, account_id, payload}, _from, state) do
     cash = Map.get(state.cash, account_id, @decimal_zero)
+    symbol = Map.get(payload, "symbol")
+    side = Map.get(payload, "side")
+    qty = parse_decimal(Map.get(payload, "qty"))
+    price = order_price(payload)
+    cost = Decimal.mult(qty, price)
 
     cond do
       not Map.has_key?(state.accounts, account_id) ->
         {:reply, {:error, %{"code" => 40010001, "message" => "account not found"}}, state}
 
-      # Notional check — we don't have prices, so any non-zero quantity
-      # with $0 cash is rejected. This exactly matches what the order
-      # placement rejection spec exercises.
-      Decimal.compare(cash, @decimal_zero) == :eq ->
+      # Buy with insufficient cash → 403 with the buying-power message
+      # our controllers + the order_placement spec key off.
+      side == "buy" and Decimal.compare(cash, cost) == :lt ->
         {:reply,
          {:error, %{"code" => 40310000, "message" => "insufficient buying power"}}, state}
 
       true ->
-        # Cash > 0 — assume the order fits (we don't have prices in the
-        # mock). Deduct a nominal $1 so subsequent identical orders also
-        # work as long as cash holds; tests that care about exact accounting
-        # can subscribe to a more precise mock later.
         order = %{
           "id" => uuid(),
           "client_order_id" => uuid(),
           "status" => "filled",
-          "symbol" => Map.get(payload, "symbol"),
+          "symbol" => symbol,
           "qty" => Map.get(payload, "qty"),
-          "side" => Map.get(payload, "side"),
+          "side" => side,
           "type" => Map.get(payload, "type"),
           "time_in_force" => Map.get(payload, "time_in_force"),
           "filled_at" => iso_now(),
-          "submitted_at" => iso_now()
+          "submitted_at" => iso_now(),
+          "filled_avg_price" => Decimal.to_string(price, :normal)
         }
 
+        # Cash flow + position update: buys debit cash and grow the
+        # position (re-weight average entry); sells credit cash and
+        # shrink the position. Going below zero on a sell is allowed
+        # (treat as short) so we don't reject legitimate sells that
+        # the seeded state forgot.
+        delta = if side == "buy", do: Decimal.negate(cost), else: cost
+        qty_delta = if side == "buy", do: qty, else: Decimal.negate(qty)
+
         next_orders = Map.update(state.orders, account_id, [order], &[order | &1])
-        next_cash = Decimal.sub(cash, Decimal.new("1"))
+        next_cash = Decimal.add(cash, delta)
+        next_positions = update_position(state.positions, account_id, symbol, qty_delta, price)
 
         state =
           state
           |> Map.put(:orders, next_orders)
           |> put_in([:cash, account_id], next_cash)
+          |> Map.put(:positions, next_positions)
 
         {:reply, {:ok, order}, state}
+    end
+  end
+
+  # Pick the fill price for an order. Limit / stop-limit orders carry
+  # `limit_price`; everything else (market, stop, trailing-stop) gets the
+  # flat default. Real Alpaca uses live quotes — out of scope for the mock.
+  defp order_price(payload) do
+    case parse_optional_decimal(Map.get(payload, "limit_price")) do
+      {:ok, d} -> if Decimal.compare(d, @decimal_zero) == :gt, do: d, else: @default_mock_price
+      :error -> @default_mock_price
+    end
+  end
+
+  # Updates the running position for `account_id`+`symbol`. New positions
+  # get the trade price as their avg_entry; existing positions re-weight
+  # avg_entry by the trade (only when same side / adding to the position).
+  defp update_position(positions_map, account_id, symbol, qty_delta, fill_price) do
+    per_account = Map.get(positions_map, account_id, %{})
+    existing = Map.get(per_account, symbol)
+
+    new_position =
+      case existing do
+        nil ->
+          %{
+            "symbol" => symbol,
+            "qty" => qty_delta,
+            "avg_entry_price" => fill_price
+          }
+
+        %{"qty" => prev_qty, "avg_entry_price" => prev_avg} ->
+          new_qty = Decimal.add(prev_qty, qty_delta)
+          # Re-weight only when extending (same side). Closing or
+          # flipping resets avg_entry to the latest fill so a reopened
+          # position doesn't carry stale cost-basis weight.
+          same_side =
+            Decimal.compare(prev_qty, @decimal_zero) ==
+              Decimal.compare(qty_delta, @decimal_zero)
+
+          new_avg =
+            cond do
+              Decimal.compare(new_qty, @decimal_zero) == :eq -> prev_avg
+              same_side -> weighted_avg(prev_qty, prev_avg, qty_delta, fill_price)
+              true -> fill_price
+            end
+
+          %{"symbol" => symbol, "qty" => new_qty, "avg_entry_price" => new_avg}
+      end
+
+    Map.put(positions_map, account_id, Map.put(per_account, symbol, new_position))
+  end
+
+  defp weighted_avg(qty1, price1, qty2, price2) do
+    total_qty = Decimal.add(Decimal.abs(qty1), Decimal.abs(qty2))
+
+    if Decimal.compare(total_qty, @decimal_zero) == :eq do
+      price2
+    else
+      numerator =
+        Decimal.add(
+          Decimal.mult(Decimal.abs(qty1), price1),
+          Decimal.mult(Decimal.abs(qty2), price2)
+        )
+
+      Decimal.div(numerator, total_qty)
+    end
+  end
+
+  defp parse_decimal(nil), do: @decimal_zero
+  defp parse_decimal(%Decimal{} = d), do: d
+  defp parse_decimal(n) when is_integer(n), do: Decimal.new(n)
+  defp parse_decimal(n) when is_float(n), do: Decimal.from_float(n)
+
+  defp parse_decimal(s) when is_binary(s) do
+    case Decimal.parse(s) do
+      {d, ""} -> d
+      _ -> @decimal_zero
+    end
+  end
+
+  defp parse_optional_decimal(nil), do: :error
+  defp parse_optional_decimal(""), do: :error
+  defp parse_optional_decimal(%Decimal{} = d), do: {:ok, d}
+  defp parse_optional_decimal(n) when is_integer(n), do: {:ok, Decimal.new(n)}
+  defp parse_optional_decimal(n) when is_float(n), do: {:ok, Decimal.from_float(n)}
+
+  defp parse_optional_decimal(s) when is_binary(s) do
+    case Decimal.parse(s) do
+      {d, ""} -> {:ok, d}
+      _ -> :error
     end
   end
 
@@ -405,6 +546,12 @@ defmodule CryptoPortfolioV3.AlpacaMock.Server do
       state.orders
       |> Map.get(account_id, [])
       |> Enum.map(fn o ->
+        qty = parse_decimal(o["qty"])
+        price = parse_decimal(o["filled_avg_price"])
+        cost = Decimal.mult(qty, price)
+        # Buys leave the account (negative cash flow), sells bring cash in.
+        net = if o["side"] == "sell", do: cost, else: Decimal.negate(cost)
+
         %{
           "id" => "fill-#{o["id"]}",
           "activity_type" => "FILL",
@@ -415,8 +562,8 @@ defmodule CryptoPortfolioV3.AlpacaMock.Server do
           "side" => o["side"],
           "type" => "fill",
           "order_id" => o["id"],
-          "price" => "1.00",
-          "net_amount" => "1.00"
+          "price" => Decimal.to_string(price, :normal),
+          "net_amount" => Decimal.to_string(net, :normal)
         }
       end)
 

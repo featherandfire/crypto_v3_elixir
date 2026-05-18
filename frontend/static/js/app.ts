@@ -2031,13 +2031,12 @@ function logoUrlFor(symbol: string, size = 64): string {
   return `https://img.logo.dev/ticker/${encodeURIComponent(symbol)}?token=${LOGO_DEV_TOKEN}&size=${size}&format=png`;
 }
 
-// Sample the dominant *vivid* color from a logo image. We draw the logo
-// onto a small offscreen canvas, walk the pixels, skip near-transparent /
-// near-grayscale / near-extreme pixels, then bucket the remaining pixels
-// by quantized RGB and pick the most-frequent saturated bucket. Weighted
-// by saturation so deeply-branded pixels dominate over wash. Returns
-// `null` if the canvas read fails (CORS, network, no qualifying pixels).
-function sampleLogoDominantColor(url: string): Promise<string | null> {
+// Sample the top-K *vivid* colors from a logo image, ranked by weighted
+// pixel count. Skips near-transparent, near-grayscale, and near-extreme
+// pixels (so heavy black/white backgrounds don't dominate the picks)
+// and weights surviving pixels by saturation. Returns the ranked hex
+// list — most-prominent first — or `null` on canvas/network failure.
+function sampleLogoDominantColors(url: string, topK = 6): Promise<string[] | null> {
   return new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -2066,13 +2065,14 @@ function sampleLogoDominantColor(url: string): Promise<string | null> {
           buckets.set(key, (buckets.get(key) || 0) + (1 + sat * 3));
         }
         if (buckets.size === 0) { resolve(null); return; }
-        let bestKey = '', bestCount = 0;
-        for (const [k, v] of buckets.entries()) {
-          if (v > bestCount) { bestCount = v; bestKey = k; }
-        }
-        const [r, g, b] = bestKey.split(',').map(Number);
-        const hex = `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
-        resolve(hex);
+        const ranked = Array.from(buckets.entries())
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, topK)
+          .map(([key]) => {
+            const [r, g, b] = key.split(',').map(Number);
+            return `#${[r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('')}`;
+          });
+        resolve(ranked);
       } catch {
         resolve(null);
       }
@@ -2082,10 +2082,21 @@ function sampleLogoDominantColor(url: string): Promise<string | null> {
   });
 }
 
-// Module-level cache keyed by ticker symbol. Sampled colors persist for
-// the page lifetime — re-sampling the same logo is wasteful and can
-// produce slightly different results due to image-decoder variance.
-const logoColorCache = new Map<string, string>();
+// Module-level cache keyed by ticker symbol. Stores the ranked palette so
+// the chart can walk down the list when its top pick collides with a
+// color already claimed by another slice.
+const logoColorCache = new Map<string, string[]>();
+
+// Bucket a hex into the same 32-step quantization the sampler uses so two
+// near-identical sampled colors hash to the same key — that's what makes
+// "is this color already taken by another slice" robust against minor
+// per-logo PNG variance.
+function quantizeHex(hex: string): string {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `${Math.round(r / 32) * 32},${Math.round(g / 32) * 32},${Math.round(b / 32) * 32}`;
+}
 
 // Brokerage hero-stack — curated unique-logo cross-section that scrolls
 // across the brokerage page under the subtitle. Mostly individual stocks
@@ -3921,6 +3932,17 @@ window.dashApp = () => ({
             this.renderHoldingsDividendChart();
             this.renderHoldingsPriceChart();
           }
+        });
+      }
+    });
+    // Theme flip — legend label color is picked at chart-build time from
+    // data-theme, so re-render any visible donut so it matches the new theme.
+    window.addEventListener('themechange', () => {
+      if (this.page === 'holdings' && this.holdingsPaletteMode !== 'projection') {
+        this.$nextTick(() => {
+          this.renderHoldingsChart();
+          this.renderHoldingsDividendChart();
+          this.renderHoldingsPriceChart();
         });
       }
     });
@@ -6615,11 +6637,34 @@ window.dashApp = () => ({
   // chart has something to render before the async sampler completes.
   _logoColorFor(this: any, symbol: string): string {
     const cached = logoColorCache.get(symbol);
-    if (cached) return cached;
+    if (cached && cached.length) return cached[0];
     return CHIP_COLORS[this.chipForPosition(symbol)] || CHIP_COLORS.Other;
   },
 
-  // Async warm-up — samples the dominant color of each missing symbol's
+  // Collision-aware palette assignment. For each symbol, walk its ranked
+  // logo colors and claim the first one whose quantized bucket isn't
+  // already taken by an earlier slice. If every sampled color collides
+  // (or sampling returned nothing), fall back to the chip color. This is
+  // what keeps two financials with similar blue logos from rendering as
+  // indistinguishable slices — the second one slides to its secondary.
+  _assignLogoColors(this: any, symbols: string[]): string[] {
+    const used = new Set<string>();
+    return symbols.map((sym) => {
+      const palette = logoColorCache.get(sym) || [];
+      for (const hex of palette) {
+        const key = quantizeHex(hex);
+        if (!used.has(key)) {
+          used.add(key);
+          return hex;
+        }
+      }
+      const fallback = CHIP_COLORS[this.chipForPosition(sym)] || CHIP_COLORS.Other;
+      used.add(quantizeHex(fallback));
+      return fallback;
+    });
+  },
+
+  // Async warm-up — samples the ranked palette for each missing symbol's
   // logo and stuffs it into the cache. Calls `onColor` after each
   // resolution so the caller can re-render the chart progressively as
   // colors arrive (rather than waiting for the whole batch).
@@ -6629,9 +6674,9 @@ window.dashApp = () => ({
     await Promise.all(missing.map(async (sym) => {
       const url = logoUrlFor(sym, 96);
       if (!url) return;
-      const color = await sampleLogoDominantColor(url);
-      if (color) {
-        logoColorCache.set(sym, color);
+      const palette = await sampleLogoDominantColors(url);
+      if (palette && palette.length) {
+        logoColorCache.set(sym, palette);
         if (onColor) onColor();
       }
     }));
@@ -6765,7 +6810,12 @@ window.dashApp = () => ({
         plugins: {
           legend: {
             position: 'right',
-            labels: { color: '#e8e0ff', boxWidth: 12, boxHeight: 12, font: { size: 11 } },
+            labels: {
+              color: document.documentElement.dataset.theme === 'light' ? '#18181b' : '#e8e0ff',
+              boxWidth: 12,
+              boxHeight: 12,
+              font: { size: 11 },
+            },
           },
           tooltip: {
             backgroundColor: '#0d0a1e',
@@ -6905,7 +6955,7 @@ window.dashApp = () => ({
       return;
     }
     const breakdown = this.holdingsBySymbolBreakdown();
-    const colors = breakdown.labels.map((sym: string) => this._logoColorFor(sym));
+    const colors = this._assignLogoColors(breakdown.labels);
     this.renderHoldingsBreakdownChart({
       selector: 'canvas[data-holdings-chart]',
       type: 'doughnut',
@@ -6937,7 +6987,7 @@ window.dashApp = () => ({
       const qty = parseFloat(p.qty) || 0;
       return qty * annual;
     });
-    const colors = breakdown.labels.map((sym: string) => this._logoColorFor(sym));
+    const colors = this._assignLogoColors(breakdown.labels);
     this.renderHoldingsBreakdownChart({
       selector: 'canvas[data-holdings-dividend-chart]',
       type: 'doughnut',
@@ -6960,10 +7010,14 @@ window.dashApp = () => ({
   renderHoldingsPriceChart(this: any) {
     const breakdown = this.holdingsPriceBreakdown();
     if (this.holdingsPaletteMode === 'logo') {
-      const colors = breakdown.labels.map((label: string) => {
-        const sym = breakdown.dominantSymbol?.[label] || '';
-        return sym ? this._logoColorFor(sym) : CHIP_COLORS.Other;
-      });
+      const dominantSyms = breakdown.labels.map(
+        (label: string) => breakdown.dominantSymbol?.[label] || ''
+      );
+      const assigned = this._assignLogoColors(dominantSyms.filter(Boolean));
+      let i = 0;
+      const colors = dominantSyms.map((sym: string) =>
+        sym ? assigned[i++] : CHIP_COLORS.Other
+      );
       this.renderHoldingsBreakdownChart({
         selector: 'canvas[data-holdings-price-chart]',
         type: 'doughnut',
@@ -6973,8 +7027,7 @@ window.dashApp = () => ({
       });
       // Warm any uncached dominant-symbol logos and re-render so the
       // tiers progressively upgrade from chip-fallback to true logo color.
-      const dominantSyms = Object.values(breakdown.dominantSymbol || {}).filter(Boolean) as string[];
-      this._warmLogoColors(dominantSyms, () => {
+      this._warmLogoColors(dominantSyms.filter(Boolean) as string[], () => {
         this.$nextTick(() => this.renderHoldingsPriceChart());
       });
       return;
