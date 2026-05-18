@@ -46,39 +46,12 @@ config :brokerage,
       ),
   jwt_ttl_seconds: String.to_integer(System.get_env("JWT_TTL_SECONDS", "3600"))
 
-# External market-data APIs (all envs).
-config :brokerage, :coingecko,
-  base_url: System.get_env("COINGECKO_BASE_URL", "https://api.coingecko.com/api/v3"),
-  timeout_ms: String.to_integer(System.get_env("COINGECKO_TIMEOUT_MS", "10000")),
-  max_retries: String.to_integer(System.get_env("COINGECKO_MAX_RETRIES", "3"))
-
-config :brokerage, :cryptocompare,
-  base_url: System.get_env("CRYPTOCOMPARE_BASE_URL", "https://min-api.cryptocompare.com"),
-  api_key: System.get_env("CRYPTOCOMPARE_API_KEY"),
-  timeout_ms: String.to_integer(System.get_env("CRYPTOCOMPARE_TIMEOUT_MS", "15000"))
-
-# Background prefetchers. Opt-in via ENABLE_PREFETCHERS=true so they don't
-# hammer CG on every `mix phx.server` in dev.
-config :brokerage,
-  enable_prefetchers: System.get_env("ENABLE_PREFETCHERS") in ["true", "1"]
-
 # Alpaca Broker API mock. When ALPACA_MOCK=1, the AlpacaMock.Server boots
 # and BrokerFunding.Client routes Req through an in-process Plug instead
 # of the real sandbox — collapses KYC approval latency, gives the test
 # suite deterministic responses. Off by default.
 config :brokerage,
   alpaca_mock?: System.get_env("ALPACA_MOCK") in ["true", "1"]
-
-config :brokerage, :yearly_prefetcher,
-  top_limit: String.to_integer(System.get_env("YEARLY_PREFETCH_TOP", "200")),
-  call_delay_ms: String.to_integer(System.get_env("YEARLY_PREFETCH_DELAY_MS", "3000")),
-  initial_delay_ms: String.to_integer(System.get_env("YEARLY_PREFETCH_INITIAL_MS", "10000"))
-
-config :brokerage, :etherscan,
-  api_key: System.get_env("ETHERSCAN_API_KEY"),
-  base_url: System.get_env("ETHERSCAN_BASE_URL", "https://api.etherscan.io/v2/api"),
-  timeout_ms: String.to_integer(System.get_env("ETHERSCAN_TIMEOUT_MS", "10000")),
-  concurrency: String.to_integer(System.get_env("ETHERSCAN_CONCURRENCY", "5"))
 
 # Alpaca paper-trading API. Defaults to paper-api.alpaca.markets — flipping
 # to live trading requires explicitly setting ALPACA_TRADING_URL=https://api.alpaca.markets
@@ -107,20 +80,6 @@ config :brokerage, :finnhub,
 config :brokerage, :polygon,
   api_key: System.get_env("POLYGON_API_KEY"),
   base_url: System.get_env("POLYGON_BASE_URL", "https://api.polygon.io")
-
-config :brokerage, :solana,
-  rpc_url: System.get_env("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com"),
-  timeout_ms: String.to_integer(System.get_env("SOLANA_TIMEOUT_MS", "12000")),
-  last_buy_lookback: String.to_integer(System.get_env("SOLANA_LAST_BUY_LOOKBACK", "30"))
-
-config :brokerage, :tron,
-  api_url: System.get_env("TRONSCAN_API_URL", "https://apilist.tronscanapi.com"),
-  timeout_ms: String.to_integer(System.get_env("TRONSCAN_TIMEOUT_MS", "15000"))
-
-config :brokerage, :pct_change_prefetcher,
-  top_limit: String.to_integer(System.get_env("PCT_PREFETCH_TOP", "200")),
-  call_delay_ms: String.to_integer(System.get_env("PCT_PREFETCH_DELAY_MS", "1500")),
-  initial_delay_ms: String.to_integer(System.get_env("PCT_PREFETCH_INITIAL_MS", "15000"))
 
 config :brokerage, BrokerageWeb.Endpoint,
   http: [port: String.to_integer(System.get_env("PORT", "4000"))]

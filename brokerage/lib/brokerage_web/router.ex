@@ -28,26 +28,6 @@ defmodule BrokerageWeb.Router do
     # `/api/webhooks/` is matched by CacheBodyReader to stash the raw body.
     post "/webhooks/alpaca", AlpacaWebhookController, :create
 
-    get "/coins/top", CoinController, :top
-    get "/coins/yearly-ranges", CoinController, :yearly_ranges
-    get "/coins/supply", CoinController, :supply
-    get "/coins/search", CoinController, :search
-    get "/coins/:coingecko_id/history", CoinController, :history
-
-    get "/cryptocompare/changes", CryptocompareController, :changes
-    get "/cryptocompare/volatility", CryptocompareController, :volatility
-
-    get "/lookup/:hash", LookupController, :show
-
-    get "/wallet/chains", WalletController, :chains
-    get "/wallet/from-tx/:hash", WalletController, :from_tx
-    get "/wallet/all/:address", WalletController, :all
-    get "/wallet/solana/:address/last-buy-fees", WalletController, :solana_last_buy_fees
-    get "/wallet/solana/:address", WalletController, :solana_balances
-    get "/wallet/tron/:address", WalletController, :tron_balances
-    get "/wallet/:chain/:address/last-buy-fees", WalletController, :last_buy_fees
-    get "/wallet/:chain/:address", WalletController, :chain_balances
-
     scope "/" do
       pipe_through :authenticated
 
@@ -109,23 +89,6 @@ defmodule BrokerageWeb.Router do
       patch "/recurring-investments/:id", RecurringInvestmentController, :update
       delete "/recurring-investments/:id", RecurringInvestmentController, :delete
 
-      get "/portfolios", PortfolioController, :index
-      post "/portfolios", PortfolioController, :create
-      get "/portfolios/:id", PortfolioController, :show
-      delete "/portfolios/:id", PortfolioController, :delete
-      post "/portfolios/:id/refresh", PortfolioController, :refresh
-
-      post "/portfolios/:portfolio_id/holdings", HoldingController, :create
-      patch "/portfolios/:portfolio_id/holdings/:id", HoldingController, :update
-      delete "/portfolios/:portfolio_id/holdings/:id", HoldingController, :delete
-
-      get "/portfolios/:portfolio_id/holdings/:holding_id/transactions",
-          TransactionController,
-          :index
-
-      post "/portfolios/:portfolio_id/holdings/:holding_id/transactions",
-           TransactionController,
-           :create
     end
   end
 

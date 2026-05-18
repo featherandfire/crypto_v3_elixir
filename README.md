@@ -104,7 +104,6 @@ ALPACA_MOCK=1         # skip real Alpaca; use in-process mock
 FINNHUB_API_KEY       # optional — enables Finnhub news
 POLYGON_API_KEY       # optional — enables Polygon company profiles
 RESEND_API_KEY        # required in :prod
-ETHERSCAN_API_KEY     # legacy crypto features
 ```
 
 ## Tests

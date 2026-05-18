@@ -14,13 +14,11 @@ defmodule Brokerage.Application do
         {DNSCluster, query: Application.get_env(:brokerage, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: Brokerage.PubSub},
         {Cachex, name: :alpaca_cache},
-        Brokerage.Market.PriceCache,
         # Recurring-investment scheduler ticks once a minute and fires
         # any due schedules. Lives in-process; single-node only.
         Brokerage.RecurringInvestments.Scheduler
       ] ++
         alpaca_mock() ++
-        prefetchers() ++
         [BrokerageWeb.Endpoint]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
@@ -35,17 +33,6 @@ defmodule Brokerage.Application do
   def config_change(changed, _new, removed) do
     BrokerageWeb.Endpoint.config_change(changed, removed)
     :ok
-  end
-
-  defp prefetchers do
-    if Application.get_env(:brokerage, :enable_prefetchers, false) do
-      [
-        Brokerage.Market.YearlyPrefetcher,
-        Brokerage.Market.PctChangePrefetcher
-      ]
-    else
-      []
-    end
   end
 
   # AlpacaMock.Server runs only when ALPACA_MOCK=1 — its presence is the

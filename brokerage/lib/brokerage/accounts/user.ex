@@ -2,8 +2,6 @@ defmodule Brokerage.Accounts.User do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Brokerage.Portfolios.Portfolio
-
   @timestamps_opts [type: :utc_datetime_usec]
 
   schema "users" do
@@ -13,8 +11,6 @@ defmodule Brokerage.Accounts.User do
     field :hashed_password, :string, redact: true
     field :is_verified, :boolean, default: false
     field :email_verified_at, :utc_datetime_usec
-
-    has_many :portfolios, Portfolio
 
     timestamps()
   end
