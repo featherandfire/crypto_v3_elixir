@@ -9,7 +9,7 @@ Both dev servers need to be up:
 
 ```bash
 # terminal 1
-cd crypto_portfolio_v3 && mix phx.server
+cd brokerage && mix phx.server
 
 # terminal 2
 cd frontend && npm run dev
@@ -30,7 +30,7 @@ The runner is mocha + tsx (no compile step). Tests live in
   change too easily.
 - **State isolation**: every spec generates a unique username (`e2e_<ts>`)
   so it can rerun without a DB reset. If we ever need a clean DB,
-  `cd crypto_portfolio_v3 && mix ecto.reset` between runs.
+  `cd brokerage && mix ecto.reset` between runs.
 - **Email verification** is read from Phoenix's dev mailbox preview
   (`/dev/mailbox`) via `helpers/mailbox.ts`. No test-only backend
   endpoints needed.

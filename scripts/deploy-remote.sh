@@ -21,7 +21,7 @@ set -euo pipefail
 SHA_SHORT="${1:?short SHA required}"
 
 REPO_DIR="$HOME/src/crypto_v3_elixir"
-BACKEND_DIR="$REPO_DIR/crypto_portfolio_v3"
+BACKEND_DIR="$REPO_DIR/brokerage"
 FRONTEND_DIR="$REPO_DIR/frontend"
 RELEASE_DIR="/opt/crypto/releases/${SHA_SHORT}"
 WEB_DIR="/var/www/crypto"
@@ -53,7 +53,7 @@ npm run build
 
 echo "==> staging release to ${RELEASE_DIR}"
 sudo mkdir -p "${RELEASE_DIR}"
-sudo rsync -a --delete "${BACKEND_DIR}/_build/prod/rel/crypto_portfolio_v3/" "${RELEASE_DIR}/"
+sudo rsync -a --delete "${BACKEND_DIR}/_build/prod/rel/brokerage/" "${RELEASE_DIR}/"
 sudo chown -R crypto:crypto "${RELEASE_DIR}"
 
 echo "==> capturing current release as previous (for rollback)"
@@ -77,7 +77,7 @@ sudo -u crypto bash -c '
   set -a
   source /etc/crypto/env
   set +a
-  /opt/crypto/current/bin/crypto_portfolio_v3 eval "CryptoPortfolioV3.Release.migrate"
+  /opt/crypto/current/bin/brokerage eval "Brokerage.Release.migrate"
 '
 
 echo "==> restarting crypto-api"

@@ -22,15 +22,15 @@ frontend/.playwright/
 /test-results/
 
 # Elixir / Phoenix
-crypto_portfolio_v3/_build/
-crypto_portfolio_v3/cover/
-crypto_portfolio_v3/deps/
-crypto_portfolio_v3/doc/
-crypto_portfolio_v3/.fetch
-crypto_portfolio_v3/erl_crash.dump
-crypto_portfolio_v3/*.ez
-crypto_portfolio_v3/tmp/
-crypto_portfolio_v3/crypto_portfolio_v3-*.tar
+brokerage/_build/
+brokerage/cover/
+brokerage/deps/
+brokerage/doc/
+brokerage/.fetch
+brokerage/erl_crash.dump
+brokerage/*.ez
+brokerage/tmp/
+brokerage/brokerage-*.tar
 
 # IDE / editor
 .idea/

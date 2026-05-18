@@ -64,7 +64,7 @@ Alpaca-only) rather than crashing the app.
 ### Backend
 
 ```bash
-cd crypto_portfolio_v3
+cd brokerage
 mix deps.get
 mix ecto.setup
 ALPACA_MOCK=1 mix phx.server     # serves on :4000
@@ -92,7 +92,7 @@ The frontend proxies API requests to the Phoenix backend on `:4000`.
 ### Environment variables
 
 The backend reads everything from `System.get_env` in
-[crypto_portfolio_v3/config/runtime.exs](crypto_portfolio_v3/config/runtime.exs).
+[brokerage/config/runtime.exs](brokerage/config/runtime.exs).
 Common ones:
 
 ```
@@ -112,7 +112,7 @@ ETHERSCAN_API_KEY     # legacy crypto features
 ### Backend
 
 ```bash
-cd crypto_portfolio_v3
+cd brokerage
 mix test
 ```
 
@@ -135,7 +135,7 @@ mock is ~3x faster than the real sandbox for deterministic flows).
 ## Deploy
 
 - Staging migrations:
-  `crypto_portfolio_v3/bin/staging.sh ecto.migrate`
+  `brokerage/bin/staging.sh ecto.migrate`
   (loads `.env.staging`, sets `MIX_ENV=prod`).
 - EC2 deploy is symlink-based: `/opt/crypto/current` -> the active
   release, `/opt/crypto/previous` -> the last one. `scripts/rollback.sh`
@@ -144,8 +144,8 @@ mock is ~3x faster than the real sandbox for deterministic flows).
 ## Project layout
 
 ```
-crypto_portfolio_v3/        Phoenix umbrella-flat app
-  lib/crypto_portfolio_v3/
+brokerage/        Phoenix umbrella-flat app
+  lib/brokerage/
     alpaca.ex               Broker API client (Req)
     alpaca_mock/            In-process Plug + GenServer mock
     broker_funding/         ACH deposits + withdrawals
@@ -154,7 +154,7 @@ crypto_portfolio_v3/        Phoenix umbrella-flat app
     wishlist_items/         Auto-execute wishlist
     notifications.ex        Email dispatch (swallows failures)
     emails.ex               Swoosh templates
-  lib/crypto_portfolio_v3_web/
+  lib/brokerage_web/
     controllers/            JSON API endpoints
     router.ex
   priv/repo/migrations/
