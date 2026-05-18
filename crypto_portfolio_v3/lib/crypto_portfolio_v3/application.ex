@@ -14,7 +14,10 @@ defmodule CryptoPortfolioV3.Application do
         {DNSCluster, query: Application.get_env(:crypto_portfolio_v3, :dns_cluster_query) || :ignore},
         {Phoenix.PubSub, name: CryptoPortfolioV3.PubSub},
         {Cachex, name: :alpaca_cache},
-        CryptoPortfolioV3.Market.PriceCache
+        CryptoPortfolioV3.Market.PriceCache,
+        # Recurring-investment scheduler ticks once a minute and fires
+        # any due schedules. Lives in-process; single-node only.
+        CryptoPortfolioV3.RecurringInvestments.Scheduler
       ] ++
         alpaca_mock() ++
         prefetchers() ++

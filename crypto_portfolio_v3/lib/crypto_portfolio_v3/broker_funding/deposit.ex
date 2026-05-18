@@ -17,6 +17,7 @@ defmodule CryptoPortfolioV3.BrokerFunding.Deposit do
 
   @methods ~w(ach wire instant)
   @statuses ~w(pending completed failed)
+  @directions ~w(INCOMING OUTGOING)
 
   schema "broker_deposits" do
     field :amount, :decimal
@@ -25,6 +26,10 @@ defmodule CryptoPortfolioV3.BrokerFunding.Deposit do
     field :reference, :string
     field :status, :string, default: "pending"
     field :note, :string
+    # INCOMING = deposit (user → brokerage), OUTGOING = withdrawal
+    # (brokerage → user). Both flow through the same Alpaca endpoint
+    # so we keep them in one table and filter by direction.
+    field :direction, :string, default: "INCOMING"
     # Portion of the deposit Alpaca made available immediately (instant
     # funding). Null when not eligible or not applicable.
     field :instant_amount, :decimal
@@ -44,11 +49,13 @@ defmodule CryptoPortfolioV3.BrokerFunding.Deposit do
       :reference,
       :status,
       :note,
+      :direction,
       :instant_amount
     ])
     |> validate_required([:user_id, :amount, :method, :bank_label, :reference])
     |> validate_inclusion(:method, @methods)
     |> validate_inclusion(:status, @statuses)
+    |> validate_inclusion(:direction, @directions)
     |> validate_number(:amount, greater_than: 0)
     |> assoc_constraint(:user)
   end

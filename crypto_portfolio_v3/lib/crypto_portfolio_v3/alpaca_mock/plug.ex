@@ -51,8 +51,12 @@ defmodule CryptoPortfolioV3.AlpacaMock.Plug do
   # ── Transfers ───────────────────────────────────────────────────────────
 
   post "/v1/accounts/:account_id/transfers" do
-    {:ok, transfer} = Server.create_transfer(account_id, conn.body_params)
-    json(conn, 201, transfer)
+    case Server.create_transfer(account_id, conn.body_params) do
+      {:ok, transfer} -> json(conn, 201, transfer)
+      # Insufficient cash on withdrawals returns a 422 mirroring Alpaca's
+      # validation error format.
+      {:error, err} -> json(conn, 422, err)
+    end
   end
 
   # ── Trading (per-customer) ──────────────────────────────────────────────
@@ -75,6 +79,16 @@ defmodule CryptoPortfolioV3.AlpacaMock.Plug do
   get "/v1/trading/accounts/:account_id/positions" do
     {:ok, positions} = Server.list_positions(account_id)
     json(conn, 200, positions)
+  end
+
+  get "/v1/accounts/:account_id/activities" do
+    {:ok, activities} = Server.list_activities(account_id)
+    json(conn, 200, activities)
+  end
+
+  get "/v1/trading/accounts/:account_id/account/portfolio/history" do
+    {:ok, history} = Server.get_portfolio_history(account_id)
+    json(conn, 200, history)
   end
 
   post "/v1/trading/accounts/:account_id/orders" do

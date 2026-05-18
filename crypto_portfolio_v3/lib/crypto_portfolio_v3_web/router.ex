@@ -57,6 +57,8 @@ defmodule CryptoPortfolioV3Web.Router do
       get "/alpaca/positions", AlpacaController, :positions
       get "/alpaca/quote/:symbol", AlpacaController, :quote
       get "/alpaca/bars/:symbol", AlpacaController, :bars
+      get "/alpaca/news/:symbol", AlpacaController, :news
+      get "/alpaca/profile/:symbol", AlpacaController, :profile
       get "/alpaca/snapshots", AlpacaController, :snapshots
       get "/alpaca/dividends", AlpacaController, :dividends
       get "/alpaca/assets", AlpacaController, :assets
@@ -66,11 +68,15 @@ defmodule CryptoPortfolioV3Web.Router do
       get "/alpaca/orders", AlpacaController, :list_orders
       post "/alpaca/orders", AlpacaController, :create_order
       delete "/alpaca/orders/:id", AlpacaController, :cancel_order
+      get "/alpaca/activities", AlpacaController, :activities
+      get "/alpaca/portfolio-history", AlpacaController, :portfolio_history
 
       # Broker API funding stubs — record customer deposit intent locally
       # until the real Alpaca Broker integration replaces them.
       post "/broker/funding/deposits", BrokerFundingController, :create
       get "/broker/funding/deposits", BrokerFundingController, :index
+      post "/broker/funding/withdrawals", BrokerFundingController, :withdraw
+      get "/broker/funding/withdrawals", BrokerFundingController, :withdrawals
       get "/broker/funding/verify", BrokerFundingController, :verify
 
       # Brokerage portfolios (the chips on Holdings). Per-user buckets for
@@ -95,6 +101,13 @@ defmodule CryptoPortfolioV3Web.Router do
       post "/wishlist", WishlistController, :create
       delete "/wishlist/:id", WishlistController, :delete
       post "/wishlist/reorder", WishlistController, :reorder
+
+      # Recurring investments — user-authorized schedules; the
+      # Scheduler GenServer fires orders at next_run_at.
+      get "/recurring-investments", RecurringInvestmentController, :index
+      post "/recurring-investments", RecurringInvestmentController, :create
+      patch "/recurring-investments/:id", RecurringInvestmentController, :update
+      delete "/recurring-investments/:id", RecurringInvestmentController, :delete
 
       get "/portfolios", PortfolioController, :index
       post "/portfolios", PortfolioController, :create

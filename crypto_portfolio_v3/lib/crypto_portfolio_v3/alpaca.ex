@@ -51,6 +51,35 @@ defmodule CryptoPortfolioV3.Alpaca do
   end
 
   @doc """
+  Recent news articles tagged with the given symbol. Returns up to 15
+  articles, newest first. Body shape mirrors Alpaca:
+    %{"news" => [%{"id", "headline", "summary", "author", "source",
+                   "url", "images", "symbols", "created_at", "updated_at"}, ...]}
+  Cached briefly so rapid symbol-toggling in the UI doesn't hammer
+  Alpaca; news cycles slowly relative to a 60s window.
+  """
+  @spec news(binary()) :: result()
+  def news(symbol) when is_binary(symbol) do
+    sym = String.upcase(symbol)
+    cache_key = {:news, sym}
+
+    case Cachex.get(:alpaca_cache, cache_key) do
+      {:ok, value} when not is_nil(value) ->
+        {:ok, value}
+
+      _ ->
+        case get(:data, "/v1beta1/news", params: [symbols: sym, limit: 15]) do
+          {:ok, body} ->
+            Cachex.put(:alpaca_cache, cache_key, body, ttl: 60_000)
+            {:ok, body}
+
+          err ->
+            err
+        end
+    end
+  end
+
+  @doc """
   Daily OHLC bars for a symbol over the trailing N days. Returns a list of
   `%{t, c}` (timestamp + close) sorted oldest-to-newest. Auto-routes by
   symbol — alphabetic → stock endpoint, ends-in-USD+long → crypto endpoint.

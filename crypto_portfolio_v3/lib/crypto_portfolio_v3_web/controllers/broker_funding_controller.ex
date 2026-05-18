@@ -56,6 +56,45 @@ defmodule CryptoPortfolioV3Web.BrokerFundingController do
     json(conn, %{deposits: deposits})
   end
 
+  def withdraw(conn, params) do
+    user_id = conn.assigns.current_user.id
+
+    with {:ok, amount} <- parse_amount(params["amount"]),
+         {:ok, method} <- validate_method(params["method"]),
+         bank_label <- (params["bank_label"] || "Chase ••••1234") |> to_string() |> String.trim(),
+         note <- (params["note"] || "") |> to_string() |> String.trim() do
+      attrs = %{
+        "amount" => amount,
+        "method" => method,
+        "bank_label" => if(bank_label == "", do: "Linked bank", else: bank_label),
+        "note" => if(note == "", do: nil, else: note)
+      }
+
+      case BrokerFunding.create_withdrawal(user_id, attrs) do
+        {:ok, withdrawal} ->
+          conn
+          |> put_status(:created)
+          |> json(serialize(withdrawal))
+
+        {:error, changeset} ->
+          conn
+          |> put_status(:unprocessable_entity)
+          |> json(%{error: "invalid_withdrawal", details: changeset_errors(changeset)})
+      end
+    else
+      {:error, msg} ->
+        conn
+        |> put_status(:bad_request)
+        |> json(%{error: msg})
+    end
+  end
+
+  def withdrawals(conn, _params) do
+    user_id = conn.assigns.current_user.id
+    withdrawals = BrokerFunding.list_withdrawals(user_id) |> Enum.map(&serialize/1)
+    json(conn, %{withdrawals: withdrawals})
+  end
+
   @doc """
   Verifies the Alpaca Broker API sandbox is reachable with the configured
   credentials. Returns:
@@ -157,6 +196,7 @@ defmodule CryptoPortfolioV3Web.BrokerFundingController do
       reference: d.reference,
       status: d.status,
       note: d.note,
+      direction: d.direction || "INCOMING",
       instant_amount: d.instant_amount && Decimal.to_string(d.instant_amount, :normal),
       created_at: d.inserted_at,
       updated_at: d.updated_at

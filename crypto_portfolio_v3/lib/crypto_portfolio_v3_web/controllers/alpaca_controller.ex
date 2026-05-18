@@ -37,6 +37,78 @@ defmodule CryptoPortfolioV3Web.AlpacaController do
 
   def quote(conn, _), do: bad_request(conn, "missing symbol")
 
+  def news(conn, %{"symbol" => symbol}) when is_binary(symbol) do
+    # Aggregated across Alpaca + Finnhub for source diversity. See
+    # CryptoPortfolioV3.News for the merge / dedupe logic; falls back
+    # to whichever provider is available when one is unconfigured.
+    render_result(conn, CryptoPortfolioV3.News.for_symbol(symbol))
+  end
+
+  def news(conn, _), do: bad_request(conn, "missing symbol")
+
+  # Company profile — aggregated by CryptoPortfolioV3.CompanyProfile.
+  # Polygon is the primary source (free tier exposes HQ city + employee
+  # count + SIC description). Finnhub `/stock/profile2` is the fallback
+  # when Polygon is unconfigured or returns no data. Cached 24h here
+  # since fundamentals only change with corporate actions.
+  def profile(conn, %{"symbol" => symbol}) when is_binary(symbol) do
+    sym = String.upcase(symbol)
+    cache_key = {:company_profile, sym}
+
+    profile =
+      case Cachex.get(:alpaca_cache, cache_key) do
+        {:ok, value} when not is_nil(value) ->
+          value
+
+        _ ->
+          {:ok, normalized} = CryptoPortfolioV3.CompanyProfile.for_symbol(sym)
+          Cachex.put(:alpaca_cache, cache_key, normalized, ttl: 24 * 60 * 60 * 1000)
+          normalized
+      end
+
+    json(conn, profile)
+  end
+
+  def profile(conn, _), do: bad_request(conn, "missing symbol")
+
+  @activity_opt_keys ~w(activity_types date until after direction page_size page_token)
+
+  def activities(conn, params) do
+    case BrokerageAccounts.active_alpaca_account_id(conn.assigns.current_user.id) do
+      {:ok, account_id} ->
+        # Whitelisted params only — Alpaca rejects unknown query keys.
+        opts =
+          params
+          |> Map.take(@activity_opt_keys)
+          |> Enum.map(fn {k, v} -> {String.to_atom(k), v} end)
+
+        render_result(conn, BrokerClient.list_activities(account_id, opts))
+
+      # Empty list for un-onboarded users so the dashboard renders cleanly.
+      {:error, _} ->
+        json(conn, [])
+    end
+  end
+
+  @history_opt_keys ~w(period timeframe date_start date_end extended_hours pnl_reset intraday_reporting)
+
+  def portfolio_history(conn, params) do
+    case BrokerageAccounts.active_alpaca_account_id(conn.assigns.current_user.id) do
+      {:ok, account_id} ->
+        opts =
+          params
+          |> Map.take(@history_opt_keys)
+          |> Enum.map(fn {k, v} -> {String.to_atom(k), v} end)
+
+        render_result(conn, BrokerClient.get_portfolio_history(account_id, opts))
+
+      # No account → return an empty series shape so the chart can render
+      # a blank state without checking for nil.
+      {:error, _} ->
+        json(conn, %{timestamp: [], equity: [], profit_loss: [], profit_loss_pct: []})
+    end
+  end
+
   def bars(conn, %{"symbol" => symbol} = params) do
     days =
       case Integer.parse(params["days"] || "365") do
@@ -127,7 +199,10 @@ defmodule CryptoPortfolioV3Web.AlpacaController do
     render_result(conn, Alpaca.dividend_activities())
   end
 
-  @order_keys ~w(symbol qty notional side type time_in_force limit_price stop_price extended_hours)
+  # `trail_price` (dollars) and `trail_percent` (percent) are mutually
+  # exclusive — trailing-stop orders take exactly one. Alpaca rejects
+  # both-or-neither, so the frontend validation is the gate.
+  @order_keys ~w(symbol qty notional side type time_in_force limit_price stop_price trail_price trail_percent extended_hours)
 
   def list_orders(conn, params) do
     case BrokerageAccounts.active_alpaca_account_id(conn.assigns.current_user.id) do
@@ -162,7 +237,23 @@ defmodule CryptoPortfolioV3Web.AlpacaController do
       true ->
         case BrokerageAccounts.active_alpaca_account_id(conn.assigns.current_user.id) do
           {:ok, account_id} ->
-            render_result(conn, BrokerClient.place_order(account_id, body))
+            result = BrokerClient.place_order(account_id, body)
+
+            # Email the user on a successful submission. The trade may
+            # not be filled yet (limit/stop orders sit), but the
+            # subject of the email is "order placed" not "filled".
+            case result do
+              {:ok, order} when is_map(order) ->
+                CryptoPortfolioV3.Notifications.order_placed(
+                  conn.assigns.current_user.id,
+                  order
+                )
+
+              _ ->
+                :ok
+            end
+
+            render_result(conn, result)
 
           {:error, reason} ->
             conn

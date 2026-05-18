@@ -123,6 +123,30 @@ defmodule CryptoPortfolioV3.BrokerFunding.Client do
     delete("/v1/trading/accounts/#{account_id}/orders/#{order_id}")
   end
 
+  @doc """
+  Lists account activities — fills, dividends, deposits, fees, transfers.
+  `opts` is a keyword list passed through as query params; common ones:
+    :activity_types ("FILL,DIV,TRANS"), :date, :until, :after, :direction,
+    :page_size. Endpoint paginates; pass :page_token for subsequent pages.
+  Returns Alpaca's array of per-event objects (heterogeneous shape — keys
+  vary by activity_type).
+  """
+  def list_activities(account_id, opts \\ []) when is_binary(account_id) and is_list(opts) do
+    get("/v1/accounts/#{account_id}/activities", params: opts)
+  end
+
+  @doc """
+  Per-account equity / P&L over time, for charting. `opts` accepts
+  :period ("1D" | "1W" | "1M" | "3M" | "1A" | "all"), :timeframe
+  ("1Min" | "5Min" | "15Min" | "1H" | "1D"), :extended_hours, etc.
+  Returns %{"timestamp" => [...], "equity" => [...], "profit_loss" => [...],
+            "profit_loss_pct" => [...], "base_value" => ..., "timeframe" => ...}.
+  """
+  def get_portfolio_history(account_id, opts \\ [])
+      when is_binary(account_id) and is_list(opts) do
+    get("/v1/trading/accounts/#{account_id}/account/portfolio/history", params: opts)
+  end
+
   # ── helpers ──────────────────────────────────────────────────────────
 
   defp get(path, opts \\ []) do

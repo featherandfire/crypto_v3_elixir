@@ -319,9 +319,27 @@ defmodule CryptoPortfolioV3.BrokerageAccounts do
   def mark_active(%Account{} = a), do: update_kyc_state(a, "active")
 
   defp update_kyc_state(%Account{} = a, state) do
-    a
-    |> Account.changeset(%{kyc_state: state})
-    |> Repo.update()
+    prior = a.kyc_state
+
+    result =
+      a
+      |> Account.changeset(%{kyc_state: state})
+      |> Repo.update()
+
+    # Send the welcome email only on the *transition* into "active".
+    # The refresh + polling paths can call this repeatedly with the
+    # same value; we only want to mail once.
+    if state == "active" and prior != "active" do
+      case result do
+        {:ok, updated} ->
+          CryptoPortfolioV3.Notifications.kyc_approved(updated.user_id, updated)
+
+        _ ->
+          :ok
+      end
+    end
+
+    result
   end
 
   @doc """

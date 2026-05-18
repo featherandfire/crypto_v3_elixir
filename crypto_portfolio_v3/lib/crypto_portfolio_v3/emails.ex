@@ -61,6 +61,153 @@ defmodule CryptoPortfolioV3.Emails do
     """)
   end
 
+  # ── Account / activity notifications ────────────────────────────────────
+  #
+  # These fire from event handlers (deposit/order webhooks, the recurring
+  # scheduler, the auto-fill path) via CryptoPortfolioV3.Notifications.
+  # All non-essential — failure to render or deliver one of these must
+  # not crash the triggering business operation. The caller wraps each
+  # send in a try/rescue.
+
+  @doc "Sent after a deposit's TRANS webhook flips it to completed."
+  @spec deposit_settled_email(map(), map()) :: Swoosh.Email.t()
+  def deposit_settled_email(%{email: email, username: username}, deposit) do
+    amount = Map.get(deposit, :amount) || Map.get(deposit, "amount") || "—"
+
+    new()
+    |> to(email)
+    |> from({@from_name, @from_address})
+    |> subject("abcoins — your deposit cleared")
+    |> text_body("""
+    Hi #{username},
+
+    Your deposit of $#{amount} just settled and is available to invest.
+
+    Open abcoins → Brokerage to see it in your buying power, or place
+    a new order from the Make a Purchase form.
+
+    — abcoins
+    """)
+  end
+
+  @doc "Sent after a withdrawal initiates (mock: completed; prod: queued at Alpaca)."
+  @spec withdrawal_initiated_email(map(), map()) :: Swoosh.Email.t()
+  def withdrawal_initiated_email(%{email: email, username: username}, withdrawal) do
+    amount = Map.get(withdrawal, :amount) || Map.get(withdrawal, "amount") || "—"
+
+    new()
+    |> to(email)
+    |> from({@from_name, @from_address})
+    |> subject("abcoins — withdrawal in progress")
+    |> text_body("""
+    Hi #{username},
+
+    Your withdrawal of $#{amount} is on its way to your linked bank.
+    ACH transfers typically take 1–3 business days.
+
+    You can see it in Brokerage → Account Activity.
+
+    If you didn't initiate this, contact us immediately.
+
+    — abcoins
+    """)
+  end
+
+  @doc "Sent when a buy/sell order is placed against the user's Alpaca account."
+  @spec order_placed_email(map(), map()) :: Swoosh.Email.t()
+  def order_placed_email(%{email: email, username: username}, order) do
+    symbol = Map.get(order, "symbol") || Map.get(order, :symbol) || "—"
+    side = Map.get(order, "side") || Map.get(order, :side) || "—"
+    qty = Map.get(order, "qty") || Map.get(order, :qty) || "—"
+    type = Map.get(order, "type") || Map.get(order, :type) || "market"
+
+    new()
+    |> to(email)
+    |> from({@from_name, @from_address})
+    |> subject("abcoins — #{String.capitalize(to_string(side))} order placed: #{symbol}")
+    |> text_body("""
+    Hi #{username},
+
+    Your #{type} order to #{side} #{qty} share(s) of #{symbol} is on
+    the books. We'll send a follow-up the moment it fills (or expires).
+
+    See it live in Brokerage → Account Activity.
+
+    — abcoins
+    """)
+  end
+
+  @doc "Sent when a wishlist item auto-fills after a deposit settles."
+  @spec wishlist_filled_email(map(), map()) :: Swoosh.Email.t()
+  def wishlist_filled_email(%{email: email, username: username}, item) do
+    symbol = Map.get(item, :symbol) || Map.get(item, "symbol") || "—"
+    qty = Map.get(item, :qty) || Map.get(item, "qty") || "—"
+    qty_str = if is_struct(qty, Decimal), do: Decimal.to_string(qty, :normal), else: to_string(qty)
+
+    new()
+    |> to(email)
+    |> from({@from_name, @from_address})
+    |> subject("abcoins — wishlist auto-fill: #{symbol}")
+    |> text_body("""
+    Hi #{username},
+
+    Your wish-list entry for #{symbol} just executed: #{qty_str} share(s)
+    purchased now that your deposit has settled.
+
+    This is the auto-execute mechanic working — every pending wish-list
+    item fires in order once funds are available.
+
+    — abcoins
+    """)
+  end
+
+  @doc "Sent when the recurring-investment scheduler places a scheduled order."
+  @spec recurring_fired_email(map(), map()) :: Swoosh.Email.t()
+  def recurring_fired_email(%{email: email, username: username}, investment) do
+    symbol = Map.get(investment, :symbol)
+    qty = Map.get(investment, :qty)
+    qty_str = if is_struct(qty, Decimal), do: Decimal.to_string(qty, :normal), else: to_string(qty)
+    cadence = Map.get(investment, :frequency)
+
+    new()
+    |> to(email)
+    |> from({@from_name, @from_address})
+    |> subject("abcoins — recurring #{cadence} buy: #{symbol}")
+    |> text_body("""
+    Hi #{username},
+
+    Your #{cadence} recurring order just ran:
+    Buy #{qty_str} #{symbol}.
+
+    You can pause or cancel this schedule from Brokerage → Recurring
+    Investments at any time.
+
+    — abcoins
+    """)
+  end
+
+  @doc "Sent when Alpaca approves the user's KYC submission."
+  @spec kyc_approved_email(map(), map()) :: Swoosh.Email.t()
+  def kyc_approved_email(%{email: email, username: username}, account) do
+    acct_number = Map.get(account, :alpaca_account_number) || "—"
+
+    new()
+    |> to(email)
+    |> from({@from_name, @from_address})
+    |> subject("abcoins — your brokerage account is live")
+    |> text_body("""
+    Hi #{username},
+
+    Welcome aboard — Alpaca has approved your KYC and your brokerage
+    account is now active. Account number: #{acct_number}.
+
+    You can fund the account from Brokerage → Add Funds and start
+    placing orders right away.
+
+    — abcoins
+    """)
+  end
+
   @doc """
   Contact-form submission. Sends to the configured admin address with
   the visitor's name/email/subject/message inline. `reply_to` is set to

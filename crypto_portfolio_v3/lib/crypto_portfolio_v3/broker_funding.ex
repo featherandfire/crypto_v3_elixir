@@ -37,11 +37,38 @@ defmodule CryptoPortfolioV3.BrokerFunding do
       bank_label: Map.get(attrs, "bank_label") || Map.get(attrs, :bank_label) || "Linked bank",
       reference: gen_reference(),
       status: "pending",
+      direction: "INCOMING",
       note: stamp_stub(user_note)
     }
 
     with {:ok, deposit} <- %Deposit{} |> Deposit.changeset(params) |> Repo.insert() do
       maybe_submit_transfer(deposit, user_id)
+    end
+  end
+
+  @doc """
+  Customer-initiated withdrawal (OUTGOING transfer). Mirrors create_deposit
+  but flips the direction. Same row shape, same table, same status
+  vocabulary — the activity log and the deposit-history list both render
+  these uniformly with a direction badge.
+  """
+  def create_withdrawal(user_id, attrs) when is_integer(user_id) do
+    user_note = Map.get(attrs, "note") || Map.get(attrs, :note)
+    method = normalize_method(Map.get(attrs, "method") || Map.get(attrs, :method))
+
+    params = %{
+      user_id: user_id,
+      amount: Map.get(attrs, "amount") || Map.get(attrs, :amount),
+      method: method,
+      bank_label: Map.get(attrs, "bank_label") || Map.get(attrs, :bank_label) || "Linked bank",
+      reference: gen_reference(),
+      status: "pending",
+      direction: "OUTGOING",
+      note: stamp_stub(user_note)
+    }
+
+    with {:ok, withdrawal} <- %Deposit{} |> Deposit.changeset(params) |> Repo.insert() do
+      maybe_submit_transfer(withdrawal, user_id)
     end
   end
 
@@ -72,11 +99,18 @@ defmodule CryptoPortfolioV3.BrokerFunding do
           transfer_type: "ach",
           relationship_id: relationship.alpaca_relationship_id,
           amount: Decimal.to_string(deposit.amount, :normal),
-          direction: "INCOMING"
+          direction: deposit.direction || "INCOMING"
         }
 
         case Client.create_transfer(account.alpaca_account_id, body) do
           {:ok, %{"id" => transfer_id} = resp} ->
+            # Outgoing transfers (withdrawals) email the user immediately
+            # on successful submission — the meaningful event is "your
+            # money's on its way", not the eventual ACH settlement.
+            if deposit.direction == "OUTGOING" do
+              CryptoPortfolioV3.Notifications.withdrawal_initiated(deposit.user_id, deposit)
+            end
+
             patch_from_alpaca(deposit, transfer_id, resp["status"], resp["instant_amount"])
 
           {:ok, other} ->
@@ -211,6 +245,15 @@ defmodule CryptoPortfolioV3.BrokerFunding do
           CryptoPortfolioV3.AlpacaMock.Server.complete_transfer(id)
         end
 
+        # Deposits notify on settlement — the meaningful event for the
+        # user is "cash available to invest." Withdrawals notify at
+        # submission (in submit_alpaca_transfer below) instead, because
+        # the meaningful event there is "your money's on its way." So
+        # we only fire deposit_settled on the INCOMING path here.
+        if updated.direction != "OUTGOING" do
+          CryptoPortfolioV3.Notifications.deposit_settled(updated.user_id, updated)
+        end
+
         # Newly-settled deposit — try to fill the user's pending wishlist
         # inline. Each fill is ~1-2 Alpaca calls; total <5s for typical
         # wishlists. Doing it synchronously keeps the response window
@@ -218,7 +261,12 @@ defmodule CryptoPortfolioV3.BrokerFunding do
         # the fills are durable, not just queued in a Task that could
         # die. Move to async (Oban/Task.Supervisor) once we need higher
         # throughput than one fill batch per webhook.
-        attempt_wishlist_fills(updated.user_id)
+        # Only run wishlist fills on INCOMING (deposits credited cash).
+        # OUTGOING withdrawals don't add buying power, so there's nothing
+        # to fill.
+        if updated.direction != "OUTGOING" do
+          attempt_wishlist_fills(updated.user_id)
+        end
       end
 
       {:ok, updated}
@@ -291,6 +339,7 @@ defmodule CryptoPortfolioV3.BrokerFunding do
     case Client.place_order(account_id, body) do
       {:ok, %{"id" => order_id}} ->
         WishlistItems.mark_filled(item, order_id)
+        CryptoPortfolioV3.Notifications.wishlist_filled(item.user_id, item)
         {:ok, item}
 
       {:error, {:http_error, _, body}} ->
@@ -332,7 +381,18 @@ defmodule CryptoPortfolioV3.BrokerFunding do
     limit = Keyword.get(opts, :limit, 50)
 
     Deposit
-    |> where([d], d.user_id == ^user_id)
+    |> where([d], d.user_id == ^user_id and d.direction == "INCOMING")
+    |> order_by([d], desc: d.inserted_at)
+    |> limit(^limit)
+    |> Repo.all()
+  end
+
+  @doc "Mirror of list_deposits/2 for the OUTGOING side (withdrawals)."
+  def list_withdrawals(user_id, opts \\ []) when is_integer(user_id) do
+    limit = Keyword.get(opts, :limit, 50)
+
+    Deposit
+    |> where([d], d.user_id == ^user_id and d.direction == "OUTGOING")
     |> order_by([d], desc: d.inserted_at)
     |> limit(^limit)
     |> Repo.all()

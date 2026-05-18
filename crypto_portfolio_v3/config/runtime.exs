@@ -90,6 +90,24 @@ config :crypto_portfolio_v3, :alpaca,
   data_url: System.get_env("ALPACA_DATA_URL", "https://data.alpaca.markets"),
   timeout_ms: String.to_integer(System.get_env("ALPACA_TIMEOUT_MS", "10000"))
 
+# Finnhub — secondary news provider, layered on top of Alpaca News to
+# diversify sources (Reuters, MarketWatch, Yahoo, CNBC, SeekingAlpha,
+# etc. — beyond Alpaca's Benzinga-only free tier). If FINNHUB_API_KEY
+# is unset, the news aggregator silently falls back to Alpaca-only.
+# Free tier: 60 req/min — enough since News.for_symbol caches per-symbol.
+config :crypto_portfolio_v3, :finnhub,
+  api_key: System.get_env("FINNHUB_API_KEY"),
+  base_url: System.get_env("FINNHUB_BASE_URL", "https://finnhub.io/api/v1")
+
+# Polygon.io — primary company-profile source. Free tier exposes HQ
+# address, employee count, and SIC description (the fields Finnhub
+# gates behind a paid plan). 5 req/min limit; CompanyProfile cache is
+# 24h per symbol so we comfortably stay under it. Without the key,
+# CryptoPortfolioV3.CompanyProfile falls back to Finnhub free profile.
+config :crypto_portfolio_v3, :polygon,
+  api_key: System.get_env("POLYGON_API_KEY"),
+  base_url: System.get_env("POLYGON_BASE_URL", "https://api.polygon.io")
+
 config :crypto_portfolio_v3, :solana,
   rpc_url: System.get_env("SOLANA_RPC_URL", "https://api.mainnet-beta.solana.com"),
   timeout_ms: String.to_integer(System.get_env("SOLANA_TIMEOUT_MS", "12000")),

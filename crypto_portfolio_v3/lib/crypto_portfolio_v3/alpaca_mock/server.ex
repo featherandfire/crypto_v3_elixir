@@ -65,13 +65,28 @@ defmodule CryptoPortfolioV3.AlpacaMock.Server do
   def place_order(account_id, payload),
     do: GenServer.call(__MODULE__, {:place_order, account_id, payload})
 
+  def list_activities(account_id),
+    do: GenServer.call(__MODULE__, {:list_activities, account_id})
+
+  def get_portfolio_history(account_id),
+    do: GenServer.call(__MODULE__, {:get_portfolio_history, account_id})
+
   @doc "Wipes all state. Useful between test runs if needed (the suite doesn't currently need it)."
   def reset, do: GenServer.call(__MODULE__, :reset)
 
   # ── GenServer ───────────────────────────────────────────────────────────
 
   @impl true
-  def init(_), do: {:ok, blank_state()}
+  def init(_) do
+    # Mock state is in-memory, but our DB persists `brokerage_accounts`
+    # across restarts. Without a seed step, every Phoenix reboot would
+    # orphan existing rows — their alpaca_account_id would refer to
+    # accounts the mock no longer knows about, and the trading-account
+    # endpoint would 404. Seeding closes that gap so manual dev sessions
+    # (e.g. signing in as a real user, then restarting Phoenix) keep
+    # working without DB surgery.
+    {:ok, seed_from_db(blank_state())}
+  end
 
   defp blank_state do
     %{
@@ -86,6 +101,57 @@ defmodule CryptoPortfolioV3.AlpacaMock.Server do
       # alpaca_id => Decimal
       cash: %{}
     }
+  end
+
+  # Reads existing brokerage_accounts + completed broker_deposits rows
+  # and replays them into the mock so the dev session "remembers" prior
+  # onboarding and funding across Phoenix restarts. Without this, a
+  # restart orphans the DB row (trading-account 404s) and zeroes the
+  # buying power (every order rejects).
+  #
+  # Cash seeded as the sum of completed deposits — an over-estimate
+  # when historical orders had drawn it down, but harmless for dev
+  # (no real money at risk), and any new order placement still flows
+  # through the mock's deduction path so accounting stays internally
+  # consistent from this restart forward.
+  #
+  # Errors are non-fatal — if Repo is unavailable mid-boot or the
+  # tables don't exist yet (e.g. fresh checkout), the mock just starts
+  # empty rather than blocking Phoenix from coming up.
+  defp seed_from_db(state) do
+    try do
+      import Ecto.Query
+      alias CryptoPortfolioV3.{Repo, BrokerageAccounts.Account, BrokerFunding.Deposit}
+
+      accounts = Repo.all(Account)
+
+      # Sum completed deposits per user_id once, then look up by user.
+      cash_by_user =
+        from(d in Deposit, where: d.status == "completed", select: {d.user_id, d.amount})
+        |> Repo.all()
+        |> Enum.group_by(fn {uid, _} -> uid end, fn {_, amt} -> amt end)
+        |> Map.new(fn {uid, amts} ->
+          {uid, Enum.reduce(amts, @decimal_zero, &Decimal.add/2)}
+        end)
+
+      Enum.reduce(accounts, state, fn a, acc ->
+        cash = Map.get(cash_by_user, a.user_id, @decimal_zero)
+
+        acc
+        |> put_in([:accounts, a.alpaca_account_id], %{
+          "id" => a.alpaca_account_id,
+          "account_number" => a.alpaca_account_number,
+          "status" => a.status || "ACTIVE",
+          "currency" => "USD",
+          "created_at" => DateTime.to_iso8601(a.inserted_at)
+        })
+        |> put_in([:cash, a.alpaca_account_id], cash)
+        |> put_in([:orders, a.alpaca_account_id], [])
+        |> put_in([:ach, a.alpaca_account_id], [])
+      end)
+    rescue
+      _ -> state
+    end
   end
 
   @impl true
@@ -146,22 +212,63 @@ defmodule CryptoPortfolioV3.AlpacaMock.Server do
   end
 
   def handle_call({:create_transfer, account_id, payload}, _from, state) do
-    transfer = %{
-      "id" => uuid(),
-      "account_id" => account_id,
-      "amount" => to_string_amount(Map.get(payload, "amount")),
-      "direction" => Map.get(payload, "direction") || "INCOMING",
-      "transfer_type" => Map.get(payload, "transfer_type") || "ach",
-      "relationship_id" => Map.get(payload, "relationship_id"),
-      # QUEUED, not COMPLETE — the deposit webhook (`complete_transfer/1`)
-      # is responsible for flipping it. Mirrors production: Alpaca queues
-      # the ACH, then the bank-side webhook fires later.
-      "status" => "QUEUED",
-      "instant_amount" => "0",
-      "created_at" => iso_now()
-    }
+    direction = Map.get(payload, "direction") || "INCOMING"
+    amount_str = to_string_amount(Map.get(payload, "amount"))
+    amount = Decimal.new(amount_str)
 
-    {:reply, {:ok, transfer}, put_in(state, [:transfers, transfer["id"]], transfer)}
+    cond do
+      direction == "OUTGOING" ->
+        cash = Map.get(state.cash, account_id, @decimal_zero)
+
+        if Decimal.compare(cash, amount) == :lt do
+          # Insufficient cash → mirror Alpaca's 422 with a clear message
+          # so our controller surfaces it as alpaca_http_422.
+          {:reply,
+           {:error,
+            %{"code" => 40010002, "message" => "insufficient cash for withdrawal"}}, state}
+        else
+          # Withdrawals settle instantly in the mock (no separate webhook
+          # path on our side for outbound). Debit cash, mark COMPLETE.
+          transfer = %{
+            "id" => uuid(),
+            "account_id" => account_id,
+            "amount" => amount_str,
+            "direction" => "OUTGOING",
+            "transfer_type" => Map.get(payload, "transfer_type") || "ach",
+            "relationship_id" => Map.get(payload, "relationship_id"),
+            "status" => "COMPLETE",
+            "instant_amount" => "0",
+            "created_at" => iso_now()
+          }
+
+          new_cash = Decimal.sub(cash, amount)
+
+          state =
+            state
+            |> put_in([:transfers, transfer["id"]], transfer)
+            |> put_in([:cash, account_id], new_cash)
+
+          {:reply, {:ok, transfer}, state}
+        end
+
+      true ->
+        transfer = %{
+          "id" => uuid(),
+          "account_id" => account_id,
+          "amount" => amount_str,
+          "direction" => "INCOMING",
+          "transfer_type" => Map.get(payload, "transfer_type") || "ach",
+          "relationship_id" => Map.get(payload, "relationship_id"),
+          # QUEUED, not COMPLETE — the deposit webhook (`complete_transfer/1`)
+          # is responsible for flipping it. Mirrors production: Alpaca queues
+          # the ACH, then the bank-side webhook fires later.
+          "status" => "QUEUED",
+          "instant_amount" => "0",
+          "created_at" => iso_now()
+        }
+
+        {:reply, {:ok, transfer}, put_in(state, [:transfers, transfer["id"]], transfer)}
+    end
   end
 
   def handle_call({:complete_transfer, transfer_id}, _from, state) do
@@ -270,6 +377,88 @@ defmodule CryptoPortfolioV3.AlpacaMock.Server do
 
         {:reply, {:ok, order}, state}
     end
+  end
+
+  def handle_call({:list_activities, account_id}, _from, state) do
+    # Synthesize from existing state: every completed transfer becomes a
+    # TRANS activity, every order becomes a FILL. Matches the shape
+    # frontends expect (id, activity_type, transaction_time + per-type
+    # fields) closely enough that no client-side branching is needed.
+    transfer_acts =
+      state.transfers
+      |> Map.values()
+      |> Enum.filter(fn t -> t["account_id"] == account_id and t["status"] == "COMPLETE" end)
+      |> Enum.map(fn t ->
+        %{
+          "id" => "trans-#{t["id"]}",
+          "activity_type" => "TRANS",
+          "account_id" => account_id,
+          "transaction_time" => t["created_at"],
+          "net_amount" => t["amount"],
+          "description" =>
+            "ACH deposit (#{t["direction"] || "INCOMING"})",
+          "status" => "executed"
+        }
+      end)
+
+    order_acts =
+      state.orders
+      |> Map.get(account_id, [])
+      |> Enum.map(fn o ->
+        %{
+          "id" => "fill-#{o["id"]}",
+          "activity_type" => "FILL",
+          "account_id" => account_id,
+          "transaction_time" => o["filled_at"] || o["submitted_at"],
+          "symbol" => o["symbol"],
+          "qty" => o["qty"],
+          "side" => o["side"],
+          "type" => "fill",
+          "order_id" => o["id"],
+          "price" => "1.00",
+          "net_amount" => "1.00"
+        }
+      end)
+
+    activities =
+      (transfer_acts ++ order_acts)
+      |> Enum.sort_by(& &1["transaction_time"], :desc)
+
+    {:reply, {:ok, activities}, state}
+  end
+
+  def handle_call({:get_portfolio_history, account_id}, _from, state) do
+    # 30-point series at hourly intervals ending now, flat at the
+    # account's current cash. Enough to render the chart in dev; tests
+    # don't assert on shape so a constant series is the lowest-effort
+    # implementation that keeps the UI honest about "no real history yet".
+    now = DateTime.utc_now() |> DateTime.truncate(:second)
+    n = 30
+    step_seconds = 3600
+
+    cash = Map.get(state.cash, account_id, @decimal_zero)
+    cash_float = cash |> Decimal.to_float()
+
+    timestamps =
+      0..(n - 1)
+      |> Enum.map(fn i ->
+        DateTime.add(now, -(n - 1 - i) * step_seconds, :second) |> DateTime.to_unix()
+      end)
+
+    equity = for _ <- 1..n, do: cash_float
+    profit_loss = for _ <- 1..n, do: 0.0
+    profit_loss_pct = for _ <- 1..n, do: 0.0
+
+    history = %{
+      "timestamp" => timestamps,
+      "equity" => equity,
+      "profit_loss" => profit_loss,
+      "profit_loss_pct" => profit_loss_pct,
+      "base_value" => cash_float,
+      "timeframe" => "1H"
+    }
+
+    {:reply, {:ok, history}, state}
   end
 
   def handle_call(:reset, _from, _state), do: {:reply, :ok, blank_state()}
