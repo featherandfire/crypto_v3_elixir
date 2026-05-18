@@ -1475,6 +1475,17 @@ const STOCK_SCREENER: ScreenerCategory[] = [
       { symbol: 'POET', name: 'POET Technologies',      note: 'Semis — silicon photonics for AI data-center interconnects.' },
       { symbol: 'EMKR', name: 'EMCORE',                 note: 'Semis — RF photonics and inertial navigation chips.' },
       { symbol: 'PXLW', name: 'Pixelworks',             note: 'Semis — video processors for mobile and projectors.' },
+      // Sub-$10 semis & semi-adjacent silicon — IoT, MEMS, LiDAR, and
+      // niche fab IP. High beta, volatile, but the cheapest entry
+      // points into chip exposure.
+      { symbol: 'SQNS', name: 'Sequans Communications', note: 'Semis — cellular IoT and 5G chips (French ADR).' },
+      { symbol: 'MVIS', name: 'MicroVision',            note: 'Semis — MEMS laser-scanning chips for LiDAR and AR.' },
+      { symbol: 'ATOM', name: 'Atomera',                note: 'Semis — MST materials IP licensed to chip foundries.' },
+      { symbol: 'KOPN', name: 'Kopin',                  note: 'Semis — microdisplays for AR/VR headsets and defense optics.' },
+      { symbol: 'DAIO', name: 'Data I/O',               note: 'Semis — programming and test equipment for chips and modules.' },
+      { symbol: 'LAZR', name: 'Luminar Technologies',   note: 'Semis — LiDAR sensor chips for autonomous vehicles.' },
+      { symbol: 'INVZ', name: 'Innoviz Technologies',   note: 'Semis — automotive LiDAR sensors for OEM ADAS programs.' },
+      { symbol: 'AEYE', name: 'AEye',                   note: 'Semis — adaptive LiDAR for ADAS and industrial automation.' },
       { symbol: 'BABA', name: 'Alibaba',               note: 'China — e-commerce (Taobao, Tmall) and cloud.' },
       { symbol: 'JD',   name: 'JD.com',                note: 'China — e-commerce and logistics.' },
       { symbol: 'PDD',  name: 'PDD Holdings',          note: 'China — Pinduoduo / Temu parent.' },
@@ -2087,6 +2098,14 @@ function sampleLogoDominantColors(url: string, topK = 6): Promise<string[] | nul
 // color already claimed by another slice.
 const logoColorCache = new Map<string, string[]>();
 
+// Hand-picked brand colors for tickers whose Logo.dev render fools the
+// auto-sampler — WU's yellow wordmark sits on so much black background
+// that the dominant-pixel pass picks a near-black bucket. Override
+// trumps both the cached sample and the chip fallback.
+const BRAND_COLOR_OVERRIDES: Record<string, string> = {
+  WU: '#FFDD00',
+};
+
 // Bucket a hex into the same 32-step quantization the sampler uses so two
 // near-identical sampled colors hash to the same key — that's what makes
 // "is this color already taken by another slice" robust against minor
@@ -2161,6 +2180,18 @@ const BROKERAGE_HERO_STACK: string[] = [
   'O', 'AMT', 'PLD', 'EQIX', 'SPG',
   // Exchanges & financial data
   'ICE', 'CME', 'NDAQ', 'MCO', 'MSCI',
+  // Additions — fill out under-represented sectors with logos that read
+  // distinctly from anything already in the stack.
+  'GE',    // industrials — General Electric
+  'UPS',   // logistics — United Parcel Service
+  'FDX',   // logistics — FedEx
+  'ABBV',  // pharma — AbbVie
+  'CRWD',  // cybersecurity — CrowdStrike
+  'TMO',   // life sciences — Thermo Fisher
+  'ISRG',  // medtech — Intuitive Surgical
+  'TJX',   // off-price retail — TJX Companies
+  'MNST',  // beverages — Monster Beverage
+  'APD',   // specialty chemicals — Air Products
 ];
 
 // Bottom-strip ticker symbols. Mix of broad-market index ETFs and well-
@@ -6636,6 +6667,8 @@ window.dashApp = () => ({
   // have one; otherwise falls back to the symbol's chip color so the
   // chart has something to render before the async sampler completes.
   _logoColorFor(this: any, symbol: string): string {
+    const override = BRAND_COLOR_OVERRIDES[symbol];
+    if (override) return override;
     const cached = logoColorCache.get(symbol);
     if (cached && cached.length) return cached[0];
     return CHIP_COLORS[this.chipForPosition(symbol)] || CHIP_COLORS.Other;
@@ -6650,6 +6683,11 @@ window.dashApp = () => ({
   _assignLogoColors(this: any, symbols: string[]): string[] {
     const used = new Set<string>();
     return symbols.map((sym) => {
+      const override = BRAND_COLOR_OVERRIDES[sym];
+      if (override) {
+        used.add(quantizeHex(override));
+        return override;
+      }
       const palette = logoColorCache.get(sym) || [];
       for (const hex of palette) {
         const key = quantizeHex(hex);
@@ -6771,6 +6809,7 @@ window.dashApp = () => ({
     state: 'holdingsChart' | 'holdingsDividendChart' | 'holdingsPriceChart';
     valueSuffix?: string;
     colors?: string[];
+    labelsAreTickers?: boolean;
   }) {
     const canvas = document.querySelector<HTMLCanvasElement>(opts.selector);
     if (!canvas) return;
@@ -6823,12 +6862,27 @@ window.dashApp = () => ({
             borderWidth: 1,
             titleColor: '#e8e0ff',
             bodyColor: '#e8e0ff',
+            titleFont: { size: 14, weight: 'bold' },
+            padding: 10,
             callbacks: {
+              // Logo palette: each slice is a single ticker — promote it
+              // to the title so the ticker is the loud, large line, with
+              // value + percent + company name below.
+              title: (items: any[]) => {
+                if (!items.length) return '';
+                return items[0].label;
+              },
               label: (ctx: any) => {
                 const v = ctx.parsed;
                 const total = (ctx.dataset.data as number[]).reduce((a, b) => a + b, 0);
                 const pct = total > 0 ? (v / total) * 100 : 0;
-                return `${ctx.label}: ${this.fmtUSD(v)}${suffix} (${pct.toFixed(1)}%)`;
+                if (opts.labelsAreTickers) {
+                  const name = this.nameForPosition(ctx.label);
+                  const lines = [`${this.fmtUSD(v)}${suffix} (${pct.toFixed(1)}%)`];
+                  if (name && name !== ctx.label) lines.push(name);
+                  return lines;
+                }
+                return `${this.fmtUSD(v)}${suffix} (${pct.toFixed(1)}%)`;
               },
               afterLabel: (ctx: any) => {
                 // Only the Other slice gets a tickers list — the rest are
@@ -6962,6 +7016,7 @@ window.dashApp = () => ({
       breakdown,
       state: 'holdingsChart',
       colors,
+      labelsAreTickers: true,
     });
     // Kick off async sampling for any symbols not yet in the color cache;
     // re-render the chart once new colors arrive so the palette upgrades
@@ -6995,6 +7050,7 @@ window.dashApp = () => ({
       state: 'holdingsDividendChart',
       valueSuffix: '/yr',
       colors,
+      labelsAreTickers: true,
     });
     this._warmLogoColors(breakdown.labels, () => {
       this.$nextTick(() => this.renderHoldingsDividendChart());

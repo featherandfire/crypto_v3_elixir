@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Crypto Portfolio Tracker</title>
+  <title>broke 2Brokerage</title>
   <link rel="icon" type="image/svg+xml" href="./static/favicon/chain-icon.svg">
   <link rel="apple-touch-icon" href="./static/favicon/chain-icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -531,58 +531,69 @@ syncGrade();
       </div>
     </header>
 
+    <!-- Chain animation pinned to the very top of the landing flow,
+         right under the nav — same SVG as the lower `.landing-chain`
+         section so the motif bookends the hero. -->
+    <section class="landing-chain landing-chain-top">
+      <img src="/static/favicon/b2b-chain.svg" alt="Chain links connecting learning and investing" class="landing-chain-img" />
+    </section>
+
     <section class="landing-hero">
       <img src="/static/favicon/b2b-logo.svg" alt="Broke 2 Brokerage" class="landing-hero-brand" />
       <h1 class="landing-hero-title">
-        The credit card<br>
-        that turns spending<br>
-        <em>into investing.</em>
+        Invest on your<br>
+        own terms — with<br>
+        <em>the knowledge to do it well,<br>
+        so your future is well to do.</em>
       </h1>
       <p class="landing-hero-sub">
-        Earn rewards that don't expire — they get invested directly into your own brokerage account.
-        Every swipe builds wealth instead of points.
+        A self-directed brokerage built around teaching, not selling. Every ticker, sector,
+        and order type comes with a plain-English explanation — so the only thing standing
+        between you and the market is your own decision.
       </p>
-      <p class="landing-hero-tagline">We're built to build you, not bill you.</p>
+      <p class="landing-hero-tagline">We do business the way business was meant to be.</p>
       <div class="landing-hero-cta">
         <button type="button" class="landing-btn primary large" @click="view='auth'; tab='register'">Get Started — Free</button>
         <button type="button" class="landing-btn ghost large" @click="view='auth'; tab='login'">I already have an account</button>
       </div>
       <div class="landing-hero-meta">
-        <span>No annual fee</span>
+        <span>No advisor fees</span>
         <span class="landing-hero-meta-dot">·</span>
         <span>Education built-in</span>
         <span class="landing-hero-meta-dot">·</span>
-        <span>FDIC-insured cash, SIPC-insured investments</span>
+        <span>SIPC-insured investments</span>
+        <span class="landing-hero-meta-dot">·</span>
+        <span>Transparent billing and agreements</span>
       </div>
     </section>
 
     <section class="landing-chain">
-      <div class="landing-chain-eyebrow">Building the connection</div>
-      <img src="/static/favicon/b2b-chain.svg" alt="Chain links connecting credit and investing" class="landing-chain-img" />
+      <div class="landing-chain-eyebrow">Connecting curiosity to confidence</div>
+      <img src="/static/favicon/b2b-chain.svg" alt="Chain links connecting learning and investing" class="landing-chain-img" />
     </section>
 
     <section class="landing-pillars">
       <div class="landing-pillar">
         <div class="landing-pillar-num">01</div>
-        <h3>Spend like normal</h3>
-        <p>Use your card the way you already use credit cards. Groceries, gas, rent, the whole life. We handle the rest.</p>
+        <h3>Learn what you're buying</h3>
+        <p>Every stock and ETF in the screener comes with a one-line summary: what the company actually does, what sector it sits in, why people own it. No jargon walls.</p>
       </div>
       <div class="landing-pillar">
         <div class="landing-pillar-num">02</div>
-        <h3>Rewards become investments</h3>
-        <p>A percentage of every purchase is automatically deposited into your linked brokerage account — invested in stocks, ETFs, or held as cash.</p>
+        <h3>Choose with intention</h3>
+        <p>Filter by industry, dividend yield, share price, or theme. Star what catches your eye, build a wishlist, and let the price tell you when to act — on your timeline, not anyone else's.</p>
       </div>
       <div class="landing-pillar">
         <div class="landing-pillar-num">03</div>
-        <h3>Learn while you earn</h3>
-        <p>The app explains what you're holding, why it matters, and how to think about it — embedded into the moments you actually decide.</p>
+        <h3>Invest with confidence</h3>
+        <p>Place market, limit, stop, and recurring orders. Track holdings, dividends, and projected growth. Every order type has a built-in explainer — so you know exactly what you're doing.</p>
       </div>
     </section>
 
     <section class="landing-stats" id="why">
       <div class="landing-stats-headline">
-        <h2>The system is broken. We're rewiring it.</h2>
-        <p>Half of Americans don't invest — and the financial industry has spent fifty years confirming that's how it should be. We disagree.</p>
+        <h2>Investing is too important to outsource.</h2>
+        <p>Half of American adults don't invest — not because they can't, but because the industry has spent fifty years convincing them it's complicated. The data, the tools, and the knowledge to do it well are all here in one place. The only thing missing is your decision.</p>
       </div>
       <div class="landing-stats-grid">
         <div class="landing-stat">
@@ -590,41 +601,41 @@ syncGrade();
           <div class="landing-stat-label">of U.S. adults don't hold investment assets <span class="landing-stat-source">(Janus Henderson, 2024)</span></div>
         </div>
         <div class="landing-stat">
-          <div class="landing-stat-value">$9,600</div>
-          <div class="landing-stat-label">avg credit-card balance for Gen X — peak debt cohort <span class="landing-stat-source">(Experian, 2025)</span></div>
+          <div class="landing-stat-value">1%</div>
+          <div class="landing-stat-label">typical advisor AUM fee — roughly a third of your returns over 30 years <span class="landing-stat-source">(industry standard)</span></div>
         </div>
         <div class="landing-stat">
-          <div class="landing-stat-value">85–90%</div>
-          <div class="landing-stat-label">of card-industry net revenue comes from revolvers <span class="landing-stat-source">(McKinsey, 2022)</span></div>
+          <div class="landing-stat-value">$0</div>
+          <div class="landing-stat-label">commission on stock + ETF trades — what self-directed investing actually costs today</div>
         </div>
         <div class="landing-stat">
-          <div class="landing-stat-value">3–4%</div>
-          <div class="landing-stat-label">annual growth in younger-generation balances — driven by rent, groceries, BNPL</div>
+          <div class="landing-stat-value">$122K</div>
+          <div class="landing-stat-label">what $100/month becomes after 30 years at 7% — the math doesn't care when you start, only that you do</div>
         </div>
       </div>
     </section>
 
     <section class="landing-mechanism" id="how-it-works">
       <h2>How it works</h2>
-      <p class="landing-mechanism-sub">Three steps from swipe to portfolio</p>
+      <p class="landing-mechanism-sub">Three steps from "I don't know where to start" to your first position</p>
       <div class="landing-flow">
         <div class="landing-flow-box landing-flow-customer">
           <div class="landing-flow-amount">01</div>
-          <div class="landing-flow-label">Use your credit card</div>
+          <div class="landing-flow-label">Browse stocks &amp; ETFs with built-in explanations of what each one is</div>
         </div>
         <div class="landing-flow-arrow">→</div>
         <div class="landing-flow-box landing-flow-fees">
           <div class="landing-flow-amount">02</div>
-          <div class="landing-flow-label">We deposit funds into your brokerage account</div>
+          <div class="landing-flow-label">Wishlist what interests you; learn while you wait for the right price</div>
         </div>
         <div class="landing-flow-arrow">→</div>
         <div class="landing-flow-box landing-flow-company">
           <div class="landing-flow-amount">03</div>
-          <div class="landing-flow-label">Invest your funds, we educate you on what you need to know</div>
+          <div class="landing-flow-label">Place the order yourself — confident, informed, in control</div>
         </div>
       </div>
       <p class="landing-mechanism-foot">
-        That's the alignment: <strong>your gain is the goal.</strong> We do well when you do well.
+        That's the alignment: <strong>your decision, your gain.</strong> We make money when you stay — not when you trade.
       </p>
     </section>
 
@@ -632,28 +643,28 @@ syncGrade();
       <h2>Common questions</h2>
       <div class="landing-faq-grid">
         <div class="landing-faq-item">
-          <h3>Is this a brokerage or a credit card?</h3>
-          <p>Both. use the credit card as normal; We create your brokerage account and automatically add rewards for spending; We </p>
+          <h3>Do I need to know how to invest already?</h3>
+          <p>No. The whole platform is built for someone making their first decision. Every screener row, order type, and sector comes with a plain-English explanation — so the knowledge builds while you browse.</p>
         </div>
         <div class="landing-faq-item">
-          <h3>What if I carry a balance?</h3>
-          <p>We don't make money pushing you into debt. The card has a competitive APR and a clear paydown plan; if you carry a balance, we still want you investing — even small amounts compound.</p>
+          <h3>What if I'm not sure what to buy?</h3>
+          <p>Start by wishlisting. Pick a few tickers that catch your eye, read what they actually do, watch how they move. There's no pressure to place an order until you understand what you're buying — and the app keeps teaching you the whole time.</p>
         </div>
         <div class="landing-faq-item">
           <h3>Are my investments insured?</h3>
-          <p>Cash held with our brokerage partner is FDIC-insured up to $250K. Investments are SIPC-protected up to $500K. Market risk on the investments themselves is real — we'll teach you about it as you go.</p>
+          <p>Investments are SIPC-protected up to $500K through our brokerage partner. Market risk on the investments themselves is real — we'll teach you about it as you go, so you can make decisions with eyes open.</p>
         </div>
         <div class="landing-faq-item">
           <h3>Who's this for?</h3>
-          <p>Anyone who's been told investing isn't for them. First-time investors, people rebuilding credit, families who want their money working in two places at once.</p>
+          <p>Anyone who's been told investing is for someone else. First-time investors, people who've tried other platforms and felt lost, and anyone who wants to understand what they own — not just hope the algorithm gets it right.</p>
         </div>
       </div>
     </section>
 
     <section class="landing-cta-final">
-      <h2>Build wealth without changing how you spend.</h2>
+      <h2>Make your first investment with confidence.</h2>
       <button type="button" class="landing-btn primary large" @click="view='auth'; tab='register'">Get Started — Free</button>
-      <p class="landing-cta-sub">Takes about 2 minutes. No credit pull until you actually apply for the card.</p>
+      <p class="landing-cta-sub">Takes about 2 minutes. No commitment until you decide to place an order.</p>
     </section>
 
     <footer class="landing-footer">
@@ -666,7 +677,7 @@ syncGrade();
         <button type="button" class="landing-link" @click="view='auth'; tab='register'">Get Started</button>
       </div>
       <div class="landing-footer-fine">
-        © Feather &amp; Fire. Brokerage services provided through our brokerage partner. Card issued by our sponsor bank.
+        © Feather &amp; Fire. Brokerage services provided through our brokerage partner.
         Investing involves risk including loss of principal. Past performance is not indicative of future results.
       </div>
     </footer>
@@ -2641,36 +2652,6 @@ syncGrade();
                 <span class="brokerage-paper-tag">Paper</span>
               </h2>
               <p class="page-subtitle">Live snapshot of your Alpaca paper-trading account. Polls every 30 seconds.</p>
-              <div class="brokerage-hero-stack">
-                <div class="brokerage-hero-track">
-                  <template x-for="sym in brokerageHeroStack" :key="'hero-a-' + sym">
-                    <div class="coin-stack-wrap" style="cursor:pointer" @click="pickScreenerSymbol(sym)">
-                      <img class="coin-stack-icon"
-                           :src="logoUrlFor(sym, 96)"
-                           :alt="sym"
-                           @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
-                      <div class="coin-stack-icon coin-stack-fallback"
-                           style="display:none"
-                           x-text="sym.slice(0, 4)"></div>
-                      <span class="coin-stack-tip" x-text="sym"></span>
-                    </div>
-                  </template>
-                  <!-- Duplicate set required for seamless infinite-loop CSS
-                       marquee — without it the scroll resets visibly. -->
-                  <template x-for="sym in brokerageHeroStack" :key="'hero-b-' + sym">
-                    <div class="coin-stack-wrap" style="cursor:pointer" @click="pickScreenerSymbol(sym)" aria-hidden="true">
-                      <img class="coin-stack-icon"
-                           :src="logoUrlFor(sym, 96)"
-                           :alt="sym"
-                           @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
-                      <div class="coin-stack-icon coin-stack-fallback"
-                           style="display:none"
-                           x-text="sym.slice(0, 4)"></div>
-                      <span class="coin-stack-tip" x-text="sym"></span>
-                    </div>
-                  </template>
-                </div>
-              </div>
             </div>
             <button type="button" class="page-back-btn icon-only" @click="loadBrokerage()" title="Refresh" aria-label="Refresh" :disabled="loadingBrokerage">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="loadingBrokerage ? 'animation: spin 1s linear infinite' : ''"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -2710,6 +2691,41 @@ syncGrade();
                 Wish List
                 <span x-show="wishList.length" class="wishlist-count" x-text="wishList.length" data-testid="wishlist-count"></span>
               </button>
+            </div>
+          </div>
+
+          <!-- Pulled out of .page-title-block so it spans the full content
+               width (= same right edge as the brokerage-stats grid below)
+               instead of being capped by the flex column that shares the
+               row with Refresh + FX + Wish List. -->
+          <div class="brokerage-hero-stack">
+            <div class="brokerage-hero-track">
+              <template x-for="sym in brokerageHeroStack" :key="'hero-a-' + sym">
+                <div class="coin-stack-wrap" style="cursor:pointer" @click="pickScreenerSymbol(sym)">
+                  <img class="coin-stack-icon"
+                       :src="logoUrlFor(sym, 96)"
+                       :alt="sym"
+                       @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
+                  <div class="coin-stack-icon coin-stack-fallback"
+                       style="display:none"
+                       x-text="sym.slice(0, 4)"></div>
+                  <span class="coin-stack-tip" x-text="sym"></span>
+                </div>
+              </template>
+              <!-- Duplicate set required for seamless infinite-loop CSS
+                   marquee — without it the scroll resets visibly. -->
+              <template x-for="sym in brokerageHeroStack" :key="'hero-b-' + sym">
+                <div class="coin-stack-wrap" style="cursor:pointer" @click="pickScreenerSymbol(sym)" aria-hidden="true">
+                  <img class="coin-stack-icon"
+                       :src="logoUrlFor(sym, 96)"
+                       :alt="sym"
+                       @error="$el.style.display='none'; $el.nextElementSibling.style.display='flex'" />
+                  <div class="coin-stack-icon coin-stack-fallback"
+                       style="display:none"
+                       x-text="sym.slice(0, 4)"></div>
+                  <span class="coin-stack-tip" x-text="sym"></span>
+                </div>
+              </template>
             </div>
           </div>
 
