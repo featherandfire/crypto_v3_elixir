@@ -1,4 +1,4 @@
-# abcoins
+# broke 2Brokerage
 
 Self-directed brokerage app — stocks, ETFs, dividends, recurring
 investments, wishlist auto-execute. Elixir/Phoenix API backend with an
