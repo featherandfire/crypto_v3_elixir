@@ -8,6 +8,12 @@
 # ── Stage 1: frontend build ───────────────────────────────────────────────
 FROM node:22-bookworm-slim AS frontend
 WORKDIR /app/frontend
+# Vite inlines VITE_* env vars at build time, so anything the bundle
+# needs has to be present here, not at runtime on the Fly machine.
+# logo.dev's free-tier token is already exposed in the client bundle
+# regardless, so passing it as a plain build-arg is fine.
+ARG VITE_LOGO_DEV_TOKEN=""
+ENV VITE_LOGO_DEV_TOKEN=$VITE_LOGO_DEV_TOKEN
 COPY frontend/package.json frontend/package-lock.json ./
 RUN npm ci
 COPY frontend/ ./

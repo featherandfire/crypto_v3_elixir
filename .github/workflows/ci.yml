@@ -112,6 +112,13 @@ jobs:
         # Build context is the repo root because the Dockerfile copies
         # both frontend/ and brokerage/. --dockerfile forces flyctl to
         # use cwd as context instead of the config's directory.
-        run: flyctl deploy --remote-only --config brokerage/fly.toml --dockerfile brokerage/Dockerfile
+        # VITE_* are inlined at build time, so we pass them through as
+        # build args rather than fly secrets.
+        run: |
+          flyctl deploy --remote-only \
+            --config brokerage/fly.toml \
+            --dockerfile brokerage/Dockerfile \
+            --build-arg VITE_LOGO_DEV_TOKEN="${VITE_LOGO_DEV_TOKEN}"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          VITE_LOGO_DEV_TOKEN: ${{ secrets.VITE_LOGO_DEV_TOKEN }}
