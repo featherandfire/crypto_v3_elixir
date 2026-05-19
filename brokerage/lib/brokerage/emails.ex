@@ -2,13 +2,39 @@ defmodule Brokerage.Emails do
   @moduledoc """
   Swoosh.Email builders. Each function returns a %Swoosh.Email{} struct —
   no side effects. Delivery is Brokerage.Mailer.deliver/1.
+
+  Each email ships both `text_body` (E2E mailbox helper greps these for
+  6-digit codes; also the fallback for clients that don't render HTML)
+  and `html_body` (the rendered branded version). Colors are pulled
+  from the dark-theme palette in frontend/static/css/style.css so the
+  inbox vibe matches the site.
   """
 
   import Swoosh.Email
 
-  @from_name "abcoins"
+  @from_name "broke 2Brokerage"
   @from_address "noreply@abcoins.xyz"
   @admin_address Application.compile_env(:brokerage, :admin_email, "noreply@abcoins.xyz")
+  # The brand wordmark lives on the deployed app; email clients fetch
+  # it from this absolute URL. Override per-env if you change hosts.
+  @logo_url Application.compile_env(
+              :brokerage,
+              :email_logo_url,
+              "https://broke-2-brokerage.fly.dev/favicon/b2b-logo.svg"
+            )
+
+  # Site palette (dark theme). Inline so it survives email clients
+  # stripping <style> blocks. Accent matches the b2b-logo.svg wordmark
+  # purple, not the broader-app accent, so the logo panel reads as the
+  # same mark.
+  @bg "#07050f"
+  @surface "#0d0a1e"
+  @surface2 "#14102a"
+  @border "#261d4a"
+  @accent "#a855f7"
+  @text "#e8e0ff"
+  @muted "#a098c8"
+  @muted_dim "#5c5280"
 
   @doc """
   Email-verification code sent after registration. `code` is the plain
@@ -20,7 +46,7 @@ defmodule Brokerage.Emails do
     new()
     |> to(email)
     |> from({@from_name, @from_address})
-    |> subject("abcoins — confirm your email")
+    |> subject("broke 2Brokerage — confirm your email")
     |> text_body("""
     Hi #{username},
 
@@ -31,8 +57,17 @@ defmodule Brokerage.Emails do
 
     If you didn't sign up, you can ignore this message.
 
-    — abcoins
+    — broke 2Brokerage
     """)
+    |> html_body(
+      render(
+        heading: "Confirm your email",
+        lead: "Hi #{h(username)} — almost there. Enter the code below on the sign-in page to finish creating your account.",
+        code: code,
+        code_label: "Verification code",
+        body: "The code expires in 10 minutes. If you didn't sign up, you can ignore this message."
+      )
+    )
   end
 
   @doc """
@@ -45,7 +80,7 @@ defmodule Brokerage.Emails do
     new()
     |> to(email)
     |> from({@from_name, @from_address})
-    |> subject("abcoins — reset your password")
+    |> subject("broke 2Brokerage — reset your password")
     |> text_body("""
     Hi #{username},
 
@@ -57,8 +92,17 @@ defmodule Brokerage.Emails do
     If you didn't request a reset, you can ignore this message — your
     password is unchanged.
 
-    — abcoins
+    — broke 2Brokerage
     """)
+    |> html_body(
+      render(
+        heading: "Reset your password",
+        lead: "Hi #{h(username)} — enter the code below on the sign-in page along with your new password.",
+        code: code,
+        code_label: "Reset code",
+        body: "The code expires in 10 minutes. If you didn't request a reset, you can ignore this message — your password is unchanged."
+      )
+    )
   end
 
   # ── Account / activity notifications ────────────────────────────────────
@@ -77,17 +121,26 @@ defmodule Brokerage.Emails do
     new()
     |> to(email)
     |> from({@from_name, @from_address})
-    |> subject("abcoins — your deposit cleared")
+    |> subject("broke 2Brokerage — your deposit cleared")
     |> text_body("""
     Hi #{username},
 
     Your deposit of $#{amount} just settled and is available to invest.
 
-    Open abcoins → Brokerage to see it in your buying power, or place
+    Open broke 2Brokerage → Brokerage to see it in your buying power, or place
     a new order from the Make a Purchase form.
 
-    — abcoins
+    — broke 2Brokerage
     """)
+    |> html_body(
+      render(
+        heading: "Deposit cleared",
+        lead: "Hi #{h(username)} — your deposit just settled.",
+        stat_label: "Available to invest",
+        stat_value: "$#{h(to_string(amount))}",
+        body: "Open Brokerage to see it in your buying power, or place a new order from the Make a Purchase form."
+      )
+    )
   end
 
   @doc "Sent after a withdrawal initiates (mock: completed; prod: queued at Alpaca)."
@@ -98,7 +151,7 @@ defmodule Brokerage.Emails do
     new()
     |> to(email)
     |> from({@from_name, @from_address})
-    |> subject("abcoins — withdrawal in progress")
+    |> subject("broke 2Brokerage — withdrawal in progress")
     |> text_body("""
     Hi #{username},
 
@@ -109,8 +162,17 @@ defmodule Brokerage.Emails do
 
     If you didn't initiate this, contact us immediately.
 
-    — abcoins
+    — broke 2Brokerage
     """)
+    |> html_body(
+      render(
+        heading: "Withdrawal in progress",
+        lead: "Hi #{h(username)} — your withdrawal is on its way to your linked bank.",
+        stat_label: "Amount",
+        stat_value: "$#{h(to_string(amount))}",
+        body: "ACH transfers typically take 1–3 business days. Track it in Brokerage → Account Activity. If you didn't initiate this, contact us immediately."
+      )
+    )
   end
 
   @doc "Sent when a buy/sell order is placed against the user's Alpaca account."
@@ -124,7 +186,7 @@ defmodule Brokerage.Emails do
     new()
     |> to(email)
     |> from({@from_name, @from_address})
-    |> subject("abcoins — #{String.capitalize(to_string(side))} order placed: #{symbol}")
+    |> subject("broke 2Brokerage — #{String.capitalize(to_string(side))} order placed: #{symbol}")
     |> text_body("""
     Hi #{username},
 
@@ -133,8 +195,17 @@ defmodule Brokerage.Emails do
 
     See it live in Brokerage → Account Activity.
 
-    — abcoins
+    — broke 2Brokerage
     """)
+    |> html_body(
+      render(
+        heading: "Order placed",
+        lead: "Hi #{h(username)} — your #{h(to_string(type))} order to #{h(to_string(side))} #{h(to_string(qty))} share(s) of #{h(to_string(symbol))} is on the books.",
+        stat_label: String.upcase(to_string(side)) <> " · " <> String.upcase(to_string(symbol)),
+        stat_value: "#{h(to_string(qty))} share(s)",
+        body: "We'll send a follow-up the moment it fills (or expires). See it live in Brokerage → Account Activity."
+      )
+    )
   end
 
   @doc "Sent when a wishlist item auto-fills after a deposit settles."
@@ -147,7 +218,7 @@ defmodule Brokerage.Emails do
     new()
     |> to(email)
     |> from({@from_name, @from_address})
-    |> subject("abcoins — wishlist auto-fill: #{symbol}")
+    |> subject("broke 2Brokerage — wishlist auto-fill: #{symbol}")
     |> text_body("""
     Hi #{username},
 
@@ -157,8 +228,17 @@ defmodule Brokerage.Emails do
     This is the auto-execute mechanic working — every pending wish-list
     item fires in order once funds are available.
 
-    — abcoins
+    — broke 2Brokerage
     """)
+    |> html_body(
+      render(
+        heading: "Wishlist auto-fill",
+        lead: "Hi #{h(username)} — your wishlist entry just executed.",
+        stat_label: "FILLED · " <> String.upcase(to_string(symbol)),
+        stat_value: "#{h(qty_str)} share(s)",
+        body: "This is the auto-execute mechanic working — every pending wishlist item fires in order once funds are available."
+      )
+    )
   end
 
   @doc "Sent when the recurring-investment scheduler places a scheduled order."
@@ -172,7 +252,7 @@ defmodule Brokerage.Emails do
     new()
     |> to(email)
     |> from({@from_name, @from_address})
-    |> subject("abcoins — recurring #{cadence} buy: #{symbol}")
+    |> subject("broke 2Brokerage — recurring #{cadence} buy: #{symbol}")
     |> text_body("""
     Hi #{username},
 
@@ -182,8 +262,17 @@ defmodule Brokerage.Emails do
     You can pause or cancel this schedule from Brokerage → Recurring
     Investments at any time.
 
-    — abcoins
+    — broke 2Brokerage
     """)
+    |> html_body(
+      render(
+        heading: "Recurring buy executed",
+        lead: "Hi #{h(username)} — your #{h(to_string(cadence))} recurring order just ran.",
+        stat_label: "BUY · " <> String.upcase(to_string(symbol)),
+        stat_value: "#{h(qty_str)} share(s)",
+        body: "You can pause or cancel this schedule from Brokerage → Recurring Investments at any time."
+      )
+    )
   end
 
   @doc "Sent when Alpaca approves the user's KYC submission."
@@ -194,7 +283,7 @@ defmodule Brokerage.Emails do
     new()
     |> to(email)
     |> from({@from_name, @from_address})
-    |> subject("abcoins — your brokerage account is live")
+    |> subject("broke 2Brokerage — your brokerage account is live")
     |> text_body("""
     Hi #{username},
 
@@ -204,8 +293,17 @@ defmodule Brokerage.Emails do
     You can fund the account from Brokerage → Add Funds and start
     placing orders right away.
 
-    — abcoins
+    — broke 2Brokerage
     """)
+    |> html_body(
+      render(
+        heading: "You're approved",
+        lead: "Hi #{h(username)} — welcome aboard. Your brokerage account is live.",
+        stat_label: "Account number",
+        stat_value: h(to_string(acct_number)),
+        body: "Fund the account from Brokerage → Add Funds and start placing orders right away."
+      )
+    )
   end
 
   @doc """
@@ -224,7 +322,7 @@ defmodule Brokerage.Emails do
     |> to(@admin_address)
     |> from({@from_name, @from_address})
     |> reply_to(email)
-    |> subject("[abcoins contact] " <> subj)
+    |> subject("[broke 2Brokerage contact] " <> subj)
     |> text_body("""
     From: #{name} <#{email}>
     Subject: #{subj}
@@ -232,7 +330,121 @@ defmodule Brokerage.Emails do
     #{msg}
 
     —
-    Sent via the abcoins Contact Us form.
+    Sent via the broke 2Brokerage Contact Us form.
     """)
+    |> html_body(
+      render(
+        heading: "Contact form submission",
+        lead: "From: #{h(name)} &lt;#{h(email)}&gt;",
+        stat_label: "Subject",
+        stat_value: h(subj),
+        body: "<pre style=\"margin:0; white-space:pre-wrap; word-wrap:break-word; font-family:inherit; color:#{@muted}; font-size:14px; line-height:1.6;\">#{h(msg)}</pre>"
+      )
+    )
   end
+
+  # ── HTML rendering ──────────────────────────────────────────────────────
+
+  # Builds the inline-styled email shell. Opts:
+  #   :heading      — H1 above the lead.
+  #   :lead         — short paragraph under the heading.
+  #   :code         — optional 6-digit code; renders the big monospace block.
+  #   :code_label   — small caps label above the code (default: "Code").
+  #   :stat_label   — optional label for a stat-style highlight (used in
+  #                   notifications where there's a key value to surface).
+  #   :stat_value   — the value paired with stat_label.
+  #   :body         — paragraph(s) under the code/stat block. May contain HTML.
+  defp render(opts) do
+    heading = Keyword.fetch!(opts, :heading)
+    lead = Keyword.fetch!(opts, :lead)
+    body = Keyword.get(opts, :body, "")
+
+    highlight =
+      cond do
+        opts[:code] -> code_block(opts[:code], opts[:code_label] || "Code")
+        opts[:stat_label] -> stat_block(opts[:stat_label], opts[:stat_value] || "")
+        true -> ""
+      end
+
+    """
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <meta name="color-scheme" content="dark light">
+      <meta name="supported-color-schemes" content="dark light">
+      <title>#{heading}</title>
+    </head>
+    <body style="margin:0; padding:0; background:#{@bg}; font-family:-apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing:antialiased;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#{@bg};">
+        <tr>
+          <td align="center" style="padding:40px 16px;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="max-width:560px; width:100%; background:#{@surface}; border:1px solid #{@border}; border-radius:14px;">
+              <tr>
+                <td style="padding:36px 36px 32px;">
+                  <img src="#{@logo_url}" alt="broke 2Brokerage" width="230" height="70" style="display:block; max-width:230px; height:auto; border:0; outline:none;">
+                  <h1 style="margin:24px 0 10px; font-size:22px; line-height:1.3; color:#{@text}; font-weight:600;">#{heading}</h1>
+                  <p style="margin:0 0 24px; color:#{@muted}; font-size:15px; line-height:1.55;">#{lead}</p>
+                  #{highlight}
+                  <p style="margin:24px 0 0; color:#{@muted}; font-size:14px; line-height:1.6;">#{body}</p>
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="560" style="max-width:560px; width:100%;">
+              <tr>
+                <td align="center" style="padding:18px 8px; color:#{@muted_dim}; font-size:12px; line-height:1.5;">
+                  broke 2Brokerage · <a href="mailto:#{@from_address}" style="color:#{@muted_dim}; text-decoration:none;">#{@from_address}</a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </body>
+    </html>
+    """
+  end
+
+  defp code_block(code, label) do
+    """
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#{@surface2}; border:1px solid #{@border}; border-radius:10px;">
+      <tr>
+        <td align="center" style="padding:22px 16px;">
+          <div style="font-size:11px; letter-spacing:0.22em; text-transform:uppercase; color:#{@muted_dim}; font-weight:600; margin-bottom:10px;">#{h(label)}</div>
+          <div style="font-family:'SF Mono', SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace; font-size:32px; letter-spacing:0.32em; color:#{@accent}; font-weight:700;">#{h(code)}</div>
+        </td>
+      </tr>
+    </table>
+    """
+  end
+
+  defp stat_block(label, value) do
+    """
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#{@surface2}; border:1px solid #{@border}; border-radius:10px;">
+      <tr>
+        <td style="padding:18px 20px;">
+          <div style="font-size:11px; letter-spacing:0.18em; text-transform:uppercase; color:#{@muted_dim}; font-weight:600; margin-bottom:6px;">#{label}</div>
+          <div style="font-size:22px; color:#{@text}; font-weight:600;">#{value}</div>
+        </td>
+      </tr>
+    </table>
+    """
+  end
+
+  # Minimal HTML escape for user-provided strings flowing into the
+  # rendered body. Covers the four characters that matter for an attribute-
+  # free body context; emails clients don't execute JS, so we don't need
+  # the full quote-handling Phoenix.HTML does.
+  defp h(nil), do: ""
+
+  defp h(s) when is_binary(s) do
+    s
+    |> String.replace("&", "&amp;")
+    |> String.replace("<", "&lt;")
+    |> String.replace(">", "&gt;")
+    |> String.replace("\"", "&quot;")
+  end
+
+  defp h(other), do: h(to_string(other))
 end
