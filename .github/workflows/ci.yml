@@ -100,7 +100,7 @@ jobs:
   deploy:
     name: Deploy to Fly.io
     needs: [backend, frontend]
-    if: false  # ← change to: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -109,6 +109,9 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy
-        run: flyctl deploy --remote-only --config brokerage/fly.toml
+        # Build context is the repo root because the Dockerfile copies
+        # both frontend/ and brokerage/. --dockerfile forces flyctl to
+        # use cwd as context instead of the config's directory.
+        run: flyctl deploy --remote-only --config brokerage/fly.toml --dockerfile brokerage/Dockerfile
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
