@@ -130,6 +130,7 @@ defmodule Brokerage.AlpacaMock.Server do
     try do
       import Ecto.Query
       alias Brokerage.{Repo, BrokerageAccounts.Account, BrokerFunding.Deposit}
+      alias Brokerage.AlpacaMock.Position, as: MockPos
 
       accounts = Repo.all(Account)
 
@@ -142,8 +143,28 @@ defmodule Brokerage.AlpacaMock.Server do
           {uid, Enum.reduce(amts, @decimal_zero, &Decimal.add/2)}
         end)
 
+      # Persisted mock positions, grouped by alpaca_account_id. Rows with
+      # qty <= 0 are skipped so closed positions don't ghost-render.
+      positions_by_account =
+        MockPos
+        |> Repo.all()
+        |> Enum.reduce(%{}, fn p, acc ->
+          if Decimal.compare(p.qty, @decimal_zero) == :gt do
+            row = %{
+              "symbol" => p.symbol,
+              "qty" => p.qty,
+              "avg_entry_price" => p.avg_entry_price
+            }
+
+            Map.update(acc, p.alpaca_account_id, %{p.symbol => row}, &Map.put(&1, p.symbol, row))
+          else
+            acc
+          end
+        end)
+
       Enum.reduce(accounts, state, fn a, acc ->
         cash = Map.get(cash_by_user, a.user_id, @decimal_zero)
+        positions = Map.get(positions_by_account, a.alpaca_account_id, %{})
 
         acc
         |> put_in([:accounts, a.alpaca_account_id], %{
@@ -156,7 +177,7 @@ defmodule Brokerage.AlpacaMock.Server do
         |> put_in([:cash, a.alpaca_account_id], cash)
         |> put_in([:orders, a.alpaca_account_id], [])
         |> put_in([:ach, a.alpaca_account_id], [])
-        |> put_in([:positions, a.alpaca_account_id], %{})
+        |> put_in([:positions, a.alpaca_account_id], positions)
       end)
     rescue
       _ -> state
@@ -421,6 +442,8 @@ defmodule Brokerage.AlpacaMock.Server do
         next_cash = Decimal.add(cash, delta)
         next_positions = update_position(state.positions, account_id, symbol, qty_delta, price)
 
+        persist_position(account_id, symbol, get_in(next_positions, [account_id, symbol]))
+
         state =
           state
           |> Map.put(:orders, next_orders)
@@ -478,6 +501,44 @@ defmodule Brokerage.AlpacaMock.Server do
 
     Map.put(positions_map, account_id, Map.put(per_account, symbol, new_position))
   end
+
+  # Write the in-memory position through to mock_alpaca_positions so it
+  # survives Phoenix restarts. Closed positions (qty == 0) get the row
+  # deleted; everything else upserts on (alpaca_account_id, symbol).
+  # Failures are swallowed — the mock should never wedge an order fill
+  # because of a write-through error.
+  defp persist_position(account_id, symbol, %{"qty" => qty, "avg_entry_price" => avg}) do
+    try do
+      import Ecto.Query
+      alias Brokerage.Repo
+      alias Brokerage.AlpacaMock.Position, as: MockPos
+
+      if Decimal.compare(qty, @decimal_zero) == :eq do
+        Repo.delete_all(
+          from p in MockPos,
+            where: p.alpaca_account_id == ^account_id and p.symbol == ^symbol
+        )
+      else
+        attrs = %{
+          alpaca_account_id: account_id,
+          symbol: symbol,
+          qty: qty,
+          avg_entry_price: avg
+        }
+
+        %MockPos{}
+        |> MockPos.changeset(attrs)
+        |> Repo.insert(
+          on_conflict: [set: [qty: qty, avg_entry_price: avg, updated_at: DateTime.utc_now()]],
+          conflict_target: [:alpaca_account_id, :symbol]
+        )
+      end
+    rescue
+      _ -> :ok
+    end
+  end
+
+  defp persist_position(_, _, _), do: :ok
 
   defp weighted_avg(qty1, price1, qty2, price2) do
     total_qty = Decimal.add(Decimal.abs(qty1), Decimal.abs(qty2))

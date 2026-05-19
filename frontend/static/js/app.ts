@@ -2971,10 +2971,21 @@ window.dashApp = () => ({
         this.activeBrokeragePortfolioId = mainId ?? 'all';
       }
       this.brokerageRewardsByPortfolio = JSON.parse(get('brokerageRewardsByPortfolio') || '{}');
-      this.totalDeposited = parseFloat(get('totalDeposited') || '0') || 0;
       this.portfolioCash = JSON.parse(get('portfolioCash') || '{}');
       this.portfolioDeposited = JSON.parse(get('portfolioDeposited') || '{}');
     } catch {}
+
+    // totalDeposited is server-derived from broker_deposits — the client
+    // bookkeeping it used to keep in localStorage drifted whenever a
+    // deposit completed/failed without the tab open. The optimistic bump
+    // in submitAddFunds still updates the number for instant feedback;
+    // the next hydrate re-syncs from the DB.
+    try {
+      const s = await apiFetch<{ total_deposited: string }>('/broker/funding/summary');
+      this.totalDeposited = parseFloat(s.total_deposited) || 0;
+    } catch {
+      this.totalDeposited = 0;
+    }
   },
 
   // PUT the new allocation map for a symbol and reflect the response in
@@ -3058,13 +3069,14 @@ window.dashApp = () => ({
     }
   },
 
+  // totalDeposited is server-derived now (see _loadBrokerageState); only
+  // the per-portfolio cash/deposit splits stay in localStorage until they
+  // get their own server-side ledger.
   _savePortfolioCash(this: any) {
-    const k1 = this._lsKey('totalDeposited');
     const k2 = this._lsKey('portfolioCash');
     const k3 = this._lsKey('portfolioDeposited');
-    if (!k1 || !k2 || !k3) return;
+    if (!k2 || !k3) return;
     try {
-      localStorage.setItem(k1, String(this.totalDeposited));
       localStorage.setItem(k2, JSON.stringify(this.portfolioCash));
       localStorage.setItem(k3, JSON.stringify(this.portfolioDeposited));
     } catch {}

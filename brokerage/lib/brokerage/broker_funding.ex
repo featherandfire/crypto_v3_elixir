@@ -387,6 +387,38 @@ defmodule Brokerage.BrokerFunding do
     |> Repo.all()
   end
 
+  @doc """
+  Lifetime cash-movement totals for a user, derived from `broker_deposits`.
+  Replaces the old client-side `totalDeposited` localStorage bookkeeping.
+  Returns Decimal strings so the JSON serializer can pass them through
+  without IEEE-754 loss.
+  """
+  def summary_for_user(user_id) when is_integer(user_id) do
+    zero = Decimal.new(0)
+
+    rows =
+      Deposit
+      |> where([d], d.user_id == ^user_id)
+      |> group_by([d], [d.direction, d.status])
+      |> select([d], {d.direction, d.status, sum(d.amount)})
+      |> Repo.all()
+
+    {incoming_completed, incoming_pending, outgoing_completed} =
+      Enum.reduce(rows, {zero, zero, zero}, fn
+        {"INCOMING", "completed", sum}, {ic, ip, oc} -> {Decimal.add(ic, sum), ip, oc}
+        {"INCOMING", "pending", sum}, {ic, ip, oc} -> {ic, Decimal.add(ip, sum), oc}
+        {"OUTGOING", "completed", sum}, {ic, ip, oc} -> {ic, ip, Decimal.add(oc, sum)}
+        _, acc -> acc
+      end)
+
+    %{
+      total_deposited: incoming_completed,
+      total_pending: incoming_pending,
+      total_withdrawn: outgoing_completed,
+      net_external_cash: Decimal.sub(incoming_completed, outgoing_completed)
+    }
+  end
+
   @doc "Mirror of list_deposits/2 for the OUTGOING side (withdrawals)."
   def list_withdrawals(user_id, opts \\ []) when is_integer(user_id) do
     limit = Keyword.get(opts, :limit, 50)

@@ -95,6 +95,18 @@ defmodule BrokerageWeb.BrokerFundingController do
     json(conn, %{withdrawals: withdrawals})
   end
 
+  def summary(conn, _params) do
+    user_id = conn.assigns.current_user.id
+    summary = BrokerFunding.summary_for_user(user_id)
+
+    json(conn, %{
+      total_deposited: Decimal.to_string(summary.total_deposited, :normal),
+      total_pending: Decimal.to_string(summary.total_pending, :normal),
+      total_withdrawn: Decimal.to_string(summary.total_withdrawn, :normal),
+      net_external_cash: Decimal.to_string(summary.net_external_cash, :normal)
+    })
+  end
+
   @doc """
   Verifies the Alpaca Broker API sandbox is reachable with the configured
   credentials. Returns:
