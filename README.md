@@ -162,11 +162,9 @@ Deploy:
 flyctl deploy                       # from repo root, picks up brokerage/fly.toml
 ```
 
-CI deploy via GitHub Actions is wired in
-[.github/workflows/ci.yml](.github/workflows/ci.yml) but gated behind
-`if: false` until the cutover is approved — flip to
-`github.ref == 'refs/heads/main' && github.event_name == 'push'` and add
-the `FLY_API_TOKEN` repo secret.
+Every push to `main` triggers a deploy via the GitHub Actions workflow
+in [.github/workflows/ci.yml](.github/workflows/ci.yml) (auth via the
+`FLY_API_TOKEN` repo secret). PRs run tests only.
 
 **Singleton constraint:** the `RecurringInvestments.Scheduler` GenServer
 is single-node by design; fly.toml pins the app to one VM. Don't scale
