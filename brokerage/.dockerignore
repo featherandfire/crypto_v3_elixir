@@ -1,0 +1,22 @@
+# Don't ship build artifacts, dev state, or secrets in the image.
+_build
+deps
+.elixir_ls
+.fetch
+cover
+test-results
+priv/static/uploads
+
+# Test/dev-only files
+test
+priv/repo/seeds.exs
+
+# Secrets / local state
+.env
+.env.*
+
+# Editor / OS
+.DS_Store
+.idea
+.vscode
+*.swp

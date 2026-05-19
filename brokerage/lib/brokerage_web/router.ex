@@ -57,6 +57,7 @@ defmodule BrokerageWeb.Router do
       get "/broker/funding/deposits", BrokerFundingController, :index
       post "/broker/funding/withdrawals", BrokerFundingController, :withdraw
       get "/broker/funding/withdrawals", BrokerFundingController, :withdrawals
+      get "/broker/funding/summary", BrokerFundingController, :summary
       get "/broker/funding/verify", BrokerFundingController, :verify
 
       # Brokerage portfolios (the chips on Holdings). Per-user buckets for
@@ -108,4 +109,9 @@ defmodule BrokerageWeb.Router do
       forward "/mailbox", Plug.Swoosh.MailboxPreview
     end
   end
+
+  # Anything not matched above falls through to the SPA shell so deep
+  # links + the bare "/" both render index.html. Non-GET / `/api`
+  # requests pass through untouched so unmatched API routes still 404.
+  forward "/", BrokerageWeb.SpaFallback
 end

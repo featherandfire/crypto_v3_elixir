@@ -133,12 +133,52 @@ mock is ~3x faster than the real sandbox for deterministic flows).
 
 ## Deploy
 
-- Staging migrations:
-  `brokerage/bin/staging.sh ecto.migrate`
-  (loads `.env.staging`, sets `MIX_ENV=prod`).
-- EC2 deploy is symlink-based: `/opt/crypto/current` -> the active
-  release, `/opt/crypto/previous` -> the last one. `scripts/rollback.sh`
-  flips them and restarts `crypto-api` via systemd.
+Production runs on Fly.io. Config lives in
+[brokerage/fly.toml](brokerage/fly.toml); the multi-stage
+[brokerage/Dockerfile](brokerage/Dockerfile) builds the Vite frontend
+into `priv/static`, builds the Elixir release, and ships a slim
+Debian runtime image.
+
+First-time setup (do once):
+
+```bash
+flyctl auth login
+flyctl apps create <unique-name>                    # update fly.toml `app =`
+flyctl postgres create --name brokerage-db --region ord
+flyctl postgres attach brokerage-db --app <unique-name>  # sets DATABASE_URL
+flyctl secrets set --app <unique-name> \
+  SECRET_KEY_BASE="$(mix phx.gen.secret)" \
+  JWT_SECRET="$(mix phx.gen.secret)" \
+  ALPACA_API_KEY=... ALPACA_API_SECRET=... \
+  B2B_API_KEY=... B2B_API_SECRET=... \
+  ALPACA_WEBHOOK_SECRET=... \
+  FINNHUB_API_KEY=... POLYGON_API_KEY=... \
+  RESEND_API_KEY=...
+```
+
+Deploy:
+
+```bash
+flyctl deploy                       # from repo root, picks up brokerage/fly.toml
+```
+
+CI deploy via GitHub Actions is wired in
+[.github/workflows/ci.yml](.github/workflows/ci.yml) but gated behind
+`if: false` until the cutover is approved — flip to
+`github.ref == 'refs/heads/main' && github.event_name == 'push'` and add
+the `FLY_API_TOKEN` repo secret.
+
+**Singleton constraint:** the `RecurringInvestments.Scheduler` GenServer
+is single-node by design; fly.toml pins the app to one VM. Don't scale
+out without migrating the scheduler to Oban (or a leader-elected
+pattern) first — duplicate instances would fire the same scheduled buys.
+
+Rollback:
+
+```bash
+flyctl releases list --app <unique-name>
+flyctl releases rollback <version> --app <unique-name>
+```
 
 ## Project layout
 

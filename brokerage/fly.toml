@@ -1,0 +1,72 @@
+# Fly.io app config. Generated when migrating off EC2.
+#
+# Setup checklist (do these once before first `flyctl deploy`):
+#   1. flyctl auth login
+#   2. flyctl apps create <unique-name>   # update `app` below to match
+#   3. flyctl postgres create --name brokerage-db --region ord
+#      flyctl postgres attach brokerage-db --app <unique-name>
+#      # ^ sets DATABASE_URL on the app automatically
+#   4. flyctl secrets set --app <unique-name> \
+#        SECRET_KEY_BASE="$(mix phx.gen.secret)" \
+#        JWT_SECRET="$(mix phx.gen.secret)" \
+#        B2B_API_KEY=... B2B_API_SECRET=... \
+#        ALPACA_API_KEY=... ALPACA_API_SECRET=... \
+#        ALPACA_WEBHOOK_SECRET=... \
+#        FINNHUB_API_KEY=... POLYGON_API_KEY=... \
+#        RESEND_API_KEY=...
+#   5. flyctl deploy
+
+app = "broke-2-brokerage"
+primary_region = "iad"
+kill_signal = "SIGTERM"
+kill_timeout = "30s"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Run migrations on every release before the new instance takes traffic.
+# `bin/brokerage eval` runs the release task in a one-shot VM that exits
+# when done; if it fails, Fly aborts the deploy and keeps the old version.
+[deploy]
+  release_command = "/app/bin/brokerage eval Brokerage.Release.migrate"
+  strategy = "immediate"
+
+[env]
+  PHX_HOST = "broke-2-brokerage.fly.dev"
+  PORT = "4000"
+  PHX_SERVER = "true"
+  # Fly Postgres exposes Flycast addresses over IPv6 and doesn't use TLS
+  # for internal traffic — the runtime DB config keys off these.
+  ECTO_IPV6 = "true"
+  DB_SSL = "false"
+
+[http_service]
+  internal_port = 4000
+  force_https = true
+  # Singleton scheduler: leave auto_stop off and pin count = 1 below.
+  # Auto-start is fine because there's only ever one machine.
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ["app"]
+
+[http_service.concurrency]
+  type = "connections"
+  hard_limit = 1000
+  soft_limit = 800
+
+[[http_service.checks]]
+  interval = "30s"
+  timeout = "5s"
+  grace_period = "10s"
+  method = "GET"
+  path = "/api/health"
+
+# Pinned to 1 VM. The RecurringInvestments.Scheduler GenServer is
+# single-node by design — duplicate instances would fire the same
+# scheduled buys. If you scale this out, move the scheduler to Oban
+# (or a leader-elected pattern) first.
+[[vm]]
+  cpu_kind = "shared"
+  cpus = 1
+  memory_mb = 512

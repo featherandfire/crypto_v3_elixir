@@ -86,14 +86,24 @@ config :brokerage, BrokerageWeb.Endpoint,
 
 # Mailer (prod only). Resend over its HTTPS API (Swoosh + Req).
 # dev/test adapters are set in config/dev.exs and config/test.exs.
+# Resend is opt-in — missing RESEND_API_KEY falls back to the Local
+# adapter so the app still boots (emails just go nowhere). Matches the
+# rest of the external-service pattern: degrade, don't crash.
 if config_env() == :prod do
-  config :brokerage, Brokerage.Mailer,
-    adapter: Swoosh.Adapters.Resend,
-    api_key:
-      System.get_env("RESEND_API_KEY") ||
-        raise("RESEND_API_KEY is required in production")
+  case System.get_env("RESEND_API_KEY") do
+    key when is_binary(key) and key != "" ->
+      config :brokerage, Brokerage.Mailer,
+        adapter: Swoosh.Adapters.Resend,
+        api_key: key
 
-  config :swoosh, :api_client, Swoosh.ApiClient.Req
+      config :swoosh, :api_client, Swoosh.ApiClient.Req
+
+    _ ->
+      config :brokerage, Brokerage.Mailer, adapter: Swoosh.Adapters.Local
+      # Local adapter doesn't make HTTP calls; turn off Swoosh's
+      # api_client so it doesn't try to init Hackney (not in deps).
+      config :swoosh, :api_client, false
+  end
 end
 
 if config_env() == :prod do

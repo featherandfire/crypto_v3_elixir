@@ -17,7 +17,11 @@ defmodule BrokerageWeb do
   those modules here.
   """
 
-  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
+  # Vite emits index.html + assets/ + static/ into frontend/dist/, which
+  # the Dockerfile copies into priv/static. Phoenix serves them via
+  # Plug.Static; index.html itself is delivered by SpaFallback for any
+  # non-/api GET so deep links and a bare "/" both render the SPA shell.
+  def static_paths, do: ~w(assets static index.html favicon.ico robots.txt)
 
   def router do
     quote do

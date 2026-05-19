@@ -24,11 +24,13 @@ export default defineConfig({
   // approval), so within a file we run serially to share that setup.
   // Across files we still get parallelism via workers below.
   fullyParallel: false,
-  // One worker. Each spec performs a fresh Alpaca sandbox onboarding;
-  // running them in parallel sporadically stalls the second flow
-  // (sandbox KYC queueing + dev mailbox contention). The bottleneck is
-  // Alpaca, not our test runner, so worker parallelism doesn't actually
-  // buy much wall-clock here. Override with `--workers=N` for ad-hoc runs.
+  // One worker. Tried 4 against ALPACA_MOCK=1 — the mock GenServer
+  // serializes fine, but the Swoosh dev mailbox + concurrent KYC
+  // submits produce a race where init() sees a stale "no account"
+  // state and routes the user away from the KYC form, making most
+  // signup-dependent specs fail. Until the dev mailbox is swapped for
+  // a test-only direct fetch (or each worker gets its own mailbox),
+  // serial is the only reliable mode.
   workers: 1,
   reporter: process.env.CI ? [['list'], ['github']] : 'list',
   use: {
